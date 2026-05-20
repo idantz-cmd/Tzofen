@@ -1,0 +1,12 @@
+node_modules/
+dist/
+data/
+.env.local
+.env
+.env.*
+*.db
+*.db-shm
+*.db-wal
+.project-config.json
+.manus-logs/
+patches/

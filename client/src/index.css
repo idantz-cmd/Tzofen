@@ -1,0 +1,293 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* Dark Sports Theme - Deep Navy & Green Accents */
+:root {
+  /* Primary: Green accent for highlights */
+  --primary: oklch(0.55 0.25 142.5); /* Vibrant green */
+  --primary-foreground: oklch(0.98 0.001 286.375);
+  --sidebar-primary: oklch(0.50 0.22 142.5); /* Darker green */
+  --sidebar-primary-foreground: oklch(0.98 0.001 286.375);
+  
+  /* Chart colors - Sports themed */
+  --chart-1: oklch(0.55 0.25 142.5); /* Green */
+  --chart-2: oklch(0.60 0.20 200); /* Cyan */
+  --chart-3: oklch(0.50 0.18 270); /* Purple */
+  --chart-4: oklch(0.65 0.15 30); /* Orange */
+  --chart-5: oklch(0.45 0.20 350); /* Red */
+  
+  --radius: 0.65rem;
+  
+  /* Light theme (fallback) */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.235 0.015 65);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.235 0.015 65);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.235 0.015 65);
+  --secondary: oklch(0.98 0.001 286.375);
+  --secondary-foreground: oklch(0.4 0.015 65);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.55 0.25 142.5);
+  --accent-foreground: oklch(0.98 0.001 286.375);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.55 0.25 142.5);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.235 0.015 65);
+  --sidebar-accent: oklch(0.967 0.001 286.375);
+  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-border: oklch(0.92 0.004 286.32);
+  --sidebar-ring: oklch(0.55 0.25 142.5);
+}
+
+/* Dark Mode - Deep Navy Background with Green Accents */
+.dark {
+  /* Primary: Vibrant green accent */
+  --primary: oklch(0.55 0.25 142.5);
+  --primary-foreground: oklch(0.98 0.001 286.375);
+  --sidebar-primary: oklch(0.50 0.22 142.5);
+  --sidebar-primary-foreground: oklch(0.98 0.001 286.375);
+  
+  /* Chart colors */
+  --chart-1: oklch(0.55 0.25 142.5);
+  --chart-2: oklch(0.60 0.20 200);
+  --chart-3: oklch(0.50 0.18 270);
+  --chart-4: oklch(0.65 0.15 30);
+  --chart-5: oklch(0.45 0.20 350);
+  
+  /* Deep navy background (very dark blue) */
+  --background: oklch(0.12 0.008 260); /* Deep navy #0f1419 */
+  --foreground: oklch(0.95 0.001 65); /* Almost white text */
+  
+  /* Card: Slightly lighter navy */
+  --card: oklch(0.18 0.010 260); /* Lighter navy #1a2332 */
+  --card-foreground: oklch(0.95 0.001 65);
+  
+  /* Popover: Slightly lighter still */
+  --popover: oklch(0.20 0.012 260); /* #232d3f */
+  --popover-foreground: oklch(0.95 0.001 65);
+  
+  /* Secondary: Muted tones */
+  --secondary: oklch(0.22 0.010 260);
+  --secondary-foreground: oklch(0.80 0.005 65);
+  
+  /* Muted: Subtle backgrounds */
+  --muted: oklch(0.25 0.012 260);
+  --muted-foreground: oklch(0.70 0.010 65);
+  
+  /* Accent: Green highlights */
+  --accent: oklch(0.55 0.25 142.5);
+  --accent-foreground: oklch(0.98 0.001 286.375);
+  
+  /* Destructive: Red for warnings */
+  --destructive: oklch(0.60 0.20 30);
+  --destructive-foreground: oklch(0.98 0.001 286.375);
+  
+  /* Borders: Subtle navy borders */
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.55 0.25 142.5);
+  
+  /* Sidebar */
+  --sidebar: oklch(0.16 0.008 260);
+  --sidebar-foreground: oklch(0.95 0.001 65);
+  --sidebar-accent: oklch(0.55 0.25 142.5);
+  --sidebar-accent-foreground: oklch(0.98 0.001 286.375);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.55 0.25 142.5);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  
+  html {
+    direction: rtl;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  }
+  
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [type="button"]:not(:disabled),
+  [type="submit"]:not(:disabled),
+  [type="reset"]:not(:disabled),
+  a[href],
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
+}
+
+@layer components {
+  /**
+   * Custom container utility that centers content and adds responsive padding.
+   * Works with RTL layout.
+   */
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .flex {
+    min-height: 0;
+    min-width: 0;
+  }
+
+  @media (min-width: 640px) {
+    .container {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      padding-left: 2rem;
+      padding-right: 2rem;
+      max-width: 1280px;
+    }
+  }
+
+  /* Sports-themed animations */
+  @keyframes pulse-glow {
+    0%, 100% {
+      opacity: 1;
+      box-shadow: 0 0 10px rgba(85, 200, 120, 0.3);
+    }
+    50% {
+      opacity: 0.8;
+      box-shadow: 0 0 20px rgba(85, 200, 120, 0.5);
+    }
+  }
+
+  @keyframes slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.3s ease-out;
+  }
+
+  /* Match card styling */
+  .match-card {
+    @apply bg-card border border-border rounded-lg p-4 hover:border-accent/50 transition-colors;
+  }
+
+  /* Score display */
+  .score-display {
+    @apply text-2xl font-bold text-accent;
+  }
+
+  /* League badge */
+  .league-badge {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold;
+  }
+
+  /* Prediction button */
+  .prediction-btn {
+    @apply px-4 py-2 rounded-lg font-semibold transition-all;
+  }
+
+  .prediction-btn-home {
+    @apply bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 border border-blue-600/30;
+  }
+
+  .prediction-btn-draw {
+    @apply bg-gray-600/20 text-gray-400 hover:bg-gray-600/30 border border-gray-600/30;
+  }
+
+  .prediction-btn-away {
+    @apply bg-red-600/20 text-red-400 hover:bg-red-600/30 border border-red-600/30;
+  }
+
+  .prediction-btn.active {
+    @apply ring-2 ring-accent;
+  }
+
+  /* Leaderboard row */
+  .leaderboard-row {
+    @apply flex items-center justify-between p-3 border-b border-border hover:bg-card/50 transition-colors;
+  }
+
+  .leaderboard-rank {
+    @apply font-bold text-accent text-lg w-12;
+  }
+
+  .leaderboard-user {
+    @apply flex-1;
+  }
+
+  .leaderboard-points {
+    @apply font-bold text-accent text-lg;
+  }
+
+  /* Accuracy badge */
+  .accuracy-badge {
+    @apply inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-600/20 text-green-400 text-xs font-semibold;
+  }
+}
