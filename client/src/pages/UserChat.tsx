@@ -65,11 +65,11 @@ export default function UserChat() {
       <div className="min-h-screen bg-background text-foreground">
         <Navigation />
         <div className="max-w-4xl mx-auto px-4 py-20 text-center">
-          <MessageSquare className="w-16 h-16 text-emerald-400 mx-auto mb-4" />
+          <MessageSquare className="w-16 h-16 text-primary mx-auto mb-4" />
           <h1 className="text-3xl font-black mb-3">צ'אט</h1>
           <p className="text-muted-foreground mb-6">התחבר כדי לדבר עם מתחרים אחרים</p>
           <Button
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+            variant="accent"
             onClick={() => { window.location.href = getLoginUrl(); }}
           >
             התחבר עכשיו
@@ -109,10 +109,10 @@ export default function UserChat() {
           <Card className="w-72 shrink-0 border-border/30 flex flex-col hidden md:flex">
             <div className="px-4 py-3 border-b border-border/20 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-emerald-400" />
+                <MessageSquare className="w-5 h-5 text-primary" />
                 <h2 className="font-bold text-sm">שיחות</h2>
                 {unreadCount > 0 && (
-                  <Badge className="bg-emerald-500 text-white text-[10px] px-1.5 py-0">
+                  <Badge className="bg-primary text-white text-[10px] px-1.5 py-0">
                     {unreadCount}
                   </Badge>
                 )}
@@ -121,7 +121,7 @@ export default function UserChat() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowNewChat(!showNewChat)}
-                className="text-emerald-400 hover:text-emerald-300"
+                className="text-primary hover:text-primary/80"
               >
                 <UserPlus className="w-4 h-4" />
               </Button>
@@ -166,14 +166,14 @@ export default function UserChat() {
                     onClick={() => setSelectedUserId(conv.userId)}
                     className={`w-full text-right px-4 py-3 border-b border-border/10 transition-colors ${
                       selectedUserId === conv.userId
-                        ? "bg-emerald-500/10 border-r-2 border-r-emerald-400"
+                        ? "bg-primary/10 border-r-2 border-r-primary"
                         : "hover:bg-muted/10"
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-sm">{conv.userName}</span>
                       {conv.unreadCount > 0 && (
-                        <Badge className="bg-emerald-500 text-white text-[10px] px-1.5 py-0">
+                        <Badge className="bg-primary text-white text-[10px] px-1.5 py-0">
                           {conv.unreadCount}
                         </Badge>
                       )}
@@ -216,8 +216,8 @@ export default function UserChat() {
                     >
                       <ArrowRight className="w-4 h-4" />
                     </Button>
-                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                      <span className="text-xs font-bold text-emerald-400">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                      <span className="text-xs font-bold text-primary">
                         {(selectedConversation?.userName || "מ")[0]}
                       </span>
                     </div>
@@ -251,7 +251,7 @@ export default function UserChat() {
                           <div className={`max-w-[75%]`}>
                             <div className={`px-3 py-2 rounded-lg text-sm ${
                               isOwn
-                                ? "bg-emerald-500/10 border border-emerald-500/20 text-foreground"
+                                ? "bg-primary/10 border border-primary/20 text-foreground"
                                 : "bg-muted/20 border border-border/20 text-foreground"
                             }`}>
                               {msg.message}
@@ -286,7 +286,8 @@ export default function UserChat() {
                     <Button
                       onClick={handleSend}
                       disabled={!newMessage.trim() || sendMutation.isPending}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white px-4"
+                      variant="accent"
+                      className="px-4"
                     >
                       <Send className="w-4 h-4" />
                     </Button>

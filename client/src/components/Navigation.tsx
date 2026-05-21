@@ -3,7 +3,8 @@ import { getLoginUrl } from "@/const";
 import { Link, useLocation } from "wouter";
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { Trophy, Target, BarChart3, Users, MessageSquare, Settings, LogOut, User, Flame } from "lucide-react";
+import { Trophy, Target, BarChart3, Users, MessageSquare, Settings, LogOut, User, Flame, TrendingUp } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 
 export default function Navigation() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -12,89 +13,69 @@ export default function Navigation() {
   const isActive = (path: string) => location === path;
 
   return (
-    <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border/30">
+    <nav className="sticky top-0 z-50 border-b border-border/40" style={{ background: "oklch(0.99 0.008 228 / 0.92)", backdropFilter: "blur(24px) saturate(180%)", borderBottomColor: "oklch(0.50 0.160 240 / 0.22)" }}>
       <div className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-md">
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center shadow-md"
+              style={{ background: "linear-gradient(135deg, oklch(0.58 0.165 238), oklch(0.40 0.160 248))", boxShadow: "0 2px 8px oklch(0.50 0.165 240 / 0.50)" }}
+            >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M2 8a4 4 0 0 1 4-4h1a4 4 0 0 1 4 4v1a3 3 0 0 0 3 3h6a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H10a8 8 0 0 1-8-8Z" />
                 <circle cx="8" cy="10" r="1" fill="white" />
               </svg>
             </div>
             <div>
-              <h1 className="text-lg font-black text-foreground tracking-tight">betingapp</h1>
-              <p className="text-[10px] text-muted-foreground leading-none">חיזויים מקצועיים</p>
+              <h1 className="text-lg font-black tracking-tight" style={{ color: "oklch(0.20 0.060 250)" }}>betingapp</h1>
+              <p className="text-[10px] leading-none" style={{ color: "oklch(0.50 0.055 240)" }}>חיזויים מקצועיים</p>
             </div>
           </Link>
 
-          {/* Navigation Links - visible to ALL users */}
+          {/* Navigation Links */}
           <div className="hidden md:flex items-center gap-1">
             <Link href="/matches">
-              <Button
-                variant={isActive("/matches") ? "default" : "ghost"}
-                size="sm"
-                className={`text-sm gap-1.5 ${isActive("/matches") ? "bg-emerald-600 hover:bg-emerald-700" : ""}`}
-              >
+              <Button variant={isActive("/matches") ? "default" : "ghost"} size="sm" className="text-sm gap-1.5">
                 <Target className="w-4 h-4" />
                 משחקים
               </Button>
             </Link>
-
             <Link href="/leaderboard">
-              <Button
-                variant={isActive("/leaderboard") ? "default" : "ghost"}
-                size="sm"
-                className={`text-sm gap-1.5 ${isActive("/leaderboard") ? "bg-emerald-600 hover:bg-emerald-700" : ""}`}
-              >
+              <Button variant={isActive("/leaderboard") ? "default" : "ghost"} size="sm" className="text-sm gap-1.5">
                 <Trophy className="w-4 h-4" />
                 דירוג
               </Button>
             </Link>
-
+            <Link href="/standings">
+              <Button variant={isActive("/standings") ? "default" : "ghost"} size="sm" className="text-sm gap-1.5">
+                <TrendingUp className="w-4 h-4" />
+                טבלאות
+              </Button>
+            </Link>
             <Link href="/competitions">
-              <Button
-                variant={isActive("/competitions") ? "default" : "ghost"}
-                size="sm"
-                className={`text-sm gap-1.5 ${isActive("/competitions") ? "bg-emerald-600 hover:bg-emerald-700" : ""}`}
-              >
+              <Button variant={isActive("/competitions") ? "default" : "ghost"} size="sm" className="text-sm gap-1.5">
                 <Users className="w-4 h-4" />
                 תחרויות
               </Button>
             </Link>
-
             <Link href="/chat">
-              <Button
-                variant={isActive("/chat") ? "default" : "ghost"}
-                size="sm"
-                className={`text-sm gap-1.5 ${isActive("/chat") ? "bg-emerald-600 hover:bg-emerald-700" : ""}`}
-              >
+              <Button variant={isActive("/chat") ? "default" : "ghost"} size="sm" className="text-sm gap-1.5">
                 <MessageSquare className="w-4 h-4" />
                 ניתוח AI
               </Button>
             </Link>
-
             {isAuthenticated && (
               <>
                 <Link href="/dashboard">
-                  <Button
-                    variant={isActive("/dashboard") ? "default" : "ghost"}
-                    size="sm"
-                    className={`text-sm gap-1.5 ${isActive("/dashboard") ? "bg-emerald-600 hover:bg-emerald-700" : ""}`}
-                  >
+                  <Button variant={isActive("/dashboard") ? "default" : "ghost"} size="sm" className="text-sm gap-1.5">
                     <BarChart3 className="w-4 h-4" />
                     לוח בקרה
                   </Button>
                 </Link>
-
                 {user?.role === "admin" && (
                   <Link href="/admin">
-                    <Button
-                      variant={isActive("/admin") ? "default" : "ghost"}
-                      size="sm"
-                      className={`text-sm gap-1.5 ${isActive("/admin") ? "bg-emerald-600 hover:bg-emerald-700" : ""}`}
-                    >
+                    <Button variant={isActive("/admin") ? "default" : "ghost"} size="sm" className="text-sm gap-1.5">
                       <Settings className="w-4 h-4" />
                       ניהול
                     </Button>
@@ -106,11 +87,15 @@ export default function Navigation() {
 
           {/* User Menu */}
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-2 border-border/40">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center">
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center"
+                      style={{ background: "linear-gradient(135deg, oklch(0.58 0.165 238), oklch(0.40 0.160 248))" }}
+                    >
                       <User className="w-3.5 h-3.5 text-white" />
                     </div>
                     <span className="hidden sm:inline text-sm">{user?.name || "משתמש"}</span>
@@ -142,17 +127,15 @@ export default function Navigation() {
               </DropdownMenu>
             ) : (
               <Button
+                variant="accent"
                 size="sm"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-                onClick={() => {
-                  window.location.href = getLoginUrl();
-                }}
+                onClick={() => { window.location.href = getLoginUrl(); }}
               >
                 התחבר
               </Button>
             )}
 
-            {/* Mobile menu - visible to ALL users */}
+            {/* Mobile menu */}
             <div className="md:hidden">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -175,6 +158,12 @@ export default function Navigation() {
                     <DropdownMenuItem>
                       <Trophy className="w-4 h-4 ml-2" />
                       דירוג
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/standings">
+                    <DropdownMenuItem>
+                      <TrendingUp className="w-4 h-4 ml-2" />
+                      טבלאות ליגה
                     </DropdownMenuItem>
                   </Link>
                   <Link href="/competitions">

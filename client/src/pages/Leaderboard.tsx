@@ -1,23 +1,23 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Navigation from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { LeaderboardSkeleton } from "@/components/ui/skeletons/LeaderboardSkeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function Leaderboard() {
   const { user } = useAuth();
   const [timeframe, setTimeframe] = useState<"all_time" | "weekly">("all_time");
 
   // Fetch leaderboard data
-  const { data: allTimeLeaderboard = [], isLoading: allTimeLoading } = trpc.leaderboard.getAllTime.useQuery({
-    limit: 100,
-  });
+  const { data: allTimeLeaderboard = [], isLoading: allTimeLoading, error: allTimeError, refetch: refetchAllTime } =
+    trpc.leaderboard.getAllTime.useQuery({ limit: 100 });
 
-  const { data: weeklyLeaderboard = [], isLoading: weeklyLoading } = trpc.leaderboard.getWeekly.useQuery({
-    limit: 100,
-  });
+  const { data: weeklyLeaderboard = [], isLoading: weeklyLoading, error: weeklyError, refetch: refetchWeekly } =
+    trpc.leaderboard.getWeekly.useQuery({ limit: 100 });
 
   // Fetch current user's position
   const { data: userPosition } = trpc.leaderboard.getUserPosition.useQuery(undefined, {
@@ -59,14 +59,16 @@ export default function Leaderboard() {
 
           <TabsContent value={timeframe} className="space-y-4">
             {/* Leaderboard */}
-            {isLoading ? (
-              <div className="flex justify-center py-8">
-                <Spinner />
-              </div>
+            {(timeframe === "all_time" ? allTimeError : weeklyError) ? (
+              <ErrorState
+                title="שגיאה בטעינת טבלת הדירוג"
+                onRetry={timeframe === "all_time" ? refetchAllTime : refetchWeekly}
+              />
+            ) : isLoading ? (
+              <LeaderboardSkeleton count={10} />
             ) : (
               <Card className="overflow-hidden">
                 <div className="divide-y divide-border">
-                  {/* Header */}
                   <div className="grid grid-cols-12 gap-4 p-4 bg-card/50 font-semibold text-sm">
                     <div className="col-span-1 text-center">דירוג</div>
                     <div className="col-span-4">שם</div>
@@ -75,64 +77,64 @@ export default function Leaderboard() {
                     <div className="col-span-2 text-center">תחזוקות</div>
                   </div>
 
-                  {/* Rows */}
                   {currentLeaderboard.length === 0 ? (
                     <div className="p-8 text-center text-muted-foreground">
                       <p>אין נתונים זמינים</p>
                     </div>
                   ) : (
-                    currentLeaderboard.map((entry: any, index: number) => {
-                      const rank = index + 1;
-                      const isCurrentUser = entry.userId === user?.id;
+                    <AnimatePresence>
+                      {currentLeaderboard.map((entry: any, index: number) => {
+                        const rank = index + 1;
+                        const isCurrentUser = entry.userId === user?.id;
 
-                      return (
-                        <div
-                          key={entry.id}
-                          className={`grid grid-cols-12 gap-4 p-4 items-center transition-colors ${
-                            isCurrentUser ? "bg-accent/10 border-l-4 border-accent" : index % 2 === 0 ? "hover:bg-card/30" : ""
-                          }`}
-                        >
-                          {/* Rank */}
-                          <div className="col-span-1 text-center">
-                            <div className="flex items-center justify-center">
-                              {rank === 1 && <span className="text-2xl">🥇</span>}
-                              {rank === 2 && <span className="text-2xl">🥈</span>}
-                              {rank === 3 && <span className="text-2xl">🥉</span>}
-                              {rank > 3 && (
-                                <span className="font-bold text-lg text-accent">#{rank}</span>
-                              )}
+                        return (
+                          <motion.div
+                            key={entry.id ?? entry.userId}
+                            layout
+                            layoutId={String(entry.userId)}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30, delay: index * 0.03 }}
+                            className={`grid grid-cols-12 gap-4 p-4 items-center transition-colors ${
+                              isCurrentUser ? "bg-accent/10 border-r-4 border-accent" : "hover:bg-card/30"
+                            }`}
+                          >
+                            <div className="col-span-1 text-center">
+                              <div className="flex items-center justify-center">
+                                {rank === 1 && <span className="text-2xl">🥇</span>}
+                                {rank === 2 && <span className="text-2xl">🥈</span>}
+                                {rank === 3 && <span className="text-2xl">🥉</span>}
+                                {rank > 3 && <span className="font-bold text-lg text-accent">#{rank}</span>}
+                              </div>
                             </div>
-                          </div>
 
-                          {/* Name */}
-                          <div className="col-span-4">
-                            <p className="font-semibold">
-                              {entry.userId ? "משתמש" : "לא ידוע"}
-                              {isCurrentUser && <span className="text-xs text-accent mr-2">(אתה)</span>}
-                            </p>
-                          </div>
-
-                          {/* Points */}
-                          <div className="col-span-3 text-center">
-                            <p className="text-lg font-bold text-accent">
-                              {(entry.totalPoints || 0).toLocaleString("he-IL")}
-                            </p>
-                          </div>
-
-                          {/* Accuracy */}
-                          <div className="col-span-2 text-center">
-                            <div className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-600/20 text-green-400 text-xs font-semibold">
-                              {(parseFloat(entry.accuracyRate || "0") || 0).toFixed(1)}%
+                            <div className="col-span-4">
+                              <p className="font-semibold">
+                                {entry.userId ? "משתמש" : "לא ידוע"}
+                                {isCurrentUser && <span className="text-xs text-accent mr-2">(אתה)</span>}
+                              </p>
                             </div>
-                          </div>
 
-                          {/* Predictions */}
-                          <div className="col-span-2 text-center text-sm text-muted-foreground">
-                            {entry.totalPredictions || 0}
-                          </div>
-                        </div>
-                      );
-                    })
+                            <div className="col-span-3 text-center">
+                              <p className="text-lg font-bold text-accent">
+                                {(entry.totalPoints || 0).toLocaleString("he-IL")}
+                              </p>
+                            </div>
+
+                            <div className="col-span-2 text-center">
+                              <div className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-600/20 text-green-400 text-xs font-semibold">
+                                {(parseFloat(entry.accuracyRate || "0") || 0).toFixed(1)}%
+                              </div>
+                            </div>
+
+                            <div className="col-span-2 text-center text-sm text-muted-foreground">
+                              {entry.totalPredictions || 0}
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
                   )}
                 </div>
               </Card>

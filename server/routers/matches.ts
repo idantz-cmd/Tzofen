@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "../_core/trpc";
 import { getUpcomingMatches, getCompletedMatches, getMatchById, createMatch, updateMatchResult, createPrediction, getUserPredictionForMatch, getUserPredictions, updateLeaderboardScore, createNotification, getDb } from "../db";
 import { advancedPredictions, matchAdvancedStats } from "../../drizzle/schema";
@@ -56,9 +57,21 @@ export const matchesRouter = router({
     }))
     .mutation(async ({ ctx, input }) => {
       try {
+        // Deadline lock — cannot predict after match starts
+        const match = await getMatchById(input.matchId);
+        if (match && new Date() >= new Date(match.matchDate)) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "הניחוש נסגר — המשחק החל",
+          });
+        }
+
         const existing = await getUserPredictionForMatch(ctx.user.id, input.matchId);
         if (existing) {
-          throw new Error("תחזוקה זו כבר הוגשה");
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "ניחוש כבר הוגש למשחק זה",
+          });
         }
 
         await createPrediction({
