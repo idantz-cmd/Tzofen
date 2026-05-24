@@ -36,6 +36,8 @@ export const matches = sqliteTable("matches", {
   awayTeamScore: integer("awayTeamScore"),
   resultPublished: integer("resultPublished", { mode: "boolean" }).default(false),
   externalId: integer("externalId"),
+  matchweek: integer("matchweek"),
+  season: text("season").default("2025-26"),
   createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
   updatedAt: integer("updatedAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
 });
@@ -169,3 +171,55 @@ export const userStreaks = sqliteTable("userStreaks", {
 
 export type UserStreak = typeof userStreaks.$inferSelect;
 export type InsertUserStreak = typeof userStreaks.$inferInsert;
+
+export const teams = sqliteTable("teams", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  externalId: integer("externalId").notNull().unique(),
+  name: text("name").notNull(),
+  hebrewName: text("hebrewName"),
+  logoUrl: text("logoUrl"),
+  city: text("city"),
+  league: text("league", { enum: ["ligat_hael", "ligah_leumit"] }).notNull(),
+  season: text("season").notNull(),
+  scrapedAt: integer("scrapedAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
+});
+
+export type Team = typeof teams.$inferSelect;
+export type InsertTeam = typeof teams.$inferInsert;
+
+export const leaguePlayers = sqliteTable("leaguePlayers", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  externalTeamId: integer("externalTeamId").notNull(),
+  teamName: text("teamName").notNull(),
+  name: text("name").notNull(),
+  position: text("position"),
+  jerseyNumber: integer("jerseyNumber"),
+  season: text("season").notNull(),
+  scrapedAt: integer("scrapedAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
+});
+
+export type LeaguePlayer = typeof leaguePlayers.$inferSelect;
+export type InsertLeaguePlayer = typeof leaguePlayers.$inferInsert;
+
+export const leagueStandings = sqliteTable("leagueStandings", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  externalTeamId: integer("externalTeamId").notNull(),
+  teamName: text("teamName").notNull(),
+  teamLogo: text("teamLogo"),
+  league: text("league", { enum: ["ligat_hael", "ligah_leumit"] }).notNull(),
+  season: text("season").notNull(),
+  position: integer("position").notNull(),
+  played: integer("played").default(0).notNull(),
+  won: integer("won").default(0).notNull(),
+  drawn: integer("drawn").default(0).notNull(),
+  lost: integer("lost").default(0).notNull(),
+  goalsFor: integer("goalsFor").default(0).notNull(),
+  goalsAgainst: integer("goalsAgainst").default(0).notNull(),
+  goalDifference: integer("goalDifference").default(0).notNull(),
+  points: integer("points").default(0).notNull(),
+  form: text("form"),
+  updatedAt: integer("updatedAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
+});
+
+export type LeagueStanding = typeof leagueStandings.$inferSelect;
+export type InsertLeagueStanding = typeof leagueStandings.$inferInsert;

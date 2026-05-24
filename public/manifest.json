@@ -1,10 +1,11 @@
 {
-  "name": "BetingApp — ניחושי כדורגל",
-  "short_name": "BetingApp",
-  "description": "נחש תוצאות ליגת העל והליגה הלאומית",
+  "name": "GetWinIL — נחש וניצח",
+  "short_name": "GetWinIL",
+  "description": "נחש תוצאות ליגת העל והליגה הלאומית — צבור נקודות, התחרה עם חברים, קבל ניתוח AI מקצועי",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#f0f5ff",
+  "background_color": "#03090f",
   "theme_color": "#003DA5",
   "lang": "he",
   "dir": "rtl",
@@ -14,7 +15,8 @@
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-512.png",
@@ -27,11 +29,13 @@
   "shortcuts": [
     {
       "name": "משחקים קרובים",
+      "short_name": "משחקים",
       "url": "/matches",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "טבלת דירוג",
+      "short_name": "דירוג",
       "url": "/leaderboard",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }

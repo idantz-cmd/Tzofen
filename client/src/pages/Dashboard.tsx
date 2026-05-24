@@ -213,12 +213,12 @@ export default function Dashboard() {
                 <p className="text-xs text-muted-foreground mt-2">תחזיות נכונות ברצף</p>
               </Card>
 
-              <Card className="p-6 border-emerald-500/20">
+              <Card className="p-6 border-primary/20">
                 <div className="flex items-center gap-2 mb-3">
-                  <Trophy className="w-5 h-5 text-emerald-400" />
+                  <Trophy className="w-5 h-5 text-primary" />
                   <h4 className="font-bold">שיא אישי</h4>
                 </div>
-                <p className="text-4xl font-black text-emerald-400">{streakData?.bestStreak || 0}</p>
+                <p className="text-4xl font-black text-primary">{streakData?.bestStreak || 0}</p>
                 <p className="text-xs text-muted-foreground mt-2">הרצף הארוך ביותר שלך</p>
               </Card>
 
@@ -273,7 +273,7 @@ export default function Dashboard() {
             {/* Streak History */}
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-emerald-400" />
+                <TrendingUp className="w-5 h-5 text-primary" />
                 היסטוריית רצפים
               </h3>
               {streakHistory.length === 0 ? (
@@ -285,7 +285,7 @@ export default function Dashboard() {
                       key={pred.id}
                       className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold border ${
                         pred.isCorrect
-                          ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+                          ? "bg-primary/20 border-primary/40 text-primary"
                           : "bg-red-500/20 border-red-500/40 text-red-400"
                       }`}
                       title={`${getPredictionLabel(pred.prediction)} — ${pred.isCorrect ? "נכון" : "שגוי"}`}
@@ -313,10 +313,10 @@ export default function Dashboard() {
                     <div>
                       <h3 className="font-bold text-foreground">{comp.name}</h3>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {comp.type === "tournament" ? "טורניר" : "דו-קרב"} • הנקודות שלך: <span className="text-emerald-400 font-bold">{comp.myPoints || 0}</span>
+                        {comp.type === "tournament" ? "טורניר" : "דו-קרב"} • הנקודות שלך: <span className="text-primary font-bold">{comp.myPoints || 0}</span>
                       </p>
                     </div>
-                    <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                    <Badge className="bg-primary/20 text-primary border-primary/30">
                       פעיל
                     </Badge>
                   </div>
@@ -404,7 +404,7 @@ function StreakBadge({ emoji, title, description, unlocked }: {
       <p className={`text-sm font-bold ${unlocked ? "text-foreground" : "text-muted-foreground"}`}>{title}</p>
       <p className="text-[10px] text-muted-foreground">{description}</p>
       {unlocked && (
-        <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center">
+        <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: "oklch(0.55 0.110 232)" }}>
           <span className="text-[8px] text-white font-bold">✓</span>
         </div>
       )}

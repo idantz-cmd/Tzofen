@@ -7,13 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 import PredictionChart from "@/components/PredictionChart";
-import { TeamLogo, getTeamColors } from "@/components/TeamLogos";
+import { TeamLogo, getTeamColors, hebrewTeamName } from "@/components/TeamLogos";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { MatchCardSkeleton } from "@/components/ui/skeletons/MatchCardSkeleton";
 import { ConfettiCelebration } from "@/components/animations/ConfettiCelebration";
+import { ConversionModal, popQueuedPrediction, type QueuedPrediction } from "@/components/ConversionModal";
 import {
   Target,
   Trophy,
@@ -27,12 +27,26 @@ import {
   Flame,
 } from "lucide-react";
 
+function useGuestToken(): string {
+  const [token] = useState(() => {
+    let t = localStorage.getItem("beting_guest_token");
+    if (!t) {
+      t = crypto.randomUUID();
+      localStorage.setItem("beting_guest_token", t);
+    }
+    return t;
+  });
+  return token;
+}
+
 export default function Matches() {
   const { isAuthenticated } = useAuth();
+  const guestToken = useGuestToken();
   const [selectedLeague, setSelectedLeague] = useState<"ligat_hael" | "ligah_leumit">("ligat_hael");
   const [activeTab, setActiveTab] = useState<"upcoming" | "completed">("upcoming");
   const [expandedMatch, setExpandedMatch] = useState<number | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [conversionModal, setConversionModal] = useState<{ isOpen: boolean; queued: Omit<QueuedPrediction, "queuedAt"> | null }>({ isOpen: false, queued: null });
 
   const utils = trpc.useUtils();
 
@@ -42,9 +56,9 @@ export default function Matches() {
   const { data: completedMatches = [], isLoading: completedLoading, error: completedError, refetch: refetchCompleted } =
     trpc.matches.getCompleted.useQuery({ league: selectedLeague });
 
-  const { data: userPredictions = [] } = trpc.matches.getUserPredictions.useQuery(undefined, {
-    enabled: isAuthenticated,
-  });
+  const { data: userPredictions = [] } = trpc.matches.getUserPredictions.useQuery(
+    isAuthenticated ? undefined : { guestToken }
+  );
 
   const submitPredictionMutation = trpc.matches.submitPrediction.useMutation({
     onSuccess: () => {
@@ -58,12 +72,35 @@ export default function Matches() {
     },
   });
 
-  const handleSubmitPrediction = (matchId: number, prediction: "home_win" | "draw" | "away_win") => {
+  // After login/register redirect: auto-submit any queued prediction
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const queued = popQueuedPrediction();
+    if (!queued) return;
+    submitPredictionMutation.mutate({ matchId: queued.matchId, prediction: queued.prediction });
+  }, [isAuthenticated]);
+
+  const handleSubmitPrediction = (
+    matchId: number,
+    prediction: "home_win" | "draw" | "away_win",
+    homeTeam: string,
+    awayTeam: string,
+  ) => {
     if (!isAuthenticated) {
-      window.location.href = getLoginUrl();
+      setConversionModal({ isOpen: true, queued: { matchId, prediction, homeTeam, awayTeam } });
       return;
     }
     submitPredictionMutation.mutate({ matchId, prediction });
+  };
+
+  const handleCloseModal = () => setConversionModal({ isOpen: false, queued: null });
+
+  const handleGuestContinue = () => {
+    const q = conversionModal.queued;
+    setConversionModal({ isOpen: false, queued: null });
+    if (q) {
+      submitPredictionMutation.mutate({ matchId: q.matchId, prediction: q.prediction, guestToken });
+    }
   };
 
   const filteredMatches = matches.filter((m: any) => m.league === selectedLeague);
@@ -83,6 +120,12 @@ export default function Matches() {
     <div className="min-h-screen bg-background text-foreground">
       <Navigation />
       <ConfettiCelebration trigger={showConfetti} />
+      <ConversionModal
+        isOpen={conversionModal.isOpen}
+        queued={conversionModal.queued}
+        onClose={handleCloseModal}
+        onGuestContinue={handleGuestContinue}
+      />
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         <motion.div
@@ -137,7 +180,6 @@ export default function Matches() {
                     matches={filteredMatches}
                     isLoading={matchesLoading}
                     userPredictions={userPredictions}
-                    isAuthenticated={isAuthenticated}
                     onSubmitPrediction={handleSubmitPrediction}
                     isSubmitting={submitPredictionMutation.isPending}
                     formatDate={formatDate}
@@ -170,7 +212,6 @@ function MatchList({
   matches,
   isLoading,
   userPredictions,
-  isAuthenticated,
   onSubmitPrediction,
   isSubmitting,
   formatDate,
@@ -180,8 +221,7 @@ function MatchList({
   matches: any[];
   isLoading: boolean;
   userPredictions: any[];
-  isAuthenticated: boolean;
-  onSubmitPrediction: (matchId: number, prediction: "home_win" | "draw" | "away_win") => void;
+  onSubmitPrediction: (matchId: number, prediction: "home_win" | "draw" | "away_win", homeTeam: string, awayTeam: string) => void;
   isSubmitting: boolean;
   formatDate: (date: Date | string) => string;
   expandedMatch: number | null;
@@ -210,7 +250,6 @@ function MatchList({
         >
           <MatchCard
             match={match}
-            isAuthenticated={isAuthenticated}
             userPrediction={userPredictions.find((p: any) => p.matchId === match.id)}
             onSubmitPrediction={onSubmitPrediction}
             isSubmitting={isSubmitting}
@@ -251,7 +290,6 @@ function formatCountdown(ms: number) {
 /* ===== Match Card ===== */
 function MatchCard({
   match,
-  isAuthenticated,
   userPrediction,
   onSubmitPrediction,
   isSubmitting,
@@ -260,9 +298,8 @@ function MatchCard({
   onToggleExpand,
 }: {
   match: any;
-  isAuthenticated: boolean;
   userPrediction?: any;
-  onSubmitPrediction: (matchId: number, prediction: "home_win" | "draw" | "away_win") => void;
+  onSubmitPrediction: (matchId: number, prediction: "home_win" | "draw" | "away_win", homeTeam: string, awayTeam: string) => void;
   isSubmitting: boolean;
   formatDate: (date: Date | string) => string;
   isExpanded: boolean;
@@ -286,8 +323,10 @@ function MatchCard({
     },
   });
 
-  const homeColors = getTeamColors(match.homeTeam);
-  const awayColors = getTeamColors(match.awayTeam);
+  const homeHebrew = hebrewTeamName(match.homeTeam);
+  const awayHebrew = hebrewTeamName(match.awayTeam);
+  const homeColors = getTeamColors(homeHebrew);
+  const awayColors = getTeamColors(awayHebrew);
   const hasPredicted = !!userPrediction;
 
   return (
@@ -343,8 +382,8 @@ function MatchCard({
         {/* Teams Display */}
         <div className="grid grid-cols-3 items-center gap-2 mb-4">
           <div className="text-center">
-            <TeamLogo teamName={match.homeTeam} size="md" />
-            <p className="font-bold text-sm mt-1.5 text-foreground">{match.homeTeam}</p>
+            <TeamLogo teamName={match.homeTeam} logoUrl={match.homeTeamLogo} size="md" />
+            <p className="font-bold text-sm mt-1.5 text-foreground">{homeHebrew}</p>
             <p className="text-[10px] text-muted-foreground">בית</p>
           </div>
           <div className="text-center">
@@ -353,8 +392,8 @@ function MatchCard({
             </div>
           </div>
           <div className="text-center">
-            <TeamLogo teamName={match.awayTeam} size="md" />
-            <p className="font-bold text-sm mt-1.5 text-foreground">{match.awayTeam}</p>
+            <TeamLogo teamName={match.awayTeam} logoUrl={match.awayTeamLogo} size="md" />
+            <p className="font-bold text-sm mt-1.5 text-foreground">{awayHebrew}</p>
             <p className="text-[10px] text-muted-foreground">חוץ</p>
           </div>
         </div>
@@ -371,18 +410,18 @@ function MatchCard({
               <Lock className="w-4 h-4" style={{ color: "oklch(0.78 0.155 72)" }} />
               <span className="text-sm font-bold" style={{ color: "oklch(0.78 0.155 72)" }}>החיזוי שלך ננעל</span>
               <Badge className="mr-auto text-xs" style={{ background: "oklch(0.78 0.155 72 / 0.15)", color: "oklch(0.78 0.155 72)", border: "1px solid oklch(0.78 0.155 72 / 0.30)" }}>
-                {userPrediction.prediction === "home_win" ? `ניצחון ${match.homeTeam}` :
-                 userPrediction.prediction === "away_win" ? `ניצחון ${match.awayTeam}` : "תיקו"}
+                {userPrediction.prediction === "home_win" ? homeHebrew :
+                 userPrediction.prediction === "away_win" ? awayHebrew : "תיקו"}
               </Badge>
             </div>
           </div>
-        ) : isAuthenticated ? (
+        ) : (
           <div>
             <p className="text-xs text-muted-foreground mb-2 font-bold">חזה את התוצאה:</p>
             <div className="grid grid-cols-3 gap-2">
               {(["home_win", "draw", "away_win"] as const).map((pred) => {
                 const isSelected = selectedPrediction === pred;
-                const label = pred === "home_win" ? "ניצחון בית" : pred === "draw" ? "תיקו" : "ניצחון חוץ";
+                const label = pred === "home_win" ? `${homeHebrew}` : pred === "draw" ? "תיקו" : `${awayHebrew}`;
                 const color = pred === "home_win" ? homeColors.primary : pred === "away_win" ? awayColors.primary : "oklch(0.65 0.130 80)";
                 return (
                   <motion.button
@@ -469,7 +508,7 @@ function MatchCard({
               <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="mt-3">
                 <Button
                   onClick={() => {
-                    onSubmitPrediction(match.id, selectedPrediction as "home_win" | "draw" | "away_win");
+                    onSubmitPrediction(match.id, selectedPrediction as "home_win" | "draw" | "away_win", homeHebrew, awayHebrew);
                     if (goalsOver || cornersOver || yellowCards || redCard) {
                       advancedMutation.mutate({
                         matchId: match.id,
@@ -488,13 +527,6 @@ function MatchCard({
                 </Button>
               </motion.div>
             )}
-          </div>
-        ) : (
-          <div className="p-3 rounded-lg bg-muted/5 border border-border/15 text-center">
-            <p className="text-xs text-muted-foreground mb-2">התחבר כדי לחזות תוצאות</p>
-            <Button size="sm" variant="accent" className="text-xs h-8" onClick={() => { window.location.href = getLoginUrl(); }}>
-              התחבר עכשיו
-            </Button>
           </div>
         )}
 
@@ -590,8 +622,10 @@ function CompletedMatchCard({
   formatDate: (date: Date | string) => string;
 }) {
   const { isAuthenticated } = useAuth();
-  const homeColors = getTeamColors(match.homeTeam);
-  const awayColors = getTeamColors(match.awayTeam);
+  const homeHebrew = hebrewTeamName(match.homeTeam);
+  const awayHebrew = hebrewTeamName(match.awayTeam);
+  const homeColors = getTeamColors(homeHebrew);
+  const awayColors = getTeamColors(awayHebrew);
   const userCorrect = userPrediction?.prediction === match.actualResult;
 
   const { data: advancedResults } = trpc.matches.getAdvancedResults.useQuery(
@@ -601,9 +635,9 @@ function CompletedMatchCard({
 
   const getResultLabel = (result: string) => {
     switch (result) {
-      case "home_win": return `ניצחון ${match.homeTeam}`;
+      case "home_win": return homeHebrew;
       case "draw": return "תיקו";
-      case "away_win": return `ניצחון ${match.awayTeam}`;
+      case "away_win": return awayHebrew;
       default: return "";
     }
   };
@@ -634,8 +668,8 @@ function CompletedMatchCard({
 
         <div className="grid grid-cols-3 items-center gap-2">
           <div className="text-center">
-            <TeamLogo teamName={match.homeTeam} size="sm" />
-            <p className="font-bold text-xs mt-1">{match.homeTeam}</p>
+            <TeamLogo teamName={match.homeTeam} logoUrl={match.homeTeamLogo} size="sm" />
+            <p className="font-bold text-xs mt-1">{homeHebrew}</p>
           </div>
           <div className="text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/10 border border-border/20">
@@ -648,8 +682,8 @@ function CompletedMatchCard({
             )}
           </div>
           <div className="text-center">
-            <TeamLogo teamName={match.awayTeam} size="sm" />
-            <p className="font-bold text-xs mt-1">{match.awayTeam}</p>
+            <TeamLogo teamName={match.awayTeam} logoUrl={match.awayTeamLogo} size="sm" />
+            <p className="font-bold text-xs mt-1">{awayHebrew}</p>
           </div>
         </div>
 

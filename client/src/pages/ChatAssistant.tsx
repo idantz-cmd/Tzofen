@@ -178,7 +178,7 @@ ${data.responses.tactical.response}
         <Navigation />
         <main className="max-w-4xl mx-auto px-4 py-12">
           <div className="text-center mb-10">
-            <BarChart3 className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
+            <BarChart3 className="w-12 h-12 text-primary mx-auto mb-3" />
             <h1 className="text-3xl font-black mb-2">מערכת ניתוח מקצועית</h1>
             <p className="text-muted-foreground">נתונים מ-1990 ועד היום • ליגת העל וליגה לאומית</p>
           </div>
@@ -188,7 +188,7 @@ ${data.responses.tactical.response}
             {ANALYSIS_MODULES.map((module) => (
               <Card key={module.id} className="p-4 border-border/30">
                 <div className="flex items-center gap-3">
-                  <div className="text-emerald-400">{module.icon}</div>
+                  <div className="text-primary">{module.icon}</div>
                   <div>
                     <p className="font-bold text-foreground">{module.name}</p>
                     <p className="text-xs text-muted-foreground">{module.description}</p>
@@ -202,7 +202,7 @@ ${data.responses.tactical.response}
           <div className="text-center">
             <p className="text-sm text-muted-foreground mb-4">התחבר כדי לשאול שאלות ולקבל ניתוחים מקצועיים</p>
             <Button
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+              variant="accent"
               onClick={() => { window.location.href = getLoginUrl(); }}
             >
               התחבר עכשיו
@@ -232,11 +232,11 @@ ${data.responses.tactical.response}
               onClick={() => setSelectedModule(selectedModule === module.id ? null : module.id)}
               className={`p-3 rounded-lg border text-right transition-all duration-200 ${
                 selectedModule === module.id
-                  ? "border-emerald-500 bg-emerald-500/10 shadow-[0_0_8px_rgba(16,185,129,0.15)]"
-                  : "border-border/30 hover:border-emerald-500/40 bg-card/50"
+                  ? "border-primary bg-primary/10 shadow-[0_0_8px_oklch(0.55_0.110_232_/_0.20)]"
+                  : "border-border/30 hover:border-primary/40 bg-card/50"
               }`}
             >
-              <div className={`mb-1 ${selectedModule === module.id ? "text-emerald-400" : "text-muted-foreground"}`}>
+              <div className={`mb-1 ${selectedModule === module.id ? "text-primary" : "text-muted-foreground"}`}>
                 {module.icon}
               </div>
               <h3 className="font-bold text-xs">{module.name}</h3>
@@ -249,11 +249,11 @@ ${data.responses.tactical.response}
             onClick={() => setSelectedModule(selectedModule === "all" ? null : "all")}
             className={`p-3 rounded-lg border text-right transition-all duration-200 ${
               selectedModule === "all"
-                ? "border-emerald-500 bg-emerald-500/10 shadow-[0_0_8px_rgba(16,185,129,0.15)]"
-                : "border-border/30 hover:border-emerald-500/40 bg-card/50"
+                ? "border-primary bg-primary/10 shadow-[0_0_8px_oklch(0.55_0.110_232_/_0.20)]"
+                : "border-border/30 hover:border-primary/40 bg-card/50"
             }`}
           >
-            <div className={`mb-1 ${selectedModule === "all" ? "text-emerald-400" : "text-muted-foreground"}`}>
+            <div className={`mb-1 ${selectedModule === "all" ? "text-primary" : "text-muted-foreground"}`}>
               <BarChart3 className="w-5 h-5" />
             </div>
             <h3 className="font-bold text-xs">ניתוח מקיף</h3>
@@ -273,12 +273,13 @@ ${data.responses.tactical.response}
                 <div
                   className={`max-w-[85%] lg:max-w-[70%] px-4 py-3 rounded-lg ${
                     message.role === "user"
-                      ? "bg-emerald-600 text-white"
+                      ? "text-white"
                       : "bg-muted/20 border border-border/20 text-foreground"
                   }`}
+                  style={message.role === "user" ? { background: "oklch(0.45 0.085 232)" } : {}}
                 >
                   {message.agentName && message.role === "assistant" && (
-                    <div className="text-xs font-bold text-emerald-400 mb-2">
+                    <div className="text-xs font-bold text-primary mb-2">
                       {message.agentName}
                     </div>
                   )}
@@ -341,7 +342,8 @@ ${data.responses.tactical.response}
               <Button
                 onClick={handleSendMessage}
                 disabled={isLoading || !inputValue.trim()}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 active:scale-[0.97] transition-transform duration-150"
+                variant="accent"
+                className="px-4"
               >
                 <Send className="w-4 h-4" />
               </Button>

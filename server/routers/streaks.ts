@@ -1,8 +1,8 @@
 ﻿import { z } from "zod";
 import { router, protectedProcedure } from "../_core/trpc";
 import { getDb } from "../db";
-import { userStreaks, predictions, users } from "../../drizzle/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { userStreaks, predictions, users, notifications } from "../../drizzle/schema";
+import { eq, desc, and } from "drizzle-orm";
 
 export const streaksRouter = router({
   // Get my current streak
@@ -70,6 +70,42 @@ export const streaksRouter = router({
       .limit(30);
 
     return recentPredictions.filter((p) => p.isCorrect !== null);
+  }),
+
+  // Get user's notifications (unread first)
+  getNotifications: protectedProcedure.query(async ({ ctx }) => {
+    const db = getDb();
+    if (!db) return [];
+    return db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.userId, ctx.user.id))
+      .orderBy(desc(notifications.createdAt))
+      .limit(50);
+  }),
+
+  // Mark a single notification as read
+  markNotificationRead: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = getDb();
+      if (!db) return { success: false };
+      await db
+        .update(notifications)
+        .set({ read: true })
+        .where(and(eq(notifications.id, input.id), eq(notifications.userId, ctx.user.id)));
+      return { success: true };
+    }),
+
+  // Mark all notifications as read
+  markAllRead: protectedProcedure.mutation(async ({ ctx }) => {
+    const db = getDb();
+    if (!db) return { success: false };
+    await db
+      .update(notifications)
+      .set({ read: true })
+      .where(and(eq(notifications.userId, ctx.user.id), eq(notifications.read, false)));
+    return { success: true };
   }),
 });
 

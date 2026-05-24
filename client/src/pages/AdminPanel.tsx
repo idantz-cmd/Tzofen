@@ -8,7 +8,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
-import { Download, RefreshCw, Calendar, CheckCircle, AlertCircle, Database } from "lucide-react";
+import { Download, RefreshCw, Calendar, CheckCircle, AlertCircle, Database, TrendingUp, Users, Send, Flame, Activity, Moon, TrendingDown } from "lucide-react";
 
 export default function AdminPanel() {
   const { user } = useAuth();
@@ -117,15 +117,22 @@ export default function AdminPanel() {
         <h1 className="text-4xl font-bold mb-8">⚙️ ניהול מערכת</h1>
 
         <Tabs defaultValue="publish" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="publish">פרסום תוצאות</TabsTrigger>
             <TabsTrigger value="import">ייבוא אוטומטי</TabsTrigger>
+            <TabsTrigger value="leaguedata">נתוני ליגה</TabsTrigger>
             <TabsTrigger value="history">היסטוריה</TabsTrigger>
+            <TabsTrigger value="engagement">מעורבות</TabsTrigger>
           </TabsList>
 
           {/* Import Tab */}
           <TabsContent value="import" className="space-y-6">
             <ImportPanel />
+          </TabsContent>
+
+          {/* League Data Tab */}
+          <TabsContent value="leaguedata" className="space-y-6">
+            <LeagueDataPanel />
           </TabsContent>
 
           {/* Publish Results Tab */}
@@ -314,6 +321,11 @@ export default function AdminPanel() {
                 )}
               </div>
             </div>
+          </TabsContent>
+
+          {/* Engagement Tab */}
+          <TabsContent value="engagement">
+            <EngagementPanel />
           </TabsContent>
 
           {/* History Tab */}
@@ -556,6 +568,329 @@ function ImportPanel() {
           <li>"ייבא עונה מלאה" — מביא את כל ~536 המשחקים מהעונה</li>
           <li>"ייבוא אוטומטי" — מריץ כל 6 שעות ומעדכן משחקים/תוצאות</li>
         </ul>
+      </Card>
+    </div>
+  );
+}
+
+/**
+ * League Data Panel — one-time scrape of teams, standings, players from football.co.il
+ */
+function LeagueDataPanel() {
+  const { data: status, refetch: refetchStatus } = trpc.leagueData.getDataStatus.useQuery();
+
+  const scrapeAll = trpc.leagueData.scrapeAll.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      refetchStatus();
+    },
+    onError: (e) => toast.error(`שגיאה: ${e.message}`),
+  });
+
+  return (
+    <div className="space-y-6">
+      {/* Status Card */}
+      <Card className="p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <TrendingUp className="w-5 h-5 text-accent" />
+          <h3 className="text-lg font-semibold">סטטוס נתוני ליגה</h3>
+        </div>
+        {status ? (
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center p-3 rounded-lg" style={{ background: "oklch(0.22 0.060 258 / 0.5)" }}>
+              <p className="text-2xl font-bold" style={{ color: "oklch(0.72 0.190 230)" }}>{status.teams}</p>
+              <p className="text-xs text-muted-foreground mt-1">קבוצות</p>
+            </div>
+            <div className="text-center p-3 rounded-lg" style={{ background: "oklch(0.22 0.060 258 / 0.5)" }}>
+              <p className="text-2xl font-bold" style={{ color: "oklch(0.84 0.190 76)" }}>{status.standings}</p>
+              <p className="text-xs text-muted-foreground mt-1">שורות טבלה</p>
+            </div>
+            <div className="text-center p-3 rounded-lg" style={{ background: "oklch(0.22 0.060 258 / 0.5)" }}>
+              <p className="text-2xl font-bold" style={{ color: "oklch(0.72 0.190 230)" }}>{status.players}</p>
+              <p className="text-xs text-muted-foreground mt-1">שחקנים</p>
+            </div>
+          </div>
+        ) : (
+          <Spinner />
+        )}
+      </Card>
+
+      {/* Scrape Card */}
+      <Card className="p-6">
+        <div className="flex items-center gap-3 mb-3">
+          <Database className="w-5 h-5 text-accent" />
+          <h3 className="text-lg font-semibold">סריקה חד-פעמית</h3>
+        </div>
+        <p className="text-sm text-muted-foreground mb-5">
+          מריץ את כל 4 הסקילים: חילוץ קבוצות, חישוב טבלאות, גריפת שחקנים ופרטי קבוצה.
+          הנתונים נמחקים ונכתבים מחדש בכל הפעלה.
+        </p>
+
+        <div className="space-y-3 mb-5 text-sm">
+          {[
+            { icon: "①", label: "Skill 1 — חילוץ קבוצות מנתוני gamesByDate (ללא בקשות נוספות)" },
+            { icon: "②", label: "Skill 2 — חישוב טבלת ליגה מתוצאות משחקים גמורים" },
+            { icon: "③", label: "Skill 3 — גריפת רשימת שחקנים מדפי הקבוצות" },
+            { icon: "④", label: "Skill 4 — גריפת עיר/מיקום קבוצה מדפי הקבוצות" },
+          ].map((s) => (
+            <div key={s.icon} className="flex items-start gap-2 text-muted-foreground">
+              <span style={{ color: "oklch(0.84 0.190 76)" }}>{s.icon}</span>
+              <span>{s.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <Button
+          onClick={() => scrapeAll.mutate({ season: "25/26" })}
+          disabled={scrapeAll.isPending}
+          className="flex items-center gap-2"
+          style={scrapeAll.isPending ? {} : { background: "oklch(0.55 0.110 232)" }}
+        >
+          {scrapeAll.isPending ? (
+            <>
+              <Spinner className="w-4 h-4" />
+              סורק... (עלול לקחת 1-3 דקות)
+            </>
+          ) : (
+            <>
+              <Users className="w-4 h-4" />
+              הפעל סריקה מלאה
+            </>
+          )}
+        </Button>
+
+        {scrapeAll.data && (
+          <div className="mt-4 p-3 rounded-lg border border-border/40 text-sm space-y-1" style={{ background: "oklch(0.22 0.060 258 / 0.4)" }}>
+            <p className="font-semibold text-green-400">✓ סריקה הושלמה</p>
+            <p className="text-muted-foreground">קבוצות: {scrapeAll.data.teams}</p>
+            <p className="text-muted-foreground">ליגת העל: {scrapeAll.data.standings?.ligat_hael} שורות</p>
+            <p className="text-muted-foreground">ליגה לאומית: {scrapeAll.data.standings?.ligah_leumit} שורות</p>
+            <p className="text-muted-foreground">שחקנים: {scrapeAll.data.players}</p>
+            {scrapeAll.data.errors && scrapeAll.data.errors.length > 0 && (
+              <p className="text-yellow-400 text-xs mt-2">{scrapeAll.data.errors.length} שגיאות קטנות (לא קריטי)</p>
+            )}
+          </div>
+        )}
+      </Card>
+
+      <Card className="p-4 border-primary/20 bg-primary/5">
+        <p className="text-xs text-muted-foreground">
+          ℹ️ הנתונים נמשכים מ-football.co.il ללא API key. טבלאות הליגה מחושבות מנתוני
+          המשחקים עצמם (מדויק ב-100%). רשימות שחקנים תלויות במבנה דפי הקבוצות.
+        </p>
+      </Card>
+    </div>
+  );
+}
+
+// ── Segment visual config (colours / icons) — client-only, never sent to users
+const SEGMENT_UI = {
+  engaged:  { icon: Flame,         color: "oklch(0.55 0.110 232)", bg: "oklch(0.55 0.110 232 / 0.10)", border: "oklch(0.55 0.110 232 / 0.25)" },
+  active:   { icon: Activity,      color: "oklch(0.78 0.155 72)",  bg: "oklch(0.78 0.155 72  / 0.10)", border: "oklch(0.78 0.155 72  / 0.25)" },
+  fading:   { icon: TrendingDown,  color: "oklch(0.72 0.190 30)",  bg: "oklch(0.72 0.190 30  / 0.10)", border: "oklch(0.72 0.190 30  / 0.25)" },
+  dormant:  { icon: Moon,          color: "oklch(0.62 0.060 258)", bg: "oklch(0.62 0.060 258 / 0.10)", border: "oklch(0.62 0.060 258 / 0.25)" },
+} as const;
+
+type SegmentKey = "engaged" | "active" | "fading" | "dormant";
+
+/**
+ * Player Engagement Segmentation panel — in-app notifications only, no CRM/email.
+ */
+function EngagementPanel() {
+  const { data: segments = [], isLoading, refetch } = trpc.engagement.getSegments.useQuery();
+  const [selected, setSelected] = useState<SegmentKey | null>(null);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+
+  const sendMutation = trpc.engagement.sendSegmentNotification.useMutation({
+    onSuccess: (data) => {
+      toast.success(`נשלחו ${data.sent} התראות בהצלחה`);
+      setSelected(null);
+      setTitle("");
+      setContent("");
+    },
+    onError: (e) => toast.error(`שגיאה: ${e.message}`),
+  });
+
+  if (isLoading) return <div className="flex justify-center py-16"><Spinner /></div>;
+
+  const selectedSegment = segments.find((s) => s.key === selected);
+  const totalUsers = segments.reduce((sum, s) => sum + s.count, 0);
+
+  return (
+    <div className="space-y-6" dir="rtl">
+      {/* Summary bar */}
+      <Card className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-bold">סגמנטציית שחקנים</h3>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {totalUsers} משתמשים רשומים סה"כ
+          </div>
+        </div>
+
+        {/* Progress bar showing distribution */}
+        <div className="flex h-3 rounded-full overflow-hidden gap-0.5">
+          {(["engaged", "active", "fading", "dormant"] as SegmentKey[]).map((key) => {
+            const seg = segments.find((s) => s.key === key);
+            const pct = totalUsers > 0 && seg ? (seg.count / totalUsers) * 100 : 0;
+            return (
+              <div
+                key={key}
+                title={`${seg?.label}: ${seg?.count}`}
+                style={{ width: `${pct}%`, background: SEGMENT_UI[key].color, minWidth: pct > 0 ? "4px" : "0" }}
+              />
+            );
+          })}
+        </div>
+        <div className="flex gap-4 mt-2 flex-wrap">
+          {(["engaged", "active", "fading", "dormant"] as SegmentKey[]).map((key) => {
+            const seg = segments.find((s) => s.key === key);
+            return (
+              <div key={key} className="flex items-center gap-1.5 text-xs">
+                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: SEGMENT_UI[key].color }} />
+                <span className="text-muted-foreground">{seg?.label} ({seg?.count})</span>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* Segment cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {segments.map((seg) => {
+          const key = seg.key as SegmentKey;
+          const ui = SEGMENT_UI[key];
+          const Icon = ui.icon;
+          const isActive = selected === key;
+
+          return (
+            <Card
+              key={key}
+              className={`p-5 cursor-pointer transition-all duration-200 ${isActive ? "ring-2 ring-offset-1 ring-offset-background" : "hover:border-border/60"}`}
+              style={{
+                background: ui.bg,
+                borderColor: isActive ? ui.color : ui.border,
+                ...(isActive ? { "--tw-ring-color": ui.color } as React.CSSProperties : {}),
+              }}
+              onClick={() => setSelected(isActive ? null : key)}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${ui.color}20` }}>
+                    <Icon className="w-4 h-4" style={{ color: ui.color }} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm">{seg.label}</p>
+                    <p className="text-xs text-muted-foreground">{seg.description}</p>
+                  </div>
+                </div>
+                <span className="text-2xl font-black" style={{ color: ui.color }}>{seg.count}</span>
+              </div>
+
+              {/* Stats row */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="text-center px-2 py-1.5 rounded-lg bg-background/30">
+                  <p className="text-lg font-bold">{seg.avgStreak}</p>
+                  <p className="text-[10px] text-muted-foreground">סטריק ממוצע</p>
+                </div>
+                <div className="text-center px-2 py-1.5 rounded-lg bg-background/30">
+                  <p className="text-lg font-bold">{seg.avgPoints}</p>
+                  <p className="text-[10px] text-muted-foreground">נקודות ממוצע</p>
+                </div>
+              </div>
+
+              {/* Sample names */}
+              {seg.samples.length > 0 && (
+                <p className="text-[11px] text-muted-foreground truncate">
+                  לדוגמה: {seg.samples.join("، ")}
+                </p>
+              )}
+
+              {/* Expand indicator */}
+              <div className="flex items-center gap-1 mt-3 text-xs font-medium" style={{ color: ui.color }}>
+                <Send className="w-3 h-3" />
+                {isActive ? "בטל בחירה" : "שלח התראה לסגמנט זה"}
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Notification composer — slides in when a segment is selected */}
+      {selected && selectedSegment && (
+        <Card className="p-6 border-primary/20" style={{ background: "oklch(0.18 0.055 258)" }}>
+          <h3 className="font-bold mb-1">
+            שלח התראה אל: <span style={{ color: SEGMENT_UI[selected].color }}>{selectedSegment.label}</span>
+          </h3>
+          <p className="text-xs text-muted-foreground mb-5">
+            ההתראה תופיע בפעמון של {selectedSegment.count} משתמשים.
+            ⚠️ שליחה מחדש תוסיף התראה נוספת — ודא שהתוכן נכון.
+          </p>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold mb-1.5">כותרת *</label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                maxLength={80}
+                placeholder="לדוגמה: משחק חשוב הלילה! 🔥"
+                className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-sm"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1 text-left">{title.length}/80</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-1.5">תוכן (אופציונלי)</label>
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                maxLength={300}
+                rows={3}
+                placeholder="פרטים נוספים, קישור, או הודעת עידוד..."
+                className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-sm resize-none"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1 text-left">{content.length}/300</p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() =>
+                  sendMutation.mutate({
+                    segment: selected,
+                    title: title.trim(),
+                    content: content.trim() || undefined,
+                  })
+                }
+                disabled={!title.trim() || sendMutation.isPending}
+                className="flex items-center gap-2 font-bold"
+                style={{ background: SEGMENT_UI[selected].color }}
+              >
+                {sendMutation.isPending ? (
+                  <Spinner className="w-4 h-4" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+                שלח ל-{selectedSegment.count} משתמשים
+              </Button>
+              <Button variant="outline" onClick={() => { setSelected(null); setTitle(""); setContent(""); }}>
+                ביטול
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Constraint reminder */}
+      <Card className="p-4 border-amber-500/20 bg-amber-500/5">
+        <p className="text-xs text-muted-foreground">
+          ℹ️ התראות הן <strong>בתוך האפליקציה בלבד</strong> — ללא מייל, SMS, או CRM חיצוני.
+          כל התראה מופיעה בפעמון של המשתמש בסגמנט. הנתונים מחושבים בזמן אמת מה-DB.
+        </p>
       </Card>
     </div>
   );

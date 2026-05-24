@@ -47,9 +47,59 @@ export const LIGA_LEUMIT_TEAMS: Record<string, TeamInfo> = {
   "הפועל עכו": { name: "הפועל עכו", shortName: "הפ. עכו", primaryColor: "#008C45", secondaryColor: "#FFFFFF", city: "עכו", initials: "הע" },
 };
 
+// English API name → Hebrew display name
+const EN_TO_HE: Record<string, string> = {
+  "Maccabi Tel Aviv": "מכבי תל אביב",
+  "Maccabi Haifa": "מכבי חיפה",
+  "Hapoel Beer Sheva": "הפועל באר שבע",
+  "Beitar Jerusalem": "ביתר ירושלים",
+  "Hapoel Tel Aviv": "הפועל תל אביב",
+  "Hapoel Haifa": "הפועל חיפה",
+  "Maccabi Netanya": "מכבי נתניה",
+  "Ashdod": "מ.ס. אשדוד",
+  "Ironi Kiryat Shmona": "עירוני קריית שמונה",
+  "Bnei Sakhnin": "בני סכנין",
+  "Hapoel Katamon": "הפועל קטמון",
+  "Hapoel Petah Tikva": "הפועל פתח תקווה",
+  "Maccabi Petah Tikva": "מכבי פתח תקווה",
+  "Hapoel Hadera": "הפועל חדרה",
+  "Maccabi Bnei Raina": "מכבי בני ריינה",
+  "Ironi Tiberias": "עירוני טבריה",
+  "Hapoel Acre": "הפועל עכו",
+  "Hapoel Afula": "הפועל עפולה",
+  "Hapoel Nazareth Illit": "הפועל נוף הגליל",
+  "Hapoel Ramat Gan": "הפועל רמת גן",
+  "Hapoel Ramat HaSharon": "הפועל רמת השרון",
+  "Hapoel Rishon LeZion": "הפועל ראשון לציון",
+  "Hapoel Umm al-Fahm": "הפועל אום אל פחם",
+  "Kafr Qasim": "מ.ס. כפר קאסם",
+  "Maccabi Herzliya": "מכבי הרצליה",
+  "Bnei Yehuda": "בני יהודה",
+  "Hapoel Kfar Saba": "הפועל כפר סבא",
+  "Hapoel Ra'anana": "הפועל רעננה",
+  "Hapoel Kfar Shalem": "הפועל כפר שלם",
+  "Maccabi Kabilio Jaffa": "מכבי קבילייו יפו",
+  "Nordia Jerusalem": "נורדיה ירושלים",
+  "Tira": "הפועל טירה",
+  "Ihud Bnei Shfaram": "איחוד בני שפרעם",
+  "Ironi Modi'in": "עירוני מודיעין",
+  "Kiryat Yam SC": "קריית ים",
+  "Hapoel Jerusalem": "הפועל ירושלים",
+  "Sektzia Nes Tziona": "סקציה נס ציונה",
+  "Maccabi Ahi Nazareth": "מכבי אחי נצרת",
+  "Hapoel Petah-Tikva": "הפועל פתח תקווה",
+};
+
+/** Translate English API name to Hebrew. Returns original if no mapping found. */
+export function hebrewTeamName(name: string): string {
+  return EN_TO_HE[name] ?? name;
+}
+
 // Get all teams
 export function getTeamInfo(teamName: string): TeamInfo | undefined {
-  return LIGAT_HAEL_TEAMS[teamName] || LIGA_LEUMIT_TEAMS[teamName];
+  const hebrew = hebrewTeamName(teamName);
+  return LIGAT_HAEL_TEAMS[hebrew] || LIGA_LEUMIT_TEAMS[hebrew] ||
+         LIGAT_HAEL_TEAMS[teamName] || LIGA_LEUMIT_TEAMS[teamName];
 }
 
 /**
@@ -90,19 +140,37 @@ export function getTeamColorVars(teamName: string) {
   return { primary: team.primaryColor, secondary: team.secondaryColor };
 }
 
-// Team Badge Component — Shield-style SVG crest with team colors
+// Team Badge Component — real logo image when available, SVG shield as fallback
 interface TeamBadgeProps {
   teamName: string;
   size?: "sm" | "md" | "lg" | "xl";
   showName?: boolean;
+  logoUrl?: string | null;
 }
 
-export function TeamBadge({ teamName, size = "md", showName = false }: TeamBadgeProps) {
+export function TeamBadge({ teamName, size = "md", showName = false, logoUrl }: TeamBadgeProps) {
+  const displayName = hebrewTeamName(teamName);
   const team = getTeamInfo(teamName);
-  const sizeMap = { sm: 36, md: 52, lg: 68, xl: 88 };
+  const sizeMap = { sm: 36, md: 48, lg: 64, xl: 88 };
   const textSize = { sm: "text-[8px]", md: "text-[10px]", lg: "text-xs", xl: "text-sm" };
   const initialsSize = { sm: "text-[10px]", md: "text-sm", lg: "text-lg", xl: "text-xl" };
   const dim = sizeMap[size];
+
+  // Use real logo from API when available
+  if (logoUrl) {
+    return (
+      <div className="flex flex-col items-center gap-1">
+        <img
+          src={logoUrl}
+          alt={displayName}
+          style={{ width: dim, height: dim }}
+          className="object-contain drop-shadow-md"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+        />
+        {showName && <span className={`${textSize[size]} text-muted-foreground text-center max-w-20 leading-tight font-semibold`}>{displayName}</span>}
+      </div>
+    );
+  }
 
   if (!team) {
     return (
@@ -112,10 +180,10 @@ export function TeamBadge({ teamName, size = "md", showName = false }: TeamBadge
           style={{ width: dim, height: dim }}
         >
           <span className={`font-bold text-muted-foreground ${textSize[size]}`}>
-            {teamName.slice(0, 2)}
+            {displayName.slice(0, 2)}
           </span>
         </div>
-        {showName && <span className="text-xs text-muted-foreground text-center max-w-16 truncate">{teamName}</span>}
+        {showName && <span className="text-xs text-muted-foreground text-center max-w-16 truncate">{displayName}</span>}
       </div>
     );
   }
@@ -165,7 +233,7 @@ export function TeamBadge({ teamName, size = "md", showName = false }: TeamBadge
       </div>
       {showName && (
         <span className={`${textSize[size]} text-muted-foreground text-center max-w-20 leading-tight font-semibold`}>
-          {team.shortName}
+          {team.shortName ?? displayName}
         </span>
       )}
     </div>

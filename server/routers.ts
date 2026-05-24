@@ -13,6 +13,9 @@ import { competitionsRouter } from "./routers/competitions";
 import { userChatRouter } from "./routers/userChat";
 import { streaksRouter } from "./routers/streaks";
 import { importRouter } from "./routers/import";
+import { leagueDataRouter } from "./routers/leagueData";
+import { newsRouter } from "./routers/news";
+import { engagementRouter } from "./routers/engagement";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -39,6 +42,9 @@ export const appRouter = router({
   userChat: userChatRouter,
   streaks: streaksRouter,
   import: importRouter,
+  leagueData: leagueDataRouter,
+  news: newsRouter,
+  engagement: engagementRouter,
 });
 
 export type AppRouter = typeof appRouter;

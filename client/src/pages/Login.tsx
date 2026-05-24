@@ -62,16 +62,27 @@ export default function Login() {
           <motion.div
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mb-4"
+            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4"
+            style={{ background: "oklch(0.78 0.155 72 / 0.10)", border: "1px solid oklch(0.78 0.155 72 / 0.25)" }}
           >
-            <Trophy className="w-8 h-8 text-emerald-400" />
+            <Trophy className="w-8 h-8" style={{ color: "oklch(0.78 0.155 72)" }} />
           </motion.div>
-          <h1 className="text-2xl font-bold text-foreground">BetingApp</h1>
-          <p className="text-sm text-muted-foreground mt-1">תחזיות כדורגל ישראלי</p>
+          {/* GetWinIL brand */}
+          <div className="leading-none inline-block mt-1" dir="ltr">
+            <div className="h-[2.5px] rounded-full mb-[4px]" style={{ background: "#0038A8" }} />
+            <div className="flex items-center justify-center">
+              <span className="font-light text-[1.45rem] tracking-tight" style={{ color: "#0038A8", fontFamily: "'Rubik', sans-serif" }}>Get</span>
+              <span className="font-black text-[1.45rem] tracking-tight" style={{ color: "#0038A8", fontFamily: "'Rubik', sans-serif" }}>Win</span>
+              <span className="text-[11px] font-bold mx-[2px] relative" style={{ color: "#0038A8", top: "-2px" }}>✡</span>
+              <span className="font-black text-[1.45rem] tracking-tight" style={{ color: "#0038A8", fontFamily: "'Rubik', sans-serif" }}>L</span>
+            </div>
+            <div className="h-[2.5px] rounded-full mt-[4px]" style={{ background: "#0038A8" }} />
+          </div>
+          <p className="text-sm text-muted-foreground mt-2">נחש וניצח בכדורגל הישראלי</p>
         </div>
 
         {/* Card */}
-        <div className="bg-card border border-border/40 rounded-2xl p-6 shadow-xl">
+        <div className="card-glass rounded-2xl p-6">
           {/* Tab Toggle */}
           <div className="flex rounded-lg bg-muted/50 p-1 mb-6">
             {(["login", "register"] as Mode[]).map((m) => (
@@ -145,7 +156,8 @@ export default function Login() {
 
             <Button
               type="submit"
-              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold active:scale-[0.97] transition-transform"
+              variant="accent"
+              className="w-full font-bold"
               disabled={loading}
             >
               {loading ? (

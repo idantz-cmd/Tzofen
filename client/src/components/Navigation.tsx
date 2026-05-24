@@ -3,8 +3,9 @@ import { getLoginUrl } from "@/const";
 import { Link, useLocation } from "wouter";
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { Trophy, Target, BarChart3, Users, MessageSquare, Settings, LogOut, User, Flame, TrendingUp } from "lucide-react";
+import { Trophy, Target, BarChart3, Users, MessageSquare, Settings, LogOut, User, Flame, TrendingUp, Brain, Newspaper } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { NewsTicker } from "./layout/NewsTicker";
 
 export default function Navigation() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -13,23 +14,32 @@ export default function Navigation() {
   const isActive = (path: string) => location === path;
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border/40" style={{ background: "oklch(0.99 0.008 228 / 0.92)", backdropFilter: "blur(24px) saturate(180%)", borderBottomColor: "oklch(0.50 0.160 240 / 0.22)" }}>
+    <div className="sticky top-0 z-50">
+    <nav className="border-b border-border/40" style={{ background: "oklch(0.99 0.008 228 / 0.92)", backdropFilter: "blur(24px) saturate(180%)", borderBottomColor: "oklch(0.50 0.160 240 / 0.22)" }}>
       <div className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <Link href="/" className="flex items-center gap-2.5 hover:opacity-85 transition-opacity select-none">
+            {/* Icon: Star of David on Israeli blue */}
             <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center shadow-md"
-              style={{ background: "linear-gradient(135deg, oklch(0.58 0.165 238), oklch(0.40 0.160 248))", boxShadow: "0 2px 8px oklch(0.50 0.165 240 / 0.50)" }}
+              className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ background: "linear-gradient(150deg, #0038A8, #001E6B)", boxShadow: "0 2px 10px #0038A855" }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M2 8a4 4 0 0 1 4-4h1a4 4 0 0 1 4 4v1a3 3 0 0 0 3 3h6a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H10a8 8 0 0 1-8-8Z" />
-                <circle cx="8" cy="10" r="1" fill="white" />
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <polygon points="12,2.5 21,18.5 3,18.5" stroke="white" strokeWidth="1.6" fill="none" strokeLinejoin="round"/>
+                <polygon points="12,21.5 3,5.5 21,5.5" stroke="white" strokeWidth="1.6" fill="none" strokeLinejoin="round"/>
               </svg>
             </div>
-            <div>
-              <h1 className="text-lg font-black tracking-tight" style={{ color: "oklch(0.20 0.060 250)" }}>betingapp</h1>
-              <p className="text-[10px] leading-none" style={{ color: "oklch(0.50 0.055 240)" }}>חיזויים מקצועיים</p>
+            {/* Text: GetWin✡IL framed by Israeli flag stripes */}
+            <div className="leading-none" dir="ltr">
+              <div className="h-[2px] rounded-full mb-[3px]" style={{ background: "#0038A8" }} />
+              <div className="flex items-center">
+                <span className="font-light text-[1.05rem] tracking-tight" style={{ color: "#0038A8", fontFamily: "'Rubik', sans-serif" }}>Get</span>
+                <span className="font-black text-[1.05rem] tracking-tight" style={{ color: "#0038A8", fontFamily: "'Rubik', sans-serif" }}>Win</span>
+                <span className="text-[9px] font-bold mx-[1px] relative" style={{ color: "#0038A8", top: "-1px" }}>✡</span>
+                <span className="font-black text-[1.05rem] tracking-tight" style={{ color: "#0038A8", fontFamily: "'Rubik', sans-serif" }}>L</span>
+              </div>
+              <div className="h-[2px] rounded-full mt-[3px]" style={{ background: "#0038A8" }} />
             </div>
           </Link>
 
@@ -39,6 +49,12 @@ export default function Navigation() {
               <Button variant={isActive("/matches") ? "default" : "ghost"} size="sm" className="text-sm gap-1.5">
                 <Target className="w-4 h-4" />
                 משחקים
+              </Button>
+            </Link>
+            <Link href="/news">
+              <Button variant={isActive("/news") ? "default" : "ghost"} size="sm" className="text-sm gap-1.5">
+                <Newspaper className="w-4 h-4" />
+                חדשות
               </Button>
             </Link>
             <Link href="/leaderboard">
@@ -57,6 +73,12 @@ export default function Navigation() {
               <Button variant={isActive("/competitions") ? "default" : "ghost"} size="sm" className="text-sm gap-1.5">
                 <Users className="w-4 h-4" />
                 תחרויות
+              </Button>
+            </Link>
+            <Link href="/ai-prediction">
+              <Button variant={isActive("/ai-prediction") ? "default" : "ghost"} size="sm" className="text-sm gap-1.5">
+                <Brain className="w-4 h-4" />
+                ניבוי AI
               </Button>
             </Link>
             <Link href="/chat">
@@ -172,6 +194,12 @@ export default function Navigation() {
                       תחרויות
                     </DropdownMenuItem>
                   </Link>
+                  <Link href="/ai-prediction">
+                    <DropdownMenuItem>
+                      <Brain className="w-4 h-4 ml-2" />
+                      ניבוי AI
+                    </DropdownMenuItem>
+                  </Link>
                   <Link href="/chat">
                     <DropdownMenuItem>
                       <MessageSquare className="w-4 h-4 ml-2" />
@@ -210,5 +238,7 @@ export default function Navigation() {
         </div>
       </div>
     </nav>
+    <NewsTicker />
+    </div>
   );
 }

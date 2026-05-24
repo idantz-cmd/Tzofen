@@ -346,7 +346,7 @@ export default function Home() {
           {/* Footer */}
           <footer className="border-t border-border/20 py-8 text-center">
             <p className="text-sm text-muted-foreground">
-              betingapp © 2025 — פלטפורמת חיזויים מקצועית לכדורגל הישראלי
+              GetWinIL ✡ © 2025 — פלטפורמת חיזויים מקצועית לכדורגל הישראלי
             </p>
           </footer>
         </main>

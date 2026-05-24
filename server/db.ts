@@ -69,6 +69,20 @@ export async function getUserByEmail(email: string) {
   return (await db.select().from(users).where(eq(users.email, email)))[0] ?? null;
 }
 
+export async function getOrCreateGuestUser(guestToken: string): Promise<number> {
+  const db = getDb();
+  const openId = `guest:${guestToken}`;
+  const existing = (await db.select().from(users).where(eq(users.openId, openId)))[0];
+  if (existing) return existing.id;
+  const result = await db.insert(users).values({
+    openId,
+    name: "אורח",
+    loginMethod: "guest",
+    role: "user",
+  });
+  return Number(result.lastInsertRowid);
+}
+
 export async function getAllUsers() {
   const db = getDb();
   return db.select().from(users);

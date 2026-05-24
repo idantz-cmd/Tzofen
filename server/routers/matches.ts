@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "../_core/trpc";
-import { getUpcomingMatches, getCompletedMatches, getMatchById, createMatch, updateMatchResult, createPrediction, getUserPredictionForMatch, getUserPredictions, updateLeaderboardScore, createNotification, getDb } from "../db";
+import { getUpcomingMatches, getCompletedMatches, getMatchById, createMatch, updateMatchResult, createPrediction, getUserPredictionForMatch, getUserPredictions, updateLeaderboardScore, createNotification, getDb, getOrCreateGuestUser } from "../db";
 import { advancedPredictions, matchAdvancedStats } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 
@@ -48,15 +48,26 @@ export const matchesRouter = router({
       }
     }),
 
-  // Submit user prediction
-  submitPrediction: protectedProcedure
+  // Submit user prediction (works for authenticated users and guests)
+  submitPrediction: publicProcedure
     .input(z.object({
       matchId: z.number(),
       prediction: z.enum(["home_win", "draw", "away_win"]),
       confidence: z.number().min(0).max(100).optional(),
+      guestToken: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       try {
+        // Resolve userId — authenticated user takes priority, else use guest token
+        let userId: number;
+        if (ctx.user) {
+          userId = ctx.user.id;
+        } else if (input.guestToken) {
+          userId = await getOrCreateGuestUser(input.guestToken);
+        } else {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "נדרש טוקן אורח" });
+        }
+
         // Deadline lock — cannot predict after match starts
         const match = await getMatchById(input.matchId);
         if (match && new Date() >= new Date(match.matchDate)) {
@@ -66,7 +77,7 @@ export const matchesRouter = router({
           });
         }
 
-        const existing = await getUserPredictionForMatch(ctx.user.id, input.matchId);
+        const existing = await getUserPredictionForMatch(userId, input.matchId);
         if (existing) {
           throw new TRPCError({
             code: "FORBIDDEN",
@@ -75,13 +86,18 @@ export const matchesRouter = router({
         }
 
         await createPrediction({
-          userId: ctx.user.id,
+          userId,
           matchId: input.matchId,
           prediction: input.prediction,
           confidence: input.confidence ?? null,
           points: 0,
           isCorrect: false,
         });
+
+        if (ctx.user) {
+          const { checkAndUpdateStreak } = await import("../services/streakService");
+          checkAndUpdateStreak(userId).catch(console.error);
+        }
 
         return { success: true, message: "התחזית הוגשה בהצלחה" };
       } catch (error) {
@@ -90,11 +106,19 @@ export const matchesRouter = router({
       }
     }),
 
-  // Get user's predictions
-  getUserPredictions: protectedProcedure
-    .query(async ({ ctx }) => {
+  // Get user's predictions (works for authenticated users and guests)
+  getUserPredictions: publicProcedure
+    .input(z.object({ guestToken: z.string().optional() }).optional())
+    .query(async ({ ctx, input }) => {
       try {
-        return await getUserPredictions(ctx.user.id);
+        let userId: number | null = null;
+        if (ctx.user) {
+          userId = ctx.user.id;
+        } else if (input?.guestToken) {
+          userId = await getOrCreateGuestUser(input.guestToken);
+        }
+        if (userId === null) return [];
+        return await getUserPredictions(userId);
       } catch (error) {
         console.error("Error fetching user predictions:", error);
         return [];
@@ -112,7 +136,7 @@ export const matchesRouter = router({
       return null;
     }),
 
-  // Admin: Publish match result and calculate scores
+  // Admin: Publish match result and award points to all predictions
   publishResult: adminProcedure
     .input(z.object({
       matchId: z.number(),
@@ -121,18 +145,9 @@ export const matchesRouter = router({
     }))
     .mutation(async ({ ctx: _ctx, input }) => {
       try {
-        let actualResult: "home_win" | "draw" | "away_win";
-        if (input.homeScore > input.awayScore) {
-          actualResult = "home_win";
-        } else if (input.homeScore < input.awayScore) {
-          actualResult = "away_win";
-        } else {
-          actualResult = "draw";
-        }
-
-        await updateMatchResult(input.matchId, actualResult, input.homeScore, input.awayScore);
-
-        return { success: true, message: "התוצאה פורסמה בהצלחה" };
+        const { publishMatchResult } = await import("../services/resultsSync");
+        await publishMatchResult(input.matchId, input.homeScore, input.awayScore);
+        return { success: true, message: "התוצאה פורסמה ונקודות חולקו" };
       } catch (error) {
         console.error("Error publishing result:", error);
         throw error;

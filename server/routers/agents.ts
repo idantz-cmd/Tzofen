@@ -2,6 +2,8 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, router } from "../_core/trpc";
 import { getTeamStats, getHeadToHead, predictMatch } from "../agents/agents";
+import { deepPredictMatch } from "../agents/deepPredictionAgent";
+import { orchestrateMatchPrediction } from "../agents/orchestratorAgent";
 
 // Simple in-memory rate limiter — 10 requests per minute per IP
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -58,6 +60,42 @@ export const agentsRouter = router({
     .query(async ({ ctx, input }) => {
       checkRateLimit((ctx as any).req?.ip ?? "unknown");
       return await predictMatch(input.homeTeam, input.awayTeam);
+    }),
+
+  // Deep AI match prediction (result, goals, corners, cards + Hebrew analysis)
+  deepPredictMatch: publicProcedure
+    .input(
+      z.object({
+        homeTeam: z.string().min(1),
+        awayTeam: z.string().min(1),
+        league: z.enum(["ligat_hael", "ligah_leumit"]).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      checkRateLimit((ctx as any).req?.ip ?? "unknown", 5);
+      return await deepPredictMatch(
+        input.homeTeam,
+        input.awayTeam,
+        input.league ?? "ligat_hael"
+      );
+    }),
+
+  // Orchestrated prediction — all agents + QA + synthesis
+  orchestratePredict: publicProcedure
+    .input(
+      z.object({
+        homeTeam: z.string().min(1),
+        awayTeam: z.string().min(1),
+        league: z.enum(["ligat_hael", "ligah_leumit"]).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      checkRateLimit((ctx as any).req?.ip ?? "unknown", 3);
+      return await orchestrateMatchPrediction(
+        input.homeTeam,
+        input.awayTeam,
+        input.league ?? "ligat_hael"
+      );
     }),
 
   // Legacy endpoints — kept for client compatibility
