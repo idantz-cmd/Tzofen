@@ -50,6 +50,8 @@ export const predictions = sqliteTable("predictions", {
   userId: integer("userId").notNull(),
   matchId: integer("matchId").notNull(),
   prediction: text("prediction", { enum: ["home_win", "draw", "away_win"] }).notNull(),
+  predictedHomeScore: integer("predictedHomeScore"),
+  predictedAwayScore: integer("predictedAwayScore"),
   confidence: real("confidence"),
   points: integer("points").default(0),
   isCorrect: integer("isCorrect", { mode: "boolean" }),

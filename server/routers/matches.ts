@@ -145,8 +145,8 @@ export const matchesRouter = router({
     }))
     .mutation(async ({ ctx: _ctx, input }) => {
       try {
-        const { publishMatchResult } = await import("../services/resultsSync");
-        await publishMatchResult(input.matchId, input.homeScore, input.awayScore);
+        const { publishResult } = await import("../services/resultsSync");
+        await publishResult(input.matchId, input.homeScore, input.awayScore);
         return { success: true, message: "התוצאה פורסמה ונקודות חולקו" };
       } catch (error) {
         console.error("Error publishing result:", error);
