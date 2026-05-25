@@ -4,6 +4,7 @@ import { z } from "zod";
 const envSchema = z.object({
   DATABASE_PATH: z.string().optional(),
   JWT_SECRET: z.string().min(1).optional(),
+  JWT_REFRESH_SECRET: z.string().min(1).optional(),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   ADMIN_EMAIL: z.string().optional(),
   AI_API_KEY: z.string().optional(),
@@ -21,6 +22,7 @@ if (!parsed.success) {
 
 export const ENV = {
   cookieSecret: process.env.JWT_SECRET ?? "dev-secret-change-in-production",
+  refreshSecret: process.env.JWT_REFRESH_SECRET ?? "dev-refresh-secret-change-in-production",
   databasePath: process.env.DATABASE_PATH ?? path.join(process.cwd(), "data", "betingapp.db"),
   isProduction: process.env.NODE_ENV === "production",
   adminEmail: process.env.ADMIN_EMAIL ?? "",

@@ -1,10 +1,22 @@
-﻿import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
+import { COOKIE_NAME, REFRESH_COOKIE_NAME } from "@shared/const";
 import bcrypt from "bcryptjs";
+import { parse as parseCookieHeader } from "cookie";
 import type { Express, Request, Response } from "express";
 import { nanoid } from "nanoid";
 import * as db from "../db";
+import { createTokens, refreshAccessToken, ACCESS_MAX_AGE, REFRESH_MAX_AGE } from "../services/auth";
 import { getSessionCookieOptions } from "./cookies";
-import { sdk } from "./sdk";
+
+function setAuthCookies(
+  req: Request,
+  res: Response,
+  accessToken: string,
+  refreshToken: string
+) {
+  const opts = getSessionCookieOptions(req);
+  res.cookie(COOKIE_NAME, accessToken, { ...opts, maxAge: ACCESS_MAX_AGE });
+  res.cookie(REFRESH_COOKIE_NAME, refreshToken, { ...opts, maxAge: REFRESH_MAX_AGE });
+}
 
 export function registerAuthRoutes(app: Express) {
   app.post("/api/auth/register", async (req: Request, res: Response) => {
@@ -45,9 +57,8 @@ export function registerAuthRoutes(app: Express) {
         return;
       }
 
-      const token = await sdk.createSessionToken(user.id, { name, email });
-      const cookieOptions = getSessionCookieOptions(req);
-      res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+      const { accessToken, refreshToken } = await createTokens(user.id, user.role);
+      setAuthCookies(req, res, accessToken, refreshToken);
       res.json({ success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
     } catch (error) {
       console.error("[Auth] Register failed", error);
@@ -78,17 +89,39 @@ export function registerAuthRoutes(app: Express) {
 
       await db.upsertUser({ openId: user.openId, lastSignedIn: new Date() });
 
-      const token = await sdk.createSessionToken(user.id, {
-        name: user.name ?? "",
-        email: user.email ?? "",
-      });
-      const cookieOptions = getSessionCookieOptions(req);
-      res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+      const { accessToken, refreshToken } = await createTokens(user.id, user.role);
+      setAuthCookies(req, res, accessToken, refreshToken);
       res.json({ success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
     } catch (error) {
       console.error("[Auth] Login failed", error);
       res.status(500).json({ error: "Login failed" });
     }
   });
-}
 
+  app.post("/api/auth/refresh", async (req: Request, res: Response) => {
+    const cookies = parseCookieHeader(req.headers.cookie ?? "");
+    const refreshToken = cookies[REFRESH_COOKIE_NAME];
+
+    if (!refreshToken) {
+      res.status(401).json({ error: "No refresh token" });
+      return;
+    }
+
+    const newAccessToken = await refreshAccessToken(refreshToken);
+    if (!newAccessToken) {
+      res.status(401).json({ error: "Invalid or expired refresh token" });
+      return;
+    }
+
+    const opts = getSessionCookieOptions(req);
+    res.cookie(COOKIE_NAME, newAccessToken, { ...opts, maxAge: ACCESS_MAX_AGE });
+    res.json({ success: true });
+  });
+
+  app.post("/api/auth/logout", (req: Request, res: Response) => {
+    const opts = getSessionCookieOptions(req);
+    res.clearCookie(COOKIE_NAME, opts);
+    res.clearCookie(REFRESH_COOKIE_NAME, opts);
+    res.json({ success: true });
+  });
+}
