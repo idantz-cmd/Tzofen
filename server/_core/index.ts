@@ -2,6 +2,9 @@
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import helmet from "helmet";
+import cookieParser from "cookie-parser";
+import rateLimit from "express-rate-limit";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
@@ -30,12 +33,43 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  message: { error: "יותר מדי בקשות, נסה שוב בעוד מעט" },
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "יותר מדי ניסיונות התחברות" },
+});
+
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { error: "מגבלת AI הושגה, המתן דקה" },
+});
+
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
+  // Security headers
+  app.use(helmet());
+  app.use(cookieParser());
+
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+  // Rate limits
+  app.use("/api/trpc", globalLimiter);
+  app.use("/api/auth/login", authLimiter);
+  app.use("/api/auth/register", authLimiter);
+  app.use("/api/trpc/agents", aiLimiter);
+
   registerStorageProxy(app);
   registerAuthRoutes(app);
 
@@ -71,4 +105,9 @@ async function startServer() {
 }
 
 startServer().catch(console.error);
+
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received, shutting down...");
+  process.exit(0);
+});
 
