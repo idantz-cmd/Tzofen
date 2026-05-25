@@ -59,7 +59,7 @@ export function registerAuthRoutes(app: Express) {
 
       const { accessToken, refreshToken } = await createTokens(user.id, user.role);
       setAuthCookies(req, res, accessToken, refreshToken);
-      res.json({ success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+      res.json({ success: true, accessToken, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
     } catch (error) {
       console.error("[Auth] Register failed", error);
       res.status(500).json({ error: "Registration failed" });
@@ -91,7 +91,7 @@ export function registerAuthRoutes(app: Express) {
 
       const { accessToken, refreshToken } = await createTokens(user.id, user.role);
       setAuthCookies(req, res, accessToken, refreshToken);
-      res.json({ success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+      res.json({ success: true, accessToken, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
     } catch (error) {
       console.error("[Auth] Login failed", error);
       res.status(500).json({ error: "Login failed" });
