@@ -57,8 +57,8 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
 
-  // Security headers
-  app.use(helmet());
+  // Security headers — disable CSP in dev so Vite's inline scripts work
+  app.use(helmet({ contentSecurityPolicy: process.env.NODE_ENV !== "development" }));
   app.use(additionalSecurityHeaders);
   app.use(cookieParser());
   app.use(requestLogger);
