@@ -13,6 +13,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { importMatchesHandler } from "../scheduled/importHandler";
 import { startResultsSync } from "../services/resultsSync";
+import { requestLogger, additionalSecurityHeaders } from "../middleware";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -58,7 +59,9 @@ async function startServer() {
 
   // Security headers
   app.use(helmet());
+  app.use(additionalSecurityHeaders);
   app.use(cookieParser());
+  app.use(requestLogger);
 
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
