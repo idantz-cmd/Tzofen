@@ -10,7 +10,7 @@ test("home page loads", async ({ page }) => {
 
 test("feature cards navigate correctly", async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("load");
 
   // Click "בחר משחק" card → should go to /matches
   await page.getByText("בחר משחק").first().click();
@@ -21,7 +21,7 @@ test("feature cards navigate correctly", async ({ page }) => {
 
 test("how-it-works: עלה בדירוג card → /leaderboard", async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("load");
   // Target the link specifically (not the hero tagline that also contains the text)
   await page.locator('a[href="/leaderboard"]').first().click();
   await page.waitForURL("**/leaderboard");
@@ -31,7 +31,7 @@ test("how-it-works: עלה בדירוג card → /leaderboard", async ({ page })
 
 test("features: ניתוח מקצועי → /chat", async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("load");
   await page.getByText("ניתוח מקצועי").first().click();
   await page.waitForURL("**/chat");
   await page.screenshot({ path: "e2e/screenshots/04-chat.png" });
@@ -40,7 +40,7 @@ test("features: ניתוח מקצועי → /chat", async ({ page }) => {
 
 test("features: תחרויות ישירות → /competitions", async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("load");
   await page.getByText("תחרויות ישירות").first().click();
   await page.waitForURL("**/competitions");
   await page.screenshot({ path: "e2e/screenshots/05-competitions.png" });
@@ -49,7 +49,7 @@ test("features: תחרויות ישירות → /competitions", async ({ page })
 
 test("top nav: משחקים button → /matches", async ({ page }) => {
   await page.goto(BASE);
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("load");
   // Desktop nav
   await page.locator("nav").getByText("משחקים").first().click();
   await page.waitForURL("**/matches");
@@ -67,7 +67,7 @@ test("top nav: דירוג button → /leaderboard", async ({ page }) => {
 
 test("standings page loads", async ({ page }) => {
   await page.goto(`${BASE}/standings`);
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("load");
   await page.screenshot({ path: "e2e/screenshots/08-standings.png" });
   expect(page.url()).toContain("/standings");
 });

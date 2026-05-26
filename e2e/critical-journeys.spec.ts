@@ -36,8 +36,8 @@ test.describe("Home page", () => {
     await page.goto("/");
     await waitForAppReady(page);
 
-    await expect(page.locator("nav")).toBeVisible();
-    await expect(page.locator('nav a[href="/"]')).toBeVisible();
+    await expect(page.locator("nav").first()).toBeVisible();
+    await expect(page.locator("nav").first().locator('a[href="/"]')).toBeVisible();
     await expect(page.locator("main")).toBeVisible();
 
     const critical = errors.filter(
@@ -96,7 +96,7 @@ test.describe("Matches page", () => {
   test("loads and renders navigation", async ({ page }) => {
     await page.goto("/matches");
     await waitForAppReady(page);
-    await expect(page.locator("nav")).toBeVisible();
+    await expect(page.locator("nav").first()).toBeVisible();
   });
 
   test("renders main content area", async ({ page }) => {
@@ -120,7 +120,7 @@ test.describe("Leaderboard page", () => {
   test("loads and renders navigation", async ({ page }) => {
     await page.goto("/leaderboard");
     await waitForAppReady(page);
-    await expect(page.locator("nav")).toBeVisible();
+    await expect(page.locator("nav").first()).toBeVisible();
   });
 
   test("renders main content area", async ({ page }) => {
@@ -155,7 +155,7 @@ test.describe("Navigation links", () => {
     await waitForAppReady(page);
     await page.locator('nav a[href="/matches"]').first().click();
     await expect(page).toHaveURL(/\/matches/);
-    await expect(page.locator("nav")).toBeVisible();
+    await expect(page.locator("nav").first()).toBeVisible();
   });
 
   test("clicking leaderboard nav link navigates to /leaderboard", async ({ page }) => {
@@ -163,13 +163,13 @@ test.describe("Navigation links", () => {
     await waitForAppReady(page);
     await page.locator('nav a[href="/leaderboard"]').first().click();
     await expect(page).toHaveURL(/\/leaderboard/);
-    await expect(page.locator("nav")).toBeVisible();
+    await expect(page.locator("nav").first()).toBeVisible();
   });
 
   test("brand logo navigates back to home from matches", async ({ page }) => {
     await page.goto("/matches");
     await waitForAppReady(page);
     await page.locator('nav a[href="/"]').first().click();
-    await expect(page).toHaveURL(/^http:\/\/localhost:5173\/?$/);
+    await expect(page).toHaveURL(/^http:\/\/localhost:3000\/?$/);
   });
 });
