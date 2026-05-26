@@ -69,8 +69,8 @@ export function PWAPrompts() {
             dir="rtl"
           >
             <div
-              className="rounded-2xl p-4 flex items-center gap-3 shadow-xl border border-border/20"
-              style={{ background: "oklch(0.16 0.055 258)" }}
+              className="rounded-2xl p-4 flex items-center gap-3 shadow-xl border border-white/10 backdrop-blur-md"
+              style={{ background: "oklch(0.18 0.045 258 / 0.72)" }}
             >
               <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
