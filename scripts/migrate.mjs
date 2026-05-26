@@ -7,10 +7,16 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dbPath = process.env.DATABASE_PATH ?? path.join(__dirname, "..", "data", "betingapp.db");
 
-console.log(`Migrating database at: ${dbPath}`);
-const db = createClient({ url: `file:${dbPath}` });
+let db;
+if (process.env.DATABASE_URL) {
+  console.log(`Migrating Turso DB: ${process.env.DATABASE_URL}`);
+  db = createClient({ url: process.env.DATABASE_URL, authToken: process.env.DATABASE_AUTH_TOKEN });
+} else {
+  const dbPath = process.env.DATABASE_PATH ?? path.join(__dirname, "..", "data", "betingapp.db");
+  console.log(`Migrating local DB: ${dbPath}`);
+  db = createClient({ url: `file:${dbPath}` });
+}
 
 const stmts = [
   // Drop removed tables (order matters for FK deps)

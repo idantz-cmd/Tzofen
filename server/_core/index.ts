@@ -100,13 +100,14 @@ async function startServer() {
     serveStatic(app);
   }
 
-  const port = await findAvailablePort(ENV.port);
+  // In production Railway sets PORT; in dev we find an available port
+  const port = ENV.isProduction ? ENV.port : await findAvailablePort(ENV.port);
 
-  if (port !== ENV.port) {
+  if (!ENV.isProduction && port !== ENV.port) {
     console.log(`Port ${ENV.port} is busy, using port ${port} instead`);
   }
 
-  server.listen(port, () => {
+  server.listen(port, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${port}/`);
     startResultsSync();
   });
