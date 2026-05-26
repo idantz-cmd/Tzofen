@@ -11,7 +11,7 @@ const QUEUE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 export interface QueuedPrediction {
   matchId: number;
-  prediction: "home_win" | "draw" | "away_win";
+  prediction: "home" | "draw" | "away";
   homeTeam: string;
   awayTeam: string;
   queuedAt: number;
@@ -59,9 +59,9 @@ export function ConversionModal({ isOpen, onClose, onGuestContinue, queued }: Pr
   }, [isOpen]);
 
   const predictionLabel =
-    queued?.prediction === "home_win"
+    queued?.prediction === "home"
       ? `${queued.homeTeam} מנצחת`
-      : queued?.prediction === "away_win"
+      : queued?.prediction === "away"
         ? `${queued.awayTeam} מנצחת`
         : "תיקו";
 

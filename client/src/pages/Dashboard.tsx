@@ -48,11 +48,11 @@ export default function Dashboard() {
 
   const getPredictionLabel = (pick: string) => {
     switch (pick) {
-      case "home_win":
+      case "home":
         return "ניצחון הבית";
       case "draw":
         return "תיקו";
-      case "away_win":
+      case "away":
         return "ניצחון חוץ";
       default:
         return "";

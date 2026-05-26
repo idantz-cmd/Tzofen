@@ -5,7 +5,7 @@ import { eq, and, lte, isNull, or } from "drizzle-orm";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type MatchResult = "home_win" | "draw" | "away_win";
+type MatchResult = "home" | "draw" | "away";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -14,8 +14,8 @@ function log(msg: string): void {
 }
 
 function deriveResult(home: number, away: number): MatchResult {
-  if (home > away) return "home_win";
-  if (home < away) return "away_win";
+  if (home > away) return "home";
+  if (home < away) return "away";
   return "draw";
 }
 
@@ -95,11 +95,10 @@ export const publishResult = async (
   await db
     .update(matches)
     .set({
-      homeTeamScore: homeScore,
-      awayTeamScore: awayScore,
+      actualHomeScore: homeScore,
+      actualAwayScore: awayScore,
       actualResult: actual,
-      resultPublished: true,
-      updatedAt: new Date(),
+      status: "finished",
     })
     .where(eq(matches.id, matchId));
 
@@ -129,7 +128,7 @@ export const publishResult = async (
 
     await db
       .update(predictions)
-      .set({ points, isCorrect: isCorrectOutcome, updatedAt: new Date() })
+      .set({ points, isCorrect: isCorrectOutcome })
       .where(eq(predictions.id, pred.id));
 
     const existing = await db
@@ -152,7 +151,6 @@ export const publishResult = async (
           weeklyPoints: (existing.weeklyPoints ?? 0) + points,
           accuracyRate: (newCorrect / newPreds) * 100,
           totalPredictions: newPreds,
-          lastUpdated: new Date(),
         })
         .where(eq(leaderboardScores.userId, pred.userId));
     } else {
@@ -178,12 +176,12 @@ export const startResultsSync = (): void => {
 
     log("Active window — checking live results...");
     const db = getDb();
-    const now = new Date();
+    const nowIso = new Date().toISOString();
 
     const pendingMatches = await db
       .select()
       .from(matches)
-      .where(and(eq(matches.resultPublished, false), lte(matches.matchDate, now)));
+      .where(and(eq(matches.status, "scheduled"), lte(matches.matchDate, nowIso)));
 
     for (const match of pendingMatches) {
       try {

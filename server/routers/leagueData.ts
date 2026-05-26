@@ -1,18 +1,22 @@
 /**
  * League Data Router
- * Admin: trigger one-time scrape of teams, standings, players from football.co.il
- * Public: query the scraped data
+ * Public: query league standings.
+ *
+ * TODO: implement with new schema — `teams`, `leaguePlayers` tables were removed.
+ * Only the `standings` table remains. Scraper procedures are stubbed since they wrote
+ * to the removed tables.
  */
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { adminProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { teams, leaguePlayers, leagueStandings } from "../../drizzle/schema";
+import { standings } from "../../drizzle/schema";
 import { eq, asc, and } from "drizzle-orm";
-import { runFullScrape } from "../services/leagueDataScraper";
 
 export const leagueDataRouter = router({
   /**
-   * Admin: trigger the one-time full scrape (all 4 skills).
+   * Admin: trigger the one-time full scrape.
+   * TODO: implement with new schema — scraper currently writes to removed tables.
    */
   scrapeAll: adminProcedure
     .input(
@@ -20,18 +24,13 @@ export const leagueDataRouter = router({
         season: z.string().default("25/26"),
       }).optional()
     )
-    .mutation(async ({ input }) => {
-      const season = input?.season ?? "25/26";
-      const result = await runFullScrape(season);
-      return {
-        success: true,
-        message: `סיום: ${result.teams} קבוצות, ${result.standings.ligat_hael + result.standings.ligah_leumit} שורות טבלה, ${result.players} שחקנים`,
-        ...result,
-      };
+    .mutation(async () => {
+      throw new TRPCError({ code: "NOT_IMPLEMENTED", message: "סקרייפר הליגה אינו זמין במהדורה הנוכחית" });
     }),
 
   /**
    * Public: get all teams (optionally filtered by league).
+   * TODO: implement with new schema — `teams` table was removed.
    */
   getTeams: publicProcedure
     .input(
@@ -39,14 +38,8 @@ export const leagueDataRouter = router({
         league: z.enum(["ligat_hael", "ligah_leumit", "both"]).default("both"),
       }).optional()
     )
-    .query(async ({ input }) => {
-      const db = getDb();
-      if (!db) return [];
-      const league = input?.league ?? "both";
-      if (league === "both") {
-        return db.select().from(teams);
-      }
-      return db.select().from(teams).where(eq(teams.league, league));
+    .query(async () => {
+      return [] as Array<{ id: number; name: string; league: string; season: string }>;
     }),
 
   /**
@@ -68,23 +61,24 @@ export const leagueDataRouter = router({
 
       const rows = await db
         .select()
-        .from(leagueStandings)
-        .where(and(eq(leagueStandings.league, input.league), eq(leagueStandings.season, targetSeason)))
-        .orderBy(asc(leagueStandings.position));
+        .from(standings)
+        .where(and(eq(standings.league, input.league), eq(standings.season, targetSeason)))
+        .orderBy(asc(standings.position));
 
       // If no data for requested season, fall back to most recent available
       if (rows.length === 0 && !input.season) {
         return db
           .select()
-          .from(leagueStandings)
-          .where(eq(leagueStandings.league, input.league))
-          .orderBy(asc(leagueStandings.position));
+          .from(standings)
+          .where(eq(standings.league, input.league))
+          .orderBy(asc(standings.position));
       }
       return rows;
     }),
 
   /**
-   * Public: get players for a specific team (by externalTeamId).
+   * Public: get players for a specific team.
+   * TODO: implement with new schema — `leaguePlayers` table was removed.
    */
   getPlayers: publicProcedure
     .input(
@@ -92,13 +86,8 @@ export const leagueDataRouter = router({
         externalTeamId: z.number(),
       })
     )
-    .query(async ({ input }) => {
-      const db = getDb();
-      if (!db) return [];
-      return db
-        .select()
-        .from(leaguePlayers)
-        .where(eq(leaguePlayers.externalTeamId, input.externalTeamId));
+    .query(async () => {
+      return [] as Array<{ id: number; name: string; teamName: string; position: string | null }>;
     }),
 
   /**
@@ -108,17 +97,13 @@ export const leagueDataRouter = router({
     const db = getDb();
     if (!db) return { hasData: false, teams: 0, standings: 0, players: 0 };
 
-    const [teamRows, standingRows, playerRows] = await Promise.all([
-      db.select().from(teams),
-      db.select().from(leagueStandings),
-      db.select().from(leaguePlayers),
-    ]);
+    const standingRows = await db.select().from(standings);
 
     return {
-      hasData: teamRows.length > 0,
-      teams: teamRows.length,
+      hasData: standingRows.length > 0,
+      teams: 0,
       standings: standingRows.length,
-      players: playerRows.length,
+      players: 0,
     };
   }),
 });

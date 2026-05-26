@@ -1,12 +1,21 @@
-﻿/**
+/**
  * Import Router - Admin procedures for importing matches and stats from football.co.il
- * No API key required â€” data is scraped directly from the official Israeli football site.
+ * No API key required — data is scraped directly from the official Israeli football site.
+ *
+ * Schema migration notes:
+ * - `matches.externalId`, `homeTeamLogo`, `awayTeamLogo` columns were removed; importer
+ *   relies on (league, homeTeam, awayTeam, matchDate) as the dedup key instead.
+ * - `matches.resultPublished` was replaced by `matches.status` ('scheduled'|'live'|'finished').
+ * - `matches.homeTeamScore`/`awayTeamScore` → `actualHomeScore`/`actualAwayScore`.
+ * - `matchAdvancedStats` table was removed → advanced-stat import procedures are stubbed.
+ * - Enum values: 'home_win'/'away_win' → 'home'/'away'.
  */
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { adminProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { matches, matchAdvancedStats } from "../../drizzle/schema";
-import { eq, and, isNull } from "drizzle-orm";
+import { matches } from "../../drizzle/schema";
+import { eq, and } from "drizzle-orm";
 import {
   createHeartbeatJob,
   listHeartbeatJobs,
@@ -17,12 +26,41 @@ import {
   fetchFixtures,
   fetchUpcomingFixtures,
   fetchRecentlyFinished,
-  fetchMatchStats,
   fetchAllIsraeliFixtures,
   type ImportedMatch,
   type LeagueKey,
 } from "../services/footballApi";
 import { publishMatchResult } from "../services/publishResult";
+
+// Map scraper enum values to new schema enum values.
+function mapResult(r: ImportedMatch["actualResult"]): "home" | "draw" | "away" | undefined {
+  if (!r) return undefined;
+  if (r === "home_win") return "home";
+  if (r === "away_win") return "away";
+  return "draw";
+}
+
+// Find an existing match using (league, homeTeam, awayTeam, matchDate) as the dedup key.
+// `matchDate` is stored as text in the new schema, so we compare as ISO strings.
+async function findExistingMatch(
+  db: ReturnType<typeof getDb>,
+  m: ImportedMatch,
+) {
+  if (!db) return [];
+  const iso = m.matchDate instanceof Date ? m.matchDate.toISOString() : String(m.matchDate);
+  return db
+    .select()
+    .from(matches)
+    .where(
+      and(
+        eq(matches.league, m.league),
+        eq(matches.homeTeam, m.homeTeam),
+        eq(matches.awayTeam, m.awayTeam),
+        eq(matches.matchDate, iso),
+      ),
+    )
+    .limit(1);
+}
 
 export const importRouter = router({
   /**
@@ -34,7 +72,7 @@ export const importRouter = router({
     }).optional())
     .mutation(async ({ input }) => {
       const league = input?.league ?? "both";
-      
+
       let imported: ImportedMatch[];
       if (league === "both") {
         imported = await fetchUpcomingFixtures();
@@ -56,11 +94,7 @@ export const importRouter = router({
       let skipped = 0;
 
       for (const match of imported) {
-        // Check if match already exists by externalId
-        const existing = await db.select()
-          .from(matches)
-          .where(eq(matches.externalId, match.externalId))
-          .limit(1);
+        const existing = await findExistingMatch(db, match);
 
         if (existing.length > 0) {
           skipped++;
@@ -71,10 +105,8 @@ export const importRouter = router({
           league: match.league,
           homeTeam: match.homeTeam,
           awayTeam: match.awayTeam,
-          matchDate: match.matchDate,
-          homeTeamLogo: match.homeTeamLogo,
-          awayTeamLogo: match.awayTeamLogo,
-          externalId: match.externalId,
+          matchDate: match.matchDate instanceof Date ? match.matchDate.toISOString() : String(match.matchDate),
+          status: "scheduled",
         });
         created++;
       }
@@ -96,18 +128,9 @@ export const importRouter = router({
     for (const match of finished) {
       if (!match.actualResult) continue;
 
-      // Find the match in our DB by externalId
-      const existing = await db.select()
-        .from(matches)
-        .where(
-          and(
-            eq(matches.externalId, match.externalId),
-            isNull(matches.actualResult)
-          )
-        )
-        .limit(1);
+      const existing = await findExistingMatch(db, match);
 
-      if (existing.length === 0) {
+      if (existing.length === 0 || existing[0].actualResult) {
         notFound++;
         continue;
       }
@@ -126,112 +149,21 @@ export const importRouter = router({
   }),
 
   /**
-   * Import advanced stats (corners, cards) for a specific match
+   * Import advanced stats (corners, cards) for a specific match.
+   * TODO: implement with new schema — `matchAdvancedStats` table was removed.
    */
   importMatchStats: adminProcedure
     .input(z.object({ matchId: z.number() }))
-    .mutation(async ({ input }) => {
-      const db = getDb();
-      if (!db) throw new Error("Database not available");
-
-      // Get the match to find externalId
-      const match = await db.select()
-        .from(matches)
-        .where(eq(matches.id, input.matchId))
-        .limit(1);
-
-      if (match.length === 0) throw new Error("Match not found");
-      if (!match[0].externalId) throw new Error("Match has no external reference (externalId)");
-
-      const stats = await fetchMatchStats(match[0].externalId);
-      if (!stats) throw new Error("No statistics available for this match (Opta data may not be pre-rendered)");
-
-      // Calculate total goals from score
-      const totalGoals = (match[0].homeTeamScore || 0) + (match[0].awayTeamScore || 0);
-
-      // Upsert advanced stats
-      const existing = await db.select()
-        .from(matchAdvancedStats)
-        .where(eq(matchAdvancedStats.matchId, input.matchId))
-        .limit(1);
-
-      if (existing.length > 0) {
-        await db.update(matchAdvancedStats)
-          .set({
-            totalGoals,
-            totalCorners: stats.totalCorners,
-            totalYellowCards: stats.totalYellowCards,
-            totalRedCards: stats.totalRedCards,
-          })
-          .where(eq(matchAdvancedStats.matchId, input.matchId));
-      } else {
-        await db.insert(matchAdvancedStats).values({
-          matchId: input.matchId,
-          totalGoals,
-          totalCorners: stats.totalCorners,
-          totalYellowCards: stats.totalYellowCards,
-          totalRedCards: stats.totalRedCards,
-        });
-      }
-
-      return {
-        totalGoals,
-        totalCorners: stats.totalCorners,
-        totalYellowCards: stats.totalYellowCards,
-        totalRedCards: stats.totalRedCards,
-      };
+    .mutation(async () => {
+      throw new TRPCError({ code: "NOT_IMPLEMENTED", message: "ייבוא סטטיסטיקות מתקדמות אינו זמין במהדורה הנוכחית" });
     }),
 
   /**
-   * Import all stats for finished matches that don't have stats yet
+   * Import all stats for finished matches that don't have stats yet.
+   * TODO: implement with new schema — `matchAdvancedStats` table was removed.
    */
   importAllStats: adminProcedure.mutation(async () => {
-    const db = getDb();
-    if (!db) throw new Error("Database not available");
-
-    // Find matches with results but no advanced stats
-    const matchesWithResults = await db.select()
-      .from(matches)
-      .where(eq(matches.resultPublished, true));
-
-    let imported = 0;
-    let failed = 0;
-    let skipped = 0;
-
-    for (const match of matchesWithResults) {
-      if (!match.externalId) { skipped++; continue; }
-
-      // Check if stats already exist
-      const existingStats = await db.select()
-        .from(matchAdvancedStats)
-        .where(eq(matchAdvancedStats.matchId, match.id))
-        .limit(1);
-
-      if (existingStats.length > 0) { skipped++; continue; }
-
-      try {
-        const stats = await fetchMatchStats(match.externalId);
-        if (!stats || (stats.totalCorners === 0 && stats.totalYellowCards === 0)) {
-          failed++;
-          continue;
-        }
-
-        const totalGoals = (match.homeTeamScore || 0) + (match.awayTeamScore || 0);
-
-        await db.insert(matchAdvancedStats).values({
-          matchId: match.id,
-          totalGoals,
-          totalCorners: stats.totalCorners,
-          totalYellowCards: stats.totalYellowCards,
-          totalRedCards: stats.totalRedCards,
-        });
-        imported++;
-      } catch {
-        failed++;
-      }
-    }
-
-    return { imported, failed, skipped };
+    throw new TRPCError({ code: "NOT_IMPLEMENTED", message: "ייבוא סטטיסטיקות מתקדמות אינו זמין במהדורה הנוכחית" });
   }),
 
   /**
@@ -252,7 +184,7 @@ export const importRouter = router({
           configured: true,
           connected: false,
           source: "football.co.il",
-          message: `×©×’×™××ª ×—×™×‘×•×¨: ${response.status}`,
+          message: `שגיאת חיבור: ${response.status}`,
         };
       }
 
@@ -260,15 +192,15 @@ export const importRouter = router({
         configured: true,
         connected: true,
         source: "football.co.il",
-        message: "×ž×—×•×‘×¨ ×œ-football.co.il â€” ×œ×œ× ×¦×•×¨×š ×‘-API key",
-        note: "× ×ª×•× ×™× × ×ž×©×›×™× ×™×©×™×¨×•×ª ×ž×”××ª×¨ ×”×¨×©×ž×™ ×©×œ ×ž× ×”×œ×ª ×”×œ×™×’×•×ª",
+        message: "מחובר ל-football.co.il — ללא צורך ב-API key",
+        note: "נתונים נמשכים ישירות מהאתר הרשמי של מנהלת הליגות",
       };
     } catch (error: any) {
       return {
         configured: true,
         connected: false,
         source: "football.co.il",
-        message: `×©×’×™××”: ${error.message}`,
+        message: `שגיאה: ${error.message}`,
       };
     }
   }),
@@ -301,10 +233,7 @@ export const importRouter = router({
       let updatedResults = 0;
 
       for (const match of imported) {
-        const existing = await db.select()
-          .from(matches)
-          .where(eq(matches.externalId, match.externalId))
-          .limit(1);
+        const existing = await findExistingMatch(db, match);
 
         if (existing.length > 0) {
           // If match exists but has no result and scraper found a result, update it
@@ -320,18 +249,17 @@ export const importRouter = router({
           continue;
         }
 
+        const mapped = mapResult(match.actualResult);
         await db.insert(matches).values({
           league: match.league,
           homeTeam: match.homeTeam,
           awayTeam: match.awayTeam,
-          matchDate: match.matchDate,
-          homeTeamLogo: match.homeTeamLogo,
-          awayTeamLogo: match.awayTeamLogo,
-          externalId: match.externalId,
-          ...(match.actualResult && {
-            actualResult: match.actualResult,
-            homeTeamScore: match.homeTeamScore,
-            awayTeamScore: match.awayTeamScore,
+          matchDate: match.matchDate instanceof Date ? match.matchDate.toISOString() : String(match.matchDate),
+          status: mapped ? "finished" : "scheduled",
+          ...(mapped && {
+            actualResult: mapped,
+            actualHomeScore: match.homeTeamScore,
+            actualAwayScore: match.awayTeamScore,
           }),
         });
         created++;
@@ -358,7 +286,7 @@ export const importRouter = router({
           cron,
           path: "/api/scheduled/importMatches",
           method: "POST",
-          description: "×™×™×‘×•× ××•×˜×•×ž×˜×™ ×ž×©×—×§×™× ×•×ª×•×¦××•×ª ×ž-football.co.il",
+          description: "ייבוא אוטומטי משחקים ותוצאות מ-football.co.il",
         },
         userSession
       );
@@ -421,10 +349,7 @@ export const importRouter = router({
       let updatedResults = 0;
 
       for (const match of filtered) {
-        const existing = await db.select()
-          .from(matches)
-          .where(eq(matches.externalId, match.externalId))
-          .limit(1);
+        const existing = await findExistingMatch(db, match);
 
         if (existing.length > 0) {
           if (!existing[0].actualResult && match.actualResult) {
@@ -443,19 +368,17 @@ export const importRouter = router({
         // we insert them with results directly. No need to call publishMatchResult
         // because there are no user predictions to score for matches that were
         // never in the system before.
+        const mapped = mapResult(match.actualResult);
         await db.insert(matches).values({
           league: match.league,
           homeTeam: match.homeTeam,
           awayTeam: match.awayTeam,
-          matchDate: match.matchDate,
-          homeTeamLogo: match.homeTeamLogo,
-          awayTeamLogo: match.awayTeamLogo,
-          externalId: match.externalId,
-          ...(match.actualResult && {
-            actualResult: match.actualResult,
-            homeTeamScore: match.homeTeamScore,
-            awayTeamScore: match.awayTeamScore,
-            resultPublished: true,
+          matchDate: match.matchDate instanceof Date ? match.matchDate.toISOString() : String(match.matchDate),
+          status: mapped ? "finished" : "scheduled",
+          ...(mapped && {
+            actualResult: mapped,
+            actualHomeScore: match.homeTeamScore,
+            actualAwayScore: match.awayTeamScore,
           }),
         });
         created++;
@@ -464,4 +387,3 @@ export const importRouter = router({
       return { created, skipped, updatedResults, total: filtered.length };
     }),
 });
-

@@ -2,7 +2,6 @@ import { COOKIE_NAME, REFRESH_COOKIE_NAME } from "@shared/const";
 import bcrypt from "bcryptjs";
 import { parse as parseCookieHeader } from "cookie";
 import type { Express, Request, Response } from "express";
-import { nanoid } from "nanoid";
 import * as db from "../db";
 import { createTokens, refreshAccessToken, ACCESS_MAX_AGE, REFRESH_MAX_AGE } from "../services/auth";
 import { getSessionCookieOptions } from "./cookies";
@@ -40,24 +39,15 @@ export function registerAuthRoutes(app: Express) {
       }
 
       const passwordHash = await bcrypt.hash(password, 10);
-      const openId = nanoid();
+      const userId = await db.createUser(email, passwordHash, name);
 
-      await db.upsertUser({
-        openId,
-        name,
-        email,
-        passwordHash,
-        loginMethod: "email",
-        lastSignedIn: new Date(),
-      });
-
-      const user = await db.getUserByOpenId(openId);
+      const user = await db.getUserById(userId);
       if (!user) {
         res.status(500).json({ error: "Failed to create user" });
         return;
       }
 
-      const { accessToken, refreshToken } = await createTokens(user.id, user.role);
+      const { accessToken, refreshToken } = await createTokens(user.id, user.role ?? "user");
       setAuthCookies(req, res, accessToken, refreshToken);
       res.json({ success: true, accessToken, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
     } catch (error) {
@@ -87,9 +77,7 @@ export function registerAuthRoutes(app: Express) {
         return;
       }
 
-      await db.upsertUser({ openId: user.openId, lastSignedIn: new Date() });
-
-      const { accessToken, refreshToken } = await createTokens(user.id, user.role);
+      const { accessToken, refreshToken } = await createTokens(user.id, user.role ?? "user");
       setAuthCookies(req, res, accessToken, refreshToken);
       res.json({ success: true, accessToken, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
     } catch (error) {

@@ -1,227 +1,96 @@
-import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { sql } from "drizzle-orm";
+import {
+  sqliteTable, text, integer, real, index, uniqueIndex
+} from 'drizzle-orm/sqlite-core';
 
-export const users = sqliteTable("users", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  openId: text("openId").notNull().unique(),
-  name: text("name"),
-  email: text("email"),
-  passwordHash: text("passwordHash"),
-  loginMethod: text("loginMethod"),
-  role: text("role", { enum: ["user", "admin"] }).default("user").notNull(),
-  createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-  updatedAt: integer("updatedAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-  lastSignedIn: integer("lastSignedIn", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-});
+export const users = sqliteTable('users', {
+  id:           integer('id').primaryKey({ autoIncrement: true }),
+  name:         text('name').notNull(),
+  email:        text('email').notNull().unique(),
+  passwordHash: text('passwordHash').notNull(),
+  role:         text('role', { enum: ['user', 'admin'] }).default('user'),
+  createdAt:    text('createdAt').default(new Date().toISOString()),
+}, (table) => ({
+  emailIdx: uniqueIndex('user_email_idx').on(table.email),
+}));
+
+export const matches = sqliteTable('matches', {
+  id:              integer('id').primaryKey({ autoIncrement: true }),
+  homeTeam:        text('homeTeam').notNull(),
+  awayTeam:        text('awayTeam').notNull(),
+  matchDate:       text('matchDate').notNull(),
+  league:          text('league').notNull(),
+  matchweek:       integer('matchweek'),
+  season:          text('season').default('2025-26'),
+  status:          text('status', { enum: ['scheduled', 'live', 'finished'] }).default('scheduled'),
+  actualResult:    text('actualResult', { enum: ['home', 'draw', 'away'] }),
+  actualHomeScore: integer('actualHomeScore'),
+  actualAwayScore: integer('actualAwayScore'),
+  aiHomeProbability: real('aiHomeProbability'),
+  aiDrawProbability: real('aiDrawProbability'),
+  aiAwayProbability: real('aiAwayProbability'),
+}, (table) => ({
+  dateIdx:   index('match_date_idx').on(table.matchDate),
+  statusIdx: index('match_status_idx').on(table.status),
+  weekIdx:   index('match_week_idx').on(table.matchweek, table.season),
+  leagueIdx: index('match_league_idx').on(table.league),
+}));
+
+export const predictions = sqliteTable('predictions', {
+  id:                 integer('id').primaryKey({ autoIncrement: true }),
+  userId:             integer('userId').notNull(),
+  matchId:            integer('matchId').notNull(),
+  prediction:         text('prediction', { enum: ['home', 'draw', 'away'] }).notNull(),
+  confidence:         integer('confidence'),
+  predictedHomeScore: integer('predictedHomeScore'),
+  predictedAwayScore: integer('predictedAwayScore'),
+  points:             integer('points').default(0),
+  isCorrect:          integer('isCorrect', { mode: 'boolean' }).default(false),
+  createdAt:          text('createdAt').default(new Date().toISOString()),
+}, (table) => ({
+  userIdx:    index('pred_user_idx').on(table.userId),
+  matchIdx:   index('pred_match_idx').on(table.matchId),
+  uniquePred: uniqueIndex('pred_unique').on(table.userId, table.matchId),
+}));
+
+export const leaderboardScores = sqliteTable('leaderboardScores', {
+  id:                 integer('id').primaryKey({ autoIncrement: true }),
+  userId:             integer('userId').notNull().unique(),
+  totalPoints:        integer('totalPoints').default(0),
+  weeklyPoints:       integer('weeklyPoints').default(0),
+  totalPredictions:   integer('totalPredictions').default(0),
+  correctPredictions: integer('correctPredictions').default(0),
+  accuracyRate:       real('accuracyRate').default(0),
+  currentStreak:      integer('currentStreak').default(0),
+  longestStreak:      integer('longestStreak').default(0),
+}, (table) => ({
+  pointsIdx: index('lb_points_idx').on(table.totalPoints),
+  weeklyIdx: index('lb_weekly_idx').on(table.weeklyPoints),
+  userIdx:   index('lb_user_idx').on(table.userId),
+}));
+
+export const standings = sqliteTable('standings', {
+  id:           integer('id').primaryKey({ autoIncrement: true }),
+  teamId:       integer('teamId').notNull(),
+  league:       text('league').notNull(),
+  season:       text('season').default('2025-26'),
+  position:     integer('position').notNull(),
+  played:       integer('played').default(0),
+  won:          integer('won').default(0),
+  drawn:        integer('drawn').default(0),
+  lost:         integer('lost').default(0),
+  goalsFor:     integer('goalsFor').default(0),
+  goalsAgainst: integer('goalsAgainst').default(0),
+  points:       integer('points').default(0),
+  form:         text('form'),
+}, (table) => ({
+  leagueSeasonIdx: index('std_league_season_idx').on(table.league, table.season),
+}));
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
-
-export const matches = sqliteTable("matches", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  league: text("league", { enum: ["ligat_hael", "ligah_leumit"] }).notNull(),
-  homeTeam: text("homeTeam").notNull(),
-  awayTeam: text("awayTeam").notNull(),
-  matchDate: integer("matchDate", { mode: "timestamp" }).notNull(),
-  homeTeamLogo: text("homeTeamLogo"),
-  awayTeamLogo: text("awayTeamLogo"),
-  aiHomeWinProb: real("aiHomeWinProb"),
-  aiDrawProb: real("aiDrawProb"),
-  aiAwayWinProb: real("aiAwayWinProb"),
-  aiRecommendedPick: text("aiRecommendedPick", { enum: ["home_win", "draw", "away_win"] }),
-  aiReasoning: text("aiReasoning"),
-  aiConfidence: real("aiConfidence"),
-  actualResult: text("actualResult", { enum: ["home_win", "draw", "away_win"] }),
-  homeTeamScore: integer("homeTeamScore"),
-  awayTeamScore: integer("awayTeamScore"),
-  resultPublished: integer("resultPublished", { mode: "boolean" }).default(false),
-  externalId: integer("externalId"),
-  matchweek: integer("matchweek"),
-  season: text("season").default("2025-26"),
-  createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-  updatedAt: integer("updatedAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-});
-
 export type Match = typeof matches.$inferSelect;
 export type InsertMatch = typeof matches.$inferInsert;
-
-export const predictions = sqliteTable("predictions", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  userId: integer("userId").notNull(),
-  matchId: integer("matchId").notNull(),
-  prediction: text("prediction", { enum: ["home_win", "draw", "away_win"] }).notNull(),
-  predictedHomeScore: integer("predictedHomeScore"),
-  predictedAwayScore: integer("predictedAwayScore"),
-  confidence: real("confidence"),
-  points: integer("points").default(0),
-  isCorrect: integer("isCorrect", { mode: "boolean" }),
-  createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-  updatedAt: integer("updatedAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-});
-
 export type Prediction = typeof predictions.$inferSelect;
 export type InsertPrediction = typeof predictions.$inferInsert;
-
-export const leaderboardScores = sqliteTable("leaderboardScores", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  userId: integer("userId").notNull().unique(),
-  totalPoints: integer("totalPoints").default(0),
-  totalPredictions: integer("totalPredictions").default(0),
-  correctPredictions: integer("correctPredictions").default(0),
-  accuracyRate: real("accuracyRate").default(0),
-  weeklyPoints: integer("weeklyPoints").default(0),
-  weeklyPredictions: integer("weeklyPredictions").default(0),
-  lastUpdated: integer("lastUpdated", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-});
-
 export type LeaderboardScore = typeof leaderboardScores.$inferSelect;
-export type InsertLeaderboardScore = typeof leaderboardScores.$inferInsert;
-
-export const notifications = sqliteTable("notifications", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  userId: integer("userId").notNull(),
-  title: text("title").notNull(),
-  content: text("content"),
-  type: text("type", { enum: ["result_published", "score_updated", "match_reminder", "achievement"] }).notNull(),
-  relatedMatchId: integer("relatedMatchId"),
-  emailSent: integer("emailSent", { mode: "boolean" }).default(false),
-  read: integer("read", { mode: "boolean" }).default(false),
-  createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-});
-
-export type Notification = typeof notifications.$inferSelect;
-export type InsertNotification = typeof notifications.$inferInsert;
-
-export const advancedPredictions = sqliteTable("advancedPredictions", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  userId: integer("userId").notNull(),
-  matchId: integer("matchId").notNull(),
-  goalsOverUnder: text("goalsOverUnder", { enum: ["over", "under"] }),
-  cornersOverUnder: text("cornersOverUnder", { enum: ["over", "under"] }),
-  yellowCardsOverUnder: text("yellowCardsOverUnder", { enum: ["over", "under"] }),
-  redCardInMatch: integer("redCardInMatch", { mode: "boolean" }),
-  points: integer("points").default(0),
-  createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-  updatedAt: integer("updatedAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-});
-
-export type AdvancedPrediction = typeof advancedPredictions.$inferSelect;
-export type InsertAdvancedPrediction = typeof advancedPredictions.$inferInsert;
-
-export const matchAdvancedStats = sqliteTable("matchAdvancedStats", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  matchId: integer("matchId").notNull().unique(),
-  totalGoals: integer("totalGoals"),
-  totalCorners: integer("totalCorners"),
-  totalYellowCards: integer("totalYellowCards"),
-  totalRedCards: integer("totalRedCards"),
-  createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-});
-
-export type MatchAdvancedStats = typeof matchAdvancedStats.$inferSelect;
-export type InsertMatchAdvancedStats = typeof matchAdvancedStats.$inferInsert;
-
-export const competitions = sqliteTable("competitions", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  name: text("name").notNull(),
-  description: text("description"),
-  type: text("type", { enum: ["tournament", "head_to_head"] }).notNull(),
-  creatorId: integer("creatorId").notNull(),
-  status: text("status", { enum: ["active", "completed", "cancelled"] }).default("active").notNull(),
-  maxParticipants: integer("maxParticipants").default(50),
-  startDate: integer("startDate", { mode: "timestamp" }),
-  endDate: integer("endDate", { mode: "timestamp" }),
-  createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-  updatedAt: integer("updatedAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-});
-
-export type Competition = typeof competitions.$inferSelect;
-export type InsertCompetition = typeof competitions.$inferInsert;
-
-export const competitionParticipants = sqliteTable("competitionParticipants", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  competitionId: integer("competitionId").notNull(),
-  userId: integer("userId").notNull(),
-  points: integer("points").default(0),
-  rank: integer("rank"),
-  joinedAt: integer("joinedAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-});
-
-export type CompetitionParticipant = typeof competitionParticipants.$inferSelect;
-export type InsertCompetitionParticipant = typeof competitionParticipants.$inferInsert;
-
-export const chatMessages = sqliteTable("chatMessages", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  senderId: integer("senderId").notNull(),
-  receiverId: integer("receiverId").notNull(),
-  message: text("message").notNull(),
-  isRead: integer("isRead", { mode: "boolean" }).default(false),
-  createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-});
-
-export type ChatMessage = typeof chatMessages.$inferSelect;
-export type InsertChatMessage = typeof chatMessages.$inferInsert;
-
-export const userStreaks = sqliteTable("userStreaks", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  userId: integer("userId").notNull().unique(),
-  currentStreak: integer("currentStreak").default(0),
-  bestStreak: integer("bestStreak").default(0),
-  lastCorrectAt: integer("lastCorrectAt", { mode: "timestamp" }),
-  updatedAt: integer("updatedAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-});
-
-export type UserStreak = typeof userStreaks.$inferSelect;
-export type InsertUserStreak = typeof userStreaks.$inferInsert;
-
-export const teams = sqliteTable("teams", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  externalId: integer("externalId").notNull().unique(),
-  name: text("name").notNull(),
-  hebrewName: text("hebrewName"),
-  logoUrl: text("logoUrl"),
-  city: text("city"),
-  league: text("league", { enum: ["ligat_hael", "ligah_leumit"] }).notNull(),
-  season: text("season").notNull(),
-  scrapedAt: integer("scrapedAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-});
-
-export type Team = typeof teams.$inferSelect;
-export type InsertTeam = typeof teams.$inferInsert;
-
-export const leaguePlayers = sqliteTable("leaguePlayers", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  externalTeamId: integer("externalTeamId").notNull(),
-  teamName: text("teamName").notNull(),
-  name: text("name").notNull(),
-  position: text("position"),
-  jerseyNumber: integer("jerseyNumber"),
-  season: text("season").notNull(),
-  scrapedAt: integer("scrapedAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-});
-
-export type LeaguePlayer = typeof leaguePlayers.$inferSelect;
-export type InsertLeaguePlayer = typeof leaguePlayers.$inferInsert;
-
-export const leagueStandings = sqliteTable("leagueStandings", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  externalTeamId: integer("externalTeamId").notNull(),
-  teamName: text("teamName").notNull(),
-  teamLogo: text("teamLogo"),
-  league: text("league", { enum: ["ligat_hael", "ligah_leumit"] }).notNull(),
-  season: text("season").notNull(),
-  position: integer("position").notNull(),
-  played: integer("played").default(0).notNull(),
-  won: integer("won").default(0).notNull(),
-  drawn: integer("drawn").default(0).notNull(),
-  lost: integer("lost").default(0).notNull(),
-  goalsFor: integer("goalsFor").default(0).notNull(),
-  goalsAgainst: integer("goalsAgainst").default(0).notNull(),
-  goalDifference: integer("goalDifference").default(0).notNull(),
-  points: integer("points").default(0).notNull(),
-  form: text("form"),
-  updatedAt: integer("updatedAt", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-});
-
-export type LeagueStanding = typeof leagueStandings.$inferSelect;
-export type InsertLeagueStanding = typeof leagueStandings.$inferInsert;
+export type Standing = typeof standings.$inferSelect;

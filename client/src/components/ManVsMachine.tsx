@@ -36,18 +36,18 @@ export function ManVsMachineChallenge({
 
   const getPickLabel = (pick: string) => {
     switch (pick) {
-      case "home_win": return `ניצחון ${homeTeam}`;
+      case "home": return `ניצחון ${homeTeam}`;
       case "draw": return "תיקו";
-      case "away_win": return `ניצחון ${awayTeam}`;
+      case "away": return `ניצחון ${awayTeam}`;
       default: return pick;
     }
   };
 
   const getPickEmoji = (pick: string) => {
     switch (pick) {
-      case "home_win": return "🏠";
+      case "home": return "🏠";
       case "draw": return "🤝";
-      case "away_win": return "✈️";
+      case "away": return "✈️";
       default: return "⚽";
     }
   };

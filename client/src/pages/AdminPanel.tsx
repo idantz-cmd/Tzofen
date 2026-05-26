@@ -17,7 +17,7 @@ export default function AdminPanel() {
   const [matchResult, setMatchResult] = useState<{
     homeScore: number;
     awayScore: number;
-    result: "home_win" | "draw" | "away_win" | null;
+    result: "home" | "draw" | "away" | null;
   }>({
     homeScore: 0,
     awayScore: 0,
@@ -71,9 +71,9 @@ export default function AdminPanel() {
 
     // Auto-calculate result
     if (newScore.homeScore > newScore.awayScore) {
-      newScore.result = "home_win";
+      newScore.result = "home";
     } else if (newScore.homeScore < newScore.awayScore) {
-      newScore.result = "away_win";
+      newScore.result = "away";
     } else {
       newScore.result = "draw";
     }
@@ -295,9 +295,9 @@ export default function AdminPanel() {
                         <div className="bg-card/50 rounded-lg p-4 border border-border">
                           <p className="text-sm text-muted-foreground mb-2">התוצאה:</p>
                           <p className="text-lg font-bold text-accent">
-                            {matchResult.result === "home_win"
+                            {matchResult.result === "home"
                               ? `ניצחון ${selectedMatchData.homeTeam}`
-                              : matchResult.result === "away_win"
+                              : matchResult.result === "away"
                                 ? `ניצחון ${selectedMatchData.awayTeam}`
                                 : "תיקו"}
                           </p>
@@ -353,7 +353,7 @@ export default function AdminPanel() {
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-bold text-accent mb-1">
-                        {match.homeScore} - {match.awayScore}
+                        {match.actualHomeScore} - {match.actualAwayScore}
                       </p>
                       <p className="text-sm text-green-400">✓ פורסם</p>
                     </div>
@@ -393,7 +393,7 @@ function ImportPanel() {
   });
 
   const importAllStats = trpc.import.importAllStats.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast.success(`יובאו סטטיסטיקות ל-${data.imported} משחקים`);
     },
     onError: (e) => toast.error(`שגיאה: ${e.message}`),
@@ -580,12 +580,12 @@ function LeagueDataPanel() {
   const { data: status, refetch: refetchStatus } = trpc.leagueData.getDataStatus.useQuery();
 
   const scrapeAll = trpc.leagueData.scrapeAll.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast.success(data.message);
       refetchStatus();
     },
     onError: (e) => toast.error(`שגיאה: ${e.message}`),
-  });
+  }) as any;
 
   return (
     <div className="space-y-6">
@@ -703,7 +703,7 @@ function EngagementPanel() {
   const [content, setContent] = useState("");
 
   const sendMutation = trpc.engagement.sendSegmentNotification.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast.success(`נשלחו ${data.sent} התראות בהצלחה`);
       setSelected(null);
       setTitle("");

@@ -1,5 +1,5 @@
-import { getDb, createNotification } from "../db";
-import { userStreaks, predictions } from "../../drizzle/schema";
+import { getDb } from "../db";
+import { leaderboardScores, predictions } from "../../drizzle/schema";
 import { eq, lt, desc, and } from "drizzle-orm";
 
 function log(msg: string): void {
@@ -14,41 +14,47 @@ function dayStart(d: Date): Date {
  * Called after every prediction submission.
  * - Increments streak if user predicted yesterday
  * - Resets streak to 1 if there was a gap
- * - Sends a notification when a streak of 3+ days breaks
- * - Updates userStreaks table
+ * - Updates leaderboardScores.currentStreak / longestStreak
+ *
+ * NOTE: The dedicated `userStreaks` table was removed from the schema.
+ * Streak data is now persisted on `leaderboardScores`. The legacy
+ * streak-break notification is dropped here because the `notifications`
+ * table was also removed.
  */
 export async function checkAndUpdateStreak(userId: number): Promise<void> {
   const db = getDb();
   const now = new Date();
   const todayMidnight = dayStart(now);
+  const todayMidnightIso = todayMidnight.toISOString();
 
-  // Find the most recent prediction submitted BEFORE today
+  // Find the most recent prediction submitted BEFORE today.
+  // `createdAt` is stored as an ISO string in SQLite — lexicographic
+  // comparison works for ISO-8601 strings.
   const [lastPred] = await db
     .select({ createdAt: predictions.createdAt })
     .from(predictions)
     .where(
       and(
         eq(predictions.userId, userId),
-        lt(predictions.createdAt, todayMidnight),
+        lt(predictions.createdAt, todayMidnightIso),
       ),
     )
     .orderBy(desc(predictions.createdAt))
     .limit(1);
 
-  // Current streak record
+  // Current streak record (on leaderboardScores)
   const [existing] = await db
     .select()
-    .from(userStreaks)
-    .where(eq(userStreaks.userId, userId))
+    .from(leaderboardScores)
+    .where(eq(leaderboardScores.userId, userId))
     .limit(1);
 
   const currentStreak = existing?.currentStreak ?? 0;
-  const bestStreak = existing?.bestStreak ?? 0;
+  const bestStreak = existing?.longestStreak ?? 0;
 
   let newStreak: number;
-  let streakBroke = false;
 
-  if (!lastPred) {
+  if (!lastPred || !lastPred.createdAt) {
     // First prediction ever
     newStreak = 1;
   } else {
@@ -65,38 +71,28 @@ export async function checkAndUpdateStreak(userId: number): Promise<void> {
       newStreak = currentStreak === 0 ? 1 : currentStreak;
     } else {
       // Gap > 1 day — streak broke
-      if (currentStreak >= 3) streakBroke = true;
       newStreak = 1;
     }
   }
 
-  // Upsert streak row
+  const nextBest = Math.max(bestStreak, newStreak);
+
+  // Upsert streak fields on leaderboardScores
   if (existing) {
     await db
-      .update(userStreaks)
+      .update(leaderboardScores)
       .set({
         currentStreak: newStreak,
-        bestStreak: Math.max(bestStreak, newStreak),
-        updatedAt: new Date(),
+        longestStreak: nextBest,
       })
-      .where(eq(userStreaks.userId, userId));
+      .where(eq(leaderboardScores.userId, userId));
   } else {
-    await db.insert(userStreaks).values({
+    await db.insert(leaderboardScores).values({
       userId,
       currentStreak: newStreak,
-      bestStreak: newStreak,
+      longestStreak: newStreak,
     });
   }
 
-  log(`User ${userId}: streak ${currentStreak} → ${newStreak}${streakBroke ? " (BROKE)" : ""}`);
-
-  // Notify when a meaningful streak breaks
-  if (streakBroke) {
-    await createNotification({
-      userId,
-      title: "הסטריק נשבר! 🔥",
-      content: `לא ניחשת אתמול — הסטריק שלך של ${currentStreak} ימים אופס. חזור היום!`,
-      type: "achievement",
-    });
-  }
+  log(`User ${userId}: streak ${currentStreak} → ${newStreak}`);
 }

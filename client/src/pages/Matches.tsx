@@ -82,7 +82,7 @@ export default function Matches() {
 
   const handleSubmitPrediction = (
     matchId: number,
-    prediction: "home_win" | "draw" | "away_win",
+    prediction: "home" | "draw" | "away",
     homeTeam: string,
     awayTeam: string,
   ) => {
@@ -221,7 +221,7 @@ function MatchList({
   matches: any[];
   isLoading: boolean;
   userPredictions: any[];
-  onSubmitPrediction: (matchId: number, prediction: "home_win" | "draw" | "away_win", homeTeam: string, awayTeam: string) => void;
+  onSubmitPrediction: (matchId: number, prediction: "home" | "draw" | "away", homeTeam: string, awayTeam: string) => void;
   isSubmitting: boolean;
   formatDate: (date: Date | string) => string;
   expandedMatch: number | null;
@@ -299,7 +299,7 @@ function MatchCard({
 }: {
   match: any;
   userPrediction?: any;
-  onSubmitPrediction: (matchId: number, prediction: "home_win" | "draw" | "away_win", homeTeam: string, awayTeam: string) => void;
+  onSubmitPrediction: (matchId: number, prediction: "home" | "draw" | "away", homeTeam: string, awayTeam: string) => void;
   isSubmitting: boolean;
   formatDate: (date: Date | string) => string;
   isExpanded: boolean;
@@ -382,7 +382,7 @@ function MatchCard({
         {/* Teams Display */}
         <div className="grid grid-cols-3 items-center gap-2 mb-4">
           <div className="text-center">
-            <TeamLogo teamName={match.homeTeam} logoUrl={match.homeTeamLogo} size="md" />
+            <TeamLogo teamName={match.homeTeam} size="md" />
             <p className="font-bold text-sm mt-1.5 text-foreground">{homeHebrew}</p>
             <p className="text-[10px] text-muted-foreground">בית</p>
           </div>
@@ -392,7 +392,7 @@ function MatchCard({
             </div>
           </div>
           <div className="text-center">
-            <TeamLogo teamName={match.awayTeam} logoUrl={match.awayTeamLogo} size="md" />
+            <TeamLogo teamName={match.awayTeam} size="md" />
             <p className="font-bold text-sm mt-1.5 text-foreground">{awayHebrew}</p>
             <p className="text-[10px] text-muted-foreground">חוץ</p>
           </div>
@@ -410,8 +410,8 @@ function MatchCard({
               <Lock className="w-4 h-4" style={{ color: "oklch(0.78 0.155 72)" }} />
               <span className="text-sm font-bold" style={{ color: "oklch(0.78 0.155 72)" }}>החיזוי שלך ננעל</span>
               <Badge className="mr-auto text-xs" style={{ background: "oklch(0.78 0.155 72 / 0.15)", color: "oklch(0.78 0.155 72)", border: "1px solid oklch(0.78 0.155 72 / 0.30)" }}>
-                {userPrediction.prediction === "home_win" ? homeHebrew :
-                 userPrediction.prediction === "away_win" ? awayHebrew : "תיקו"}
+                {userPrediction.prediction === "home" ? homeHebrew :
+                 userPrediction.prediction === "away" ? awayHebrew : "תיקו"}
               </Badge>
             </div>
           </div>
@@ -419,10 +419,10 @@ function MatchCard({
           <div>
             <p className="text-xs text-muted-foreground mb-2 font-bold">חזה את התוצאה:</p>
             <div className="grid grid-cols-3 gap-2">
-              {(["home_win", "draw", "away_win"] as const).map((pred) => {
+              {(["home", "draw", "away"] as const).map((pred) => {
                 const isSelected = selectedPrediction === pred;
-                const label = pred === "home_win" ? `${homeHebrew}` : pred === "draw" ? "תיקו" : `${awayHebrew}`;
-                const color = pred === "home_win" ? homeColors.primary : pred === "away_win" ? awayColors.primary : "oklch(0.65 0.130 80)";
+                const label = pred === "home" ? `${homeHebrew}` : pred === "draw" ? "תיקו" : `${awayHebrew}`;
+                const color = pred === "home" ? homeColors.primary : pred === "away" ? awayColors.primary : "oklch(0.65 0.130 80)";
                 return (
                   <motion.button
                     key={pred}
@@ -508,7 +508,7 @@ function MatchCard({
               <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="mt-3">
                 <Button
                   onClick={() => {
-                    onSubmitPrediction(match.id, selectedPrediction as "home_win" | "draw" | "away_win", homeHebrew, awayHebrew);
+                    onSubmitPrediction(match.id, selectedPrediction as "home" | "draw" | "away", homeHebrew, awayHebrew);
                     if (goalsOver || cornersOver || yellowCards || redCard) {
                       advancedMutation.mutate({
                         matchId: match.id,
@@ -631,13 +631,13 @@ function CompletedMatchCard({
   const { data: advancedResults } = trpc.matches.getAdvancedResults.useQuery(
     { matchId: match.id },
     { enabled: !!isAuthenticated && !!match.actualResult }
-  );
+  ) as { data: any };
 
   const getResultLabel = (result: string) => {
     switch (result) {
-      case "home_win": return homeHebrew;
+      case "home": return homeHebrew;
       case "draw": return "תיקו";
-      case "away_win": return awayHebrew;
+      case "away": return awayHebrew;
       default: return "";
     }
   };
@@ -668,21 +668,21 @@ function CompletedMatchCard({
 
         <div className="grid grid-cols-3 items-center gap-2">
           <div className="text-center">
-            <TeamLogo teamName={match.homeTeam} logoUrl={match.homeTeamLogo} size="sm" />
+            <TeamLogo teamName={match.homeTeam} size="sm" />
             <p className="font-bold text-xs mt-1">{homeHebrew}</p>
           </div>
           <div className="text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/10 border border-border/20">
-              <span className="text-2xl font-black" style={{ color: homeColors.primary }}>{match.homeTeamScore ?? 0}</span>
+              <span className="text-2xl font-black" style={{ color: homeColors.primary }}>{match.actualHomeScore ?? 0}</span>
               <span className="text-muted-foreground font-bold">-</span>
-              <span className="text-2xl font-black" style={{ color: awayColors.primary }}>{match.awayTeamScore ?? 0}</span>
+              <span className="text-2xl font-black" style={{ color: awayColors.primary }}>{match.actualAwayScore ?? 0}</span>
             </div>
             {match.actualResult && (
               <p className="text-[10px] text-muted-foreground mt-1 font-medium">{getResultLabel(match.actualResult)}</p>
             )}
           </div>
           <div className="text-center">
-            <TeamLogo teamName={match.awayTeam} logoUrl={match.awayTeamLogo} size="sm" />
+            <TeamLogo teamName={match.awayTeam} size="sm" />
             <p className="font-bold text-xs mt-1">{awayHebrew}</p>
           </div>
         </div>

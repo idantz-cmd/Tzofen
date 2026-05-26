@@ -1,9 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "../_core/trpc";
-import { getUpcomingMatches, getCompletedMatches, getMatchById, createMatch, updateMatchResult, createPrediction, getUserPredictionForMatch, getUserPredictions, updateLeaderboardScore, createNotification, getDb, getOrCreateGuestUser } from "../db";
-import { advancedPredictions, matchAdvancedStats } from "../../drizzle/schema";
-import { eq, and } from "drizzle-orm";
+import { getUpcomingMatches, getCompletedMatches, getMatchById, createPrediction, getUserPredictionForMatch, getUserPredictions, getOrCreateGuestUser } from "../db";
 
 export const matchesRouter = router({
   // Get upcoming matches
@@ -52,7 +50,7 @@ export const matchesRouter = router({
   submitPrediction: publicProcedure
     .input(z.object({
       matchId: z.number(),
-      prediction: z.enum(["home_win", "draw", "away_win"]),
+      prediction: z.enum(["home", "draw", "away"]),
       confidence: z.number().min(0).max(100).optional(),
       guestToken: z.string().optional(),
     }))
@@ -155,38 +153,15 @@ export const matchesRouter = router({
     }),
 
   // Get advanced prediction results for a completed match
+  // TODO: implement with new schema (advancedPredictions/matchAdvancedStats tables removed)
   getAdvancedResults: protectedProcedure
     .input(z.object({ matchId: z.number() }))
-    .query(async ({ ctx, input }) => {
-      const db = getDb();
-      if (!db) return null;
-
-      const [userPred] = await db
-        .select()
-        .from(advancedPredictions)
-        .where(
-          and(
-            eq(advancedPredictions.userId, ctx.user.id),
-            eq(advancedPredictions.matchId, input.matchId)
-          )
-        )
-        .limit(1);
-
-      if (!userPred) return null;
-
-      const [stats] = await db
-        .select()
-        .from(matchAdvancedStats)
-        .where(eq(matchAdvancedStats.matchId, input.matchId))
-        .limit(1);
-
-      return {
-        prediction: userPred,
-        actualStats: stats || null,
-      };
+    .query(async () => {
+      throw new TRPCError({ code: "NOT_IMPLEMENTED", message: "תכונה זו אינה זמינה במהדורה הנוכחית" });
     }),
 
   // Submit advanced prediction (goals, corners, cards)
+  // TODO: implement with new schema (advancedPredictions table removed)
   submitAdvancedPrediction: protectedProcedure
     .input(z.object({
       matchId: z.number(),
@@ -195,45 +170,7 @@ export const matchesRouter = router({
       yellowCardsOverUnder: z.enum(["over", "under"]).optional(),
       redCardInMatch: z.boolean().optional(),
     }))
-    .mutation(async ({ ctx, input }) => {
-      const db = getDb();
-      if (!db) throw new Error("Database unavailable");
-
-      const [existing] = await db
-        .select()
-        .from(advancedPredictions)
-        .where(
-          and(
-            eq(advancedPredictions.userId, ctx.user.id),
-            eq(advancedPredictions.matchId, input.matchId)
-          )
-        )
-        .limit(1);
-
-      if (existing) {
-        await db
-          .update(advancedPredictions)
-          .set({
-            goalsOverUnder: input.goalsOverUnder || null,
-            cornersOverUnder: input.cornersOverUnder || null,
-            yellowCardsOverUnder: input.yellowCardsOverUnder || null,
-            redCardInMatch: input.redCardInMatch ?? null,
-          })
-          .where(eq(advancedPredictions.id, existing.id));
-
-        return { success: true, message: "החיזוי המתקדם עודכן" };
-      }
-
-      await db.insert(advancedPredictions).values({
-        userId: ctx.user.id,
-        matchId: input.matchId,
-        goalsOverUnder: input.goalsOverUnder || null,
-        cornersOverUnder: input.cornersOverUnder || null,
-        yellowCardsOverUnder: input.yellowCardsOverUnder || null,
-        redCardInMatch: input.redCardInMatch ?? null,
-        points: 0,
-      });
-
-      return { success: true, message: "החיזוי המתקדם נשמר" };
+    .mutation(async () => {
+      throw new TRPCError({ code: "NOT_IMPLEMENTED", message: "תכונה זו אינה זמינה במהדורה הנוכחית" });
     }),
 });

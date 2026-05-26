@@ -1,8 +1,14 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { router, adminProcedure } from "../_core/trpc";
-import { getDb, createNotification } from "../db";
-import { users, predictions, userStreaks, leaderboardScores } from "../../drizzle/schema";
-import { eq, ne, sql } from "drizzle-orm";
+import { getDb } from "../db";
+import { users, predictions, leaderboardScores } from "../../drizzle/schema";
+import { eq, sql } from "drizzle-orm";
+
+// TODO: implement with new schema — `userStreaks` table removed (streak data now on
+// `leaderboardScores`). The `users` table no longer has `loginMethod`/`openId`, so we
+// cannot filter out guest users at the query level. Notifications table was also removed,
+// so segment notifications are stubbed.
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -40,14 +46,12 @@ async function getUserRows(): Promise<UserRow[]> {
       // SQLite stores createdAt as unix seconds via unixepoch()
       lastPrediction: sql<number | null>`max(${predictions.createdAt})`,
       totalPredictions: sql<number>`count(${predictions.id})`,
-      currentStreak: sql<number>`coalesce(${userStreaks.currentStreak}, 0)`,
+      currentStreak: sql<number>`coalesce(${leaderboardScores.currentStreak}, 0)`,
       totalPoints: sql<number>`coalesce(${leaderboardScores.totalPoints}, 0)`,
     })
     .from(users)
     .leftJoin(predictions, eq(predictions.userId, users.id))
-    .leftJoin(userStreaks, eq(userStreaks.userId, users.id))
     .leftJoin(leaderboardScores, eq(leaderboardScores.userId, users.id))
-    .where(ne(users.loginMethod, "guest"))
     .groupBy(users.id);
 
   return rows as UserRow[];
@@ -88,6 +92,7 @@ export const engagementRouter = router({
   }),
 
   // Blast an in-app notification to every user in a segment
+  // TODO: implement with new schema — `notifications` table was removed
   sendSegmentNotification: adminProcedure
     .input(
       z.object({
@@ -96,22 +101,7 @@ export const engagementRouter = router({
         content: z.string().max(300).optional(),
       }),
     )
-    .mutation(async ({ input }) => {
-      const rows = await getUserRows();
-      const targets = rows.filter((r) => classify(r) === input.segment);
-      const meta = SEGMENT_META[input.segment];
-
-      await Promise.all(
-        targets.map((r) =>
-          createNotification({
-            userId: r.userId,
-            title: input.title,
-            content: input.content,
-            type: meta.notifType,
-          }),
-        ),
-      );
-
-      return { sent: targets.length };
+    .mutation(async () => {
+      throw new TRPCError({ code: "NOT_IMPLEMENTED", message: "שליחת התראות לפי קבוצה אינה זמינה במהדורה הנוכחית" });
     }),
 });

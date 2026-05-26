@@ -14,8 +14,6 @@
  */
 
 import * as cheerio from "cheerio";
-import { getDb } from "../db";
-import { teams, leaguePlayers, leagueStandings } from "../../drizzle/schema";
 
 // ─── Internal Types ──────────────────────────────────────────────────────────
 
@@ -401,107 +399,33 @@ export interface ScrapeResult {
 }
 
 /**
- * Run all four skills and persist results to the database.
- * This is the one-time scrape entry point.
+ * Run all four skills and return results.
+ * NOTE: DB persistence for teams/leaguePlayers/leagueStandings was removed
+ * in the schema migration. This function now returns scraped data only.
  */
 export async function runFullScrape(season = "25/26"): Promise<ScrapeResult> {
-  const db = getDb();
-  if (!db) throw new Error("Database not available");
-
   const errors: string[] = [];
-
-  // ── Fetch all games ──────────────────────────────────────────────────────────
   const allGames = await fetchAllGames();
 
-  // ── Skill 1: Teams ───────────────────────────────────────────────────────────
   const extractedTeams = await skillExtractTeams(allGames);
+  const teamsInserted = extractedTeams.length;
 
-  await db.delete(teams);
-  let teamsInserted = 0;
-  for (const t of extractedTeams) {
-    try {
-      await db.insert(teams).values({
-        externalId: t.externalId,
-        name: t.name,
-        hebrewName: t.hebrewName || t.name,
-        logoUrl: t.logoUrl ?? null,
-        league: t.league,
-        season,
-      });
-      teamsInserted++;
-    } catch (e: any) {
-      errors.push(`[Skill1] Team ${t.name}: ${e.message}`);
-    }
-  }
-
-  // ── Skill 2: Standings ───────────────────────────────────────────────────────
-  await db.delete(leagueStandings);
   let standingsLigatHael = 0;
   let standingsLigahLeumit = 0;
-
   for (const leagueId of LEAGUE_IDS) {
     const rows = await skillComputeStandings(allGames, leagueId, season);
-    for (const row of rows) {
-      try {
-        await db.insert(leagueStandings).values({
-          externalTeamId: row.externalTeamId,
-          teamName: row.teamName,
-          teamLogo: row.teamLogo ?? null,
-          league: row.league,
-          season: row.season,
-          position: row.position,
-          played: row.played,
-          won: row.won,
-          drawn: row.drawn,
-          lost: row.lost,
-          goalsFor: row.goalsFor,
-          goalsAgainst: row.goalsAgainst,
-          goalDifference: row.goalDifference,
-          points: row.points,
-          form: row.form || null,
-        });
-        if (leagueId === 902) standingsLigatHael++;
-        else standingsLigahLeumit++;
-      } catch (e: any) {
-        errors.push(`[Skill2] Standing ${row.teamName}: ${e.message}`);
-      }
-    }
+    if (leagueId === 902) standingsLigatHael = rows.length;
+    else standingsLigahLeumit = rows.length;
   }
 
-  // ── Skill 3 + 4: Players + Details ───────────────────────────────────────────
-  await db.delete(leaguePlayers);
   let playersTotal = 0;
-
-  const savedTeams = await db.select().from(teams);
-
-  for (const team of savedTeams) {
+  for (const team of extractedTeams) {
     try {
-      // Skill 4: city details
-      const details = await skillScrapeTeamDetails(team.externalId);
-      if (details.city) {
-        const { eq } = await import("drizzle-orm");
-        await db.update(teams).set({ city: details.city }).where(eq(teams.id, team.id));
-      }
-
-      // Skill 3: players
       const players = await skillScrapePlayerRoster(team.externalId);
-      for (const p of players) {
-        if (!p.name) continue;
-        await db.insert(leaguePlayers).values({
-          externalTeamId: team.externalId,
-          teamName: team.hebrewName || team.name,
-          name: p.name,
-          position: p.position ?? null,
-          jerseyNumber: p.jerseyNumber ?? null,
-          season,
-        });
-        playersTotal++;
-      }
+      playersTotal += players.length;
     } catch (e: any) {
-      errors.push(`[Skill3/4] ${team.name}: ${e.message}`);
+      errors.push(`[Skill3] ${team.name}: ${e.message}`);
     }
-
-    // Polite delay to avoid rate limiting
     await new Promise((r) => setTimeout(r, 250));
   }
 

@@ -37,12 +37,12 @@ export interface HeadToHeadStats {
   team2GoalsScored: number;
   avgTotalGoals: number;
   recentMatches: Array<{
-    date: Date;
+    date: string;
     homeTeam: string;
     awayTeam: string;
     homeScore: number;
     awayScore: number;
-    result: "home_win" | "draw" | "away_win";
+    result: "home" | "draw" | "away";
   }>;
 }
 
@@ -52,7 +52,7 @@ export interface MatchPrediction {
   homeWinProbability: number;
   drawProbability: number;
   awayWinProbability: number;
-  recommendedPick: "home_win" | "draw" | "away_win";
+  recommendedPick: "home" | "draw" | "away";
   confidence: "low" | "medium" | "high";
   reasoning: string;
   homeStats: TeamStats;
@@ -98,14 +98,14 @@ export async function getTeamStats(teamName: string): Promise<TeamStats> {
 
   for (const m of completedMatches) {
     const isHome = m.homeTeam === teamName;
-    const scored = isHome ? (m.homeTeamScore ?? 0) : (m.awayTeamScore ?? 0);
-    const conceded = isHome ? (m.awayTeamScore ?? 0) : (m.homeTeamScore ?? 0);
+    const scored = isHome ? (m.actualHomeScore ?? 0) : (m.actualAwayScore ?? 0);
+    const conceded = isHome ? (m.actualAwayScore ?? 0) : (m.actualHomeScore ?? 0);
     stats.goalsScored += scored;
     stats.goalsConceded += conceded;
 
     const teamWon =
-      (isHome && m.actualResult === "home_win") ||
-      (!isHome && m.actualResult === "away_win");
+      (isHome && m.actualResult === "home") ||
+      (!isHome && m.actualResult === "away");
     const teamDrew = m.actualResult === "draw";
 
     if (isHome) {
@@ -133,13 +133,13 @@ export async function getTeamStats(teamName: string): Promise<TeamStats> {
 
   // Form: last 5 completed matches sorted by date desc
   const sorted = [...completedMatches].sort(
-    (a, b) => b.matchDate.getTime() - a.matchDate.getTime()
+    (a, b) => new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime()
   );
   stats.form = sorted.slice(0, 5).map((m) => {
     const isHome = m.homeTeam === teamName;
     const won =
-      (isHome && m.actualResult === "home_win") ||
-      (!isHome && m.actualResult === "away_win");
+      (isHome && m.actualResult === "home") ||
+      (!isHome && m.actualResult === "away");
     const drew = m.actualResult === "draw";
     return won ? "W" : drew ? "D" : "L";
   });
@@ -181,22 +181,22 @@ export async function getHeadToHead(team1: string, team2: string): Promise<HeadT
   let totalGoals = 0;
 
   for (const m of h2hMatches) {
-    totalGoals += (m.homeTeamScore ?? 0) + (m.awayTeamScore ?? 0);
+    totalGoals += (m.actualHomeScore ?? 0) + (m.actualAwayScore ?? 0);
 
     if (m.homeTeam === team1) {
-      stats.team1GoalsScored += m.homeTeamScore ?? 0;
-      stats.team2GoalsScored += m.awayTeamScore ?? 0;
+      stats.team1GoalsScored += m.actualHomeScore ?? 0;
+      stats.team2GoalsScored += m.actualAwayScore ?? 0;
     } else {
-      stats.team1GoalsScored += m.awayTeamScore ?? 0;
-      stats.team2GoalsScored += m.homeTeamScore ?? 0;
+      stats.team1GoalsScored += m.actualAwayScore ?? 0;
+      stats.team2GoalsScored += m.actualHomeScore ?? 0;
     }
 
     const team1Won =
-      (m.homeTeam === team1 && m.actualResult === "home_win") ||
-      (m.awayTeam === team1 && m.actualResult === "away_win");
+      (m.homeTeam === team1 && m.actualResult === "home") ||
+      (m.awayTeam === team1 && m.actualResult === "away");
     const team2Won =
-      (m.homeTeam === team2 && m.actualResult === "home_win") ||
-      (m.awayTeam === team2 && m.actualResult === "away_win");
+      (m.homeTeam === team2 && m.actualResult === "home") ||
+      (m.awayTeam === team2 && m.actualResult === "away");
 
     if (team1Won) stats.team1Wins++;
     else if (team2Won) stats.team2Wins++;
@@ -211,15 +211,15 @@ export async function getHeadToHead(team1: string, team2: string): Promise<HeadT
 
   // Last 5 H2H sorted by date desc
   const sorted = [...h2hMatches].sort(
-    (a, b) => b.matchDate.getTime() - a.matchDate.getTime()
+    (a, b) => new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime()
   );
   stats.recentMatches = sorted.slice(0, 5).map((m) => ({
     date: m.matchDate,
     homeTeam: m.homeTeam,
     awayTeam: m.awayTeam,
-    homeScore: m.homeTeamScore ?? 0,
-    awayScore: m.awayTeamScore ?? 0,
-    result: m.actualResult as "home_win" | "draw" | "away_win",
+    homeScore: m.actualHomeScore ?? 0,
+    awayScore: m.actualAwayScore ?? 0,
+    result: m.actualResult as "home" | "draw" | "away",
   }));
 
   return stats;
@@ -285,12 +285,12 @@ export async function predictMatch(
 
   // Pick recommendation
   const max = Math.max(homeWinProbability, drawProbability, awayWinProbability);
-  const recommendedPick: "home_win" | "draw" | "away_win" =
+  const recommendedPick: "home" | "draw" | "away" =
     max === homeWinProbability
-      ? "home_win"
+      ? "home"
       : max === drawProbability
         ? "draw"
-        : "away_win";
+        : "away";
 
   // Confidence based on data availability
   const dataPoints =
