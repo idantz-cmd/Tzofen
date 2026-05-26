@@ -104,6 +104,8 @@ const stmts = [
   "ALTER TABLE predictions ADD COLUMN predictedAwayScore INTEGER",
   "ALTER TABLE leaderboardScores ADD COLUMN currentStreak INTEGER DEFAULT 0",
   "ALTER TABLE leaderboardScores ADD COLUMN longestStreak INTEGER DEFAULT 0",
+  "ALTER TABLE users ADD COLUMN favTeam TEXT",
+  "ALTER TABLE users ADD COLUMN plan TEXT DEFAULT 'free'",
 
   // Rename old columns if they exist (SQLite doesn't support RENAME COLUMN before 3.25,
   // but libsql/turso is modern enough)

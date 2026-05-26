@@ -38,7 +38,8 @@ export async function createUser(
   email: string,
   passwordHash: string,
   name: string,
-  role: "user" | "admin" = "user"
+  role: "user" | "admin" = "user",
+  favTeam?: string
 ): Promise<number> {
   const db = getDb();
   const result = await db.insert(users).values({
@@ -46,6 +47,7 @@ export async function createUser(
     passwordHash,
     name,
     role,
+    favTeam: favTeam ?? null,
   });
   return Number(result.lastInsertRowid);
 }

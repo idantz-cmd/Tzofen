@@ -193,14 +193,14 @@ export default function Home() {
                 </div>
 
                 {/* WOW Moment: Next match countdown + predictions counter */}
-                {nextMatch && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5, duration: 0.5 }}
-                    className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-8"
-                  >
-                    {/* Countdown ring */}
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.5 }}
+                  className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-8"
+                >
+                  {/* Countdown ring — shown only when a match is loaded */}
+                  {nextMatch && (
                     <div className="flex flex-col items-center gap-2">
                       <CountdownRing
                         totalSeconds={TOTAL_WINDOW_SECONDS}
@@ -213,17 +213,17 @@ export default function Home() {
                       </p>
                       <p className="text-[10px] text-muted-foreground/60">המשחק הבא</p>
                     </div>
+                  )}
 
-                    {/* Animated predictions counter */}
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="text-3xl font-black tabular-nums" style={{ color: "oklch(0.55 0.165 240)", textShadow: "0 0 12px oklch(0.50 0.165 240 / 50%)" }}>
-                        <ScoreCounter value={12480} duration={2} />+
-                      </div>
-                      <p className="text-xs text-muted-foreground">ניחושים הוגשו</p>
-                      <p className="text-[10px] text-muted-foreground/60">בפלטפורמה</p>
+                  {/* Animated predictions counter — always visible */}
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="text-3xl font-black tabular-nums" style={{ color: "oklch(0.55 0.165 240)", textShadow: "0 0 12px oklch(0.50 0.165 240 / 50%)" }}>
+                      <ScoreCounter value={12480} duration={2} />+
                     </div>
-                  </motion.div>
-                )}
+                    <p className="text-xs text-muted-foreground">ניחושים הוגשו</p>
+                    <p className="text-[10px] text-muted-foreground/60">בפלטפורמה</p>
+                  </div>
+                </motion.div>
               </motion.div>
             </div>
           </section>

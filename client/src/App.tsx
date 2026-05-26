@@ -20,6 +20,7 @@ const Standings = lazy(() => import("./pages/Standings"));
 const UserChat = lazy(() => import("./pages/UserChat"));
 const AIPrediction = lazy(() => import("./pages/AIPrediction"));
 const News = lazy(() => import("./pages/News"));
+const Pricing = lazy(() => import("./pages/Pricing"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function AppLoader() {
@@ -45,6 +46,7 @@ function Router() {
         <Route path={"/ai-prediction"} component={AIPrediction} />
         <Route path={"/news"} component={News} />
         <Route path={"/login"} component={Login} />
+        <Route path={"/pricing"} component={Pricing} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>

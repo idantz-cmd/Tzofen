@@ -19,7 +19,7 @@ function setAuthCookies(
 
 export function registerAuthRoutes(app: Express) {
   app.post("/api/auth/register", async (req: Request, res: Response) => {
-    const { email, password, name } = req.body ?? {};
+    const { email, password, name, favTeam } = req.body ?? {};
 
     if (!email || !password || !name) {
       res.status(400).json({ error: "email, password, name are required" });
@@ -39,7 +39,7 @@ export function registerAuthRoutes(app: Express) {
       }
 
       const passwordHash = await bcrypt.hash(password, 10);
-      const userId = await db.createUser(email, passwordHash, name);
+      const userId = await db.createUser(email, passwordHash, name, "user", favTeam);
 
       const user = await db.getUserById(userId);
       if (!user) {

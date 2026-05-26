@@ -8,6 +8,8 @@ export const users = sqliteTable('users', {
   email:        text('email').notNull().unique(),
   passwordHash: text('passwordHash').notNull(),
   role:         text('role', { enum: ['user', 'admin'] }).default('user'),
+  favTeam:      text('favTeam'),
+  plan:         text('plan', { enum: ['free', 'pro', 'champion'] }).default('free'),
   createdAt:    text('createdAt').default(new Date().toISOString()),
 }, (table) => ({
   emailIdx: uniqueIndex('user_email_idx').on(table.email),
