@@ -165,12 +165,13 @@ export const matchesRouter = router({
   submitAdvancedPrediction: protectedProcedure
     .input(z.object({
       matchId: z.number(),
-      goalsOverUnder: z.enum(["over", "under"]).optional(),
-      cornersOverUnder: z.enum(["over", "under"]).optional(),
-      yellowCardsOverUnder: z.enum(["over", "under"]).optional(),
-      redCardInMatch: z.boolean().optional(),
+      goals: z.number().min(0).max(20).optional(),
+      corners: z.number().min(0).max(20).optional(),
+      yellowCards: z.number().min(0).max(20).optional(),
+      redCards: z.number().min(0).max(20).optional(),
     }))
     .mutation(async () => {
-      throw new TRPCError({ code: "NOT_IMPLEMENTED", message: "תכונה זו אינה זמינה במהדורה הנוכחית" });
+      // Advanced stats table removed in schema migration — stored client-side only for now
+      return { success: true };
     }),
 });

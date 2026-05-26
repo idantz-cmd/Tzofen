@@ -307,10 +307,10 @@ function MatchCard({
 }) {
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [goalsOver, setGoalsOver] = useState<string | null>(null);
-  const [cornersOver, setCornersOver] = useState<string | null>(null);
-  const [yellowCards, setYellowCards] = useState<string | null>(null);
-  const [redCard, setRedCard] = useState<string | null>(null);
+  const [goals, setGoals] = useState<number | null>(null);
+  const [corners, setCorners] = useState<number | null>(null);
+  const [yellowCards, setYellowCards] = useState<number | null>(null);
+  const [redCards, setRedCards] = useState<number | null>(null);
 
   const msLeft = useMatchCountdown(match.matchDate);
   const isLocked = msLeft <= 0;
@@ -461,45 +461,54 @@ function MatchCard({
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mt-3 space-y-3 p-3 rounded-lg bg-muted/5 border border-border/15"
+                  className="mt-3 space-y-4 p-3 rounded-lg bg-muted/5 border border-border/15"
                 >
-                  {[
-                    { label: "שערים (מעל/מתחת 2.5)", state: goalsOver, set: setGoalsOver },
-                    { label: "קרנות (מעל/מתחת 9.5)", state: cornersOver, set: setCornersOver },
-                    { label: "כרטיסים צהובים (מעל/מתחת 3.5)", state: yellowCards, set: setYellowCards },
-                  ].map(({ label, state, set }) => (
+                  {([
+                    { label: "שערים ⚽", emoji: "⚽", value: goals, set: setGoals, color: "oklch(0.55 0.110 232)" },
+                    { label: "קרנות 🚩", emoji: "🚩", value: corners, set: setCorners, color: "oklch(0.65 0.160 200)" },
+                    { label: "כרטיסים צהובים 🟨", emoji: "🟨", value: yellowCards, set: setYellowCards, color: "oklch(0.82 0.185 92)" },
+                    { label: "כרטיסים אדומים 🟥", emoji: "🟥", value: redCards, set: setRedCards, color: "oklch(0.60 0.200 25)" },
+                  ] as const).map(({ label, value, set, color }) => (
                     <div key={label}>
-                      <p className="text-[11px] text-muted-foreground mb-1.5 font-bold">{label}</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {["over", "under"].map((v) => (
-                          <Button
-                            key={v}
-                            variant="outline"
-                            size="sm"
-                            onClick={() => set(state === v ? null : v)}
-                            className={`text-xs h-9 ${state === v ? "text-white border-transparent" : "border-border/30"}`}
-                            style={state === v ? { background: "oklch(0.55 0.110 232)" } : {}}
-                          >
-                            {v === "over" ? "מעל" : "מתחת"}
-                          </Button>
-                        ))}
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-[11px] text-muted-foreground font-bold">{label}</p>
+                        <div className="flex items-center gap-2">
+                          {value !== null ? (
+                            <span className="text-sm font-black tabular-nums px-2 py-0.5 rounded-full text-white" style={{ background: color }}>
+                              {value}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground/50">לא מגדיר</span>
+                          )}
+                          {value !== null && (
+                            <button onClick={() => set(null)} className="text-muted-foreground/40 hover:text-muted-foreground text-[10px]">✕</button>
+                          )}
+                        </div>
+                      </div>
+                      <input
+                        type="range"
+                        min={0}
+                        max={20}
+                        step={1}
+                        value={value ?? 5}
+                        onChange={(e) => set(Number(e.target.value))}
+                        className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                        style={{
+                          background: value !== null
+                            ? `linear-gradient(to left, ${color} ${((value) / 20) * 100}%, oklch(0.30 0.020 240) ${((value) / 20) * 100}%)`
+                            : "oklch(0.30 0.020 240)",
+                          opacity: value !== null ? 1 : 0.45,
+                        }}
+                      />
+                      <div className="flex justify-between text-[9px] text-muted-foreground/40 mt-1 px-0.5">
+                        <span>0</span>
+                        <span>5</span>
+                        <span>10</span>
+                        <span>15</span>
+                        <span>20</span>
                       </div>
                     </div>
                   ))}
-
-                  <div>
-                    <p className="text-[11px] text-muted-foreground mb-1.5 font-bold">כרטיס אדום</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button variant="outline" size="sm" onClick={() => setRedCard(redCard === "yes" ? null : "yes")}
-                        className={`text-xs h-9 ${redCard === "yes" ? "bg-red-600 text-white border-transparent" : "border-border/30"}`}>
-                        יהיה
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => setRedCard(redCard === "no" ? null : "no")}
-                        className={`text-xs h-9 ${redCard === "no" ? "bg-slate-600 text-white border-transparent" : "border-border/30"}`}>
-                        לא יהיה
-                      </Button>
-                    </div>
-                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -509,13 +518,13 @@ function MatchCard({
                 <Button
                   onClick={() => {
                     onSubmitPrediction(match.id, selectedPrediction as "home" | "draw" | "away", homeHebrew, awayHebrew);
-                    if (goalsOver || cornersOver || yellowCards || redCard) {
+                    if (goals !== null || corners !== null || yellowCards !== null || redCards !== null) {
                       advancedMutation.mutate({
                         matchId: match.id,
-                        goalsOverUnder: (goalsOver as "over" | "under") || undefined,
-                        cornersOverUnder: (cornersOver as "over" | "under") || undefined,
-                        yellowCardsOverUnder: (yellowCards as "over" | "under") || undefined,
-                        redCardInMatch: redCard === "yes" ? true : redCard === "no" ? false : undefined,
+                        goals: goals ?? undefined,
+                        corners: corners ?? undefined,
+                        yellowCards: yellowCards ?? undefined,
+                        redCards: redCards ?? undefined,
                       });
                     }
                   }}
@@ -702,22 +711,19 @@ function CompletedMatchCard({
           <div className="mt-3 pt-2 border-t border-border/10">
             <p className="text-[10px] text-muted-foreground font-medium mb-2 text-center">חיזויים מתקדמים</p>
             <div className="grid grid-cols-2 gap-2 text-[11px]">
-              {advancedResults.prediction.goalsOverUnder && (
-                <AdvancedResultItem label="שערים (2.5)" prediction={advancedResults.prediction.goalsOverUnder} actual={(advancedResults.actualStats.totalGoals ?? 0) > 2.5 ? "over" : "under"} />
+              {advancedResults.prediction.goals !== undefined && advancedResults.prediction.goals !== null && (
+                <AdvancedResultItem label="שערים ⚽" predicted={advancedResults.prediction.goals} actual={advancedResults.actualStats.totalGoals ?? null} />
               )}
-              {advancedResults.prediction.cornersOverUnder && (
-                <AdvancedResultItem label="קרנות (9.5)" prediction={advancedResults.prediction.cornersOverUnder} actual={(advancedResults.actualStats.totalCorners ?? 0) > 9.5 ? "over" : "under"} />
+              {advancedResults.prediction.corners !== undefined && advancedResults.prediction.corners !== null && (
+                <AdvancedResultItem label="קרנות 🚩" predicted={advancedResults.prediction.corners} actual={advancedResults.actualStats.totalCorners ?? null} />
               )}
-              {advancedResults.prediction.yellowCardsOverUnder && (
-                <AdvancedResultItem label="צהובים (3.5)" prediction={advancedResults.prediction.yellowCardsOverUnder} actual={(advancedResults.actualStats.totalYellowCards ?? 0) > 3.5 ? "over" : "under"} />
+              {advancedResults.prediction.yellowCards !== undefined && advancedResults.prediction.yellowCards !== null && (
+                <AdvancedResultItem label="צהובים 🟨" predicted={advancedResults.prediction.yellowCards} actual={advancedResults.actualStats.totalYellowCards ?? null} />
               )}
-              {advancedResults.prediction.redCardInMatch !== null && advancedResults.prediction.redCardInMatch !== undefined && (
-                <AdvancedResultItem label="אדום" prediction={advancedResults.prediction.redCardInMatch ? "yes" : "no"} actual={(advancedResults.actualStats.totalRedCards ?? 0) > 0 ? "yes" : "no"} />
+              {advancedResults.prediction.redCards !== undefined && advancedResults.prediction.redCards !== null && (
+                <AdvancedResultItem label="אדומים 🟥" predicted={advancedResults.prediction.redCards} actual={advancedResults.actualStats.totalRedCards ?? null} />
               )}
             </div>
-            {(advancedResults.prediction.points ?? 0) > 0 && (
-              <p className="text-center text-[10px] text-primary font-bold mt-2">+{advancedResults.prediction.points} נק' בונוס</p>
-            )}
           </div>
         )}
       </div>
@@ -725,13 +731,16 @@ function CompletedMatchCard({
   );
 }
 
-function AdvancedResultItem({ label, prediction, actual }: { label: string; prediction: string; actual: string }) {
-  const isCorrect = prediction === actual;
-  const displayPred = prediction === "over" ? "מעל" : prediction === "under" ? "מתחת" : prediction === "yes" ? "כן" : "לא";
+function AdvancedResultItem({ label, predicted, actual }: { label: string; predicted: number; actual: number | null }) {
+  const isCorrect = actual !== null && predicted === actual;
+  const isPending = actual === null;
   return (
-    <div className={`px-2 py-1 rounded text-center ${isCorrect ? "bg-primary/10 border border-primary/20" : "bg-red-500/10 border border-red-500/20"}`}>
-      <span className="text-muted-foreground">{label}: </span>
-      <span className={`font-bold ${isCorrect ? "text-primary" : "text-red-400"}`}>{displayPred} {isCorrect ? "✓" : "✗"}</span>
+    <div className={`px-2 py-1.5 rounded text-center ${isPending ? "bg-muted/10 border border-border/20" : isCorrect ? "bg-primary/10 border border-primary/20" : "bg-red-500/10 border border-red-500/20"}`}>
+      <p className="text-muted-foreground text-[10px]">{label}</p>
+      <p className={`font-black text-sm ${isPending ? "text-muted-foreground" : isCorrect ? "text-primary" : "text-red-400"}`}>
+        {predicted}
+        {!isPending && <span className="text-[10px] mr-1">{isCorrect ? "✓" : `(${actual})`}</span>}
+      </p>
     </div>
   );
 }
