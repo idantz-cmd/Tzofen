@@ -128,6 +128,20 @@
   --chart-5:               oklch(0.73 0.115 185);
 }
 
+/* Force light-mode CSS variables regardless of .dark theme */
+.force-light {
+  --background:            oklch(1 0 0);
+  --foreground:            oklch(0.15 0.055 255);
+  --card:                  oklch(1 0 0);
+  --card-foreground:       oklch(0.15 0.055 255);
+  --muted:                 oklch(0.93 0.018 230);
+  --muted-foreground:      oklch(0.46 0.040 242);
+  --border:                oklch(0.83 0.035 228);
+  --input:                 oklch(0.83 0.035 228);
+  --primary:               oklch(0.50 0.165 240);
+  --primary-foreground:    oklch(0.99 0.003 240);
+}
+
 /* ============================================================
    SECTION 2 — ANIMATED MESH BACKGROUND
    Subtle cool orbs on bright white canvas.

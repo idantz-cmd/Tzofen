@@ -146,7 +146,7 @@ export default function Login() {
       </motion.div>
 
       {/* ── Right panel: form ── */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-background">
+      <div className="force-light flex-1 flex items-center justify-center p-6 bg-background">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -201,7 +201,7 @@ export default function Login() {
                 <div className="w-full border-t border-border/30" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-background px-3 text-muted-foreground">או עם אימייל</span>
+                <span className="bg-white px-3 text-muted-foreground">או עם אימייל</span>
               </div>
             </div>
           )}
