@@ -13,7 +13,7 @@ if (process.env.DATABASE_URL) {
   console.log(`Migrating Turso DB: ${process.env.DATABASE_URL}`);
   db = createClient({ url: process.env.DATABASE_URL, authToken: process.env.DATABASE_AUTH_TOKEN });
 } else {
-  const dbPath = process.env.DATABASE_PATH ?? path.join(__dirname, "..", "data", "betingapp.db");
+  const dbPath = process.env.DATABASE_PATH ?? path.join(__dirname, "..", "data", "getwinil.db");
   console.log(`Migrating local DB: ${dbPath}`);
   db = createClient({ url: `file:${dbPath}` });
 }

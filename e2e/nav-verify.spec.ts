@@ -5,7 +5,7 @@ const BASE = "http://localhost:3000";
 test("home page loads", async ({ page }) => {
   await page.goto(BASE);
   await page.screenshot({ path: "e2e/screenshots/01-home.png", fullPage: false });
-  await expect(page).toHaveTitle(/betingapp|BetingApp/i);
+  await expect(page).toHaveTitle(/GetWinIL/i);
 });
 
 test("feature cards navigate correctly", async ({ page }) => {

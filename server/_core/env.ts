@@ -29,7 +29,7 @@ export const ENV = {
   refreshSecret: process.env.JWT_REFRESH_SECRET ?? "dev-refresh-secret-change-in-production",
   databaseUrl: process.env.DATABASE_URL,
   databaseAuthToken: process.env.DATABASE_AUTH_TOKEN,
-  databasePath: process.env.DATABASE_PATH ?? path.join(process.cwd(), "data", "betingapp.db"),
+  databasePath: process.env.DATABASE_PATH ?? path.join(process.cwd(), "data", "getwinil.db"),
   isProduction: process.env.NODE_ENV === "production",
   port: parseInt(process.env.PORT ?? "3000", 10),
   corsOrigin: process.env.CORS_ORIGIN ?? "http://localhost:5173",
