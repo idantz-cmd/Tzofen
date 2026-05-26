@@ -112,4 +112,61 @@ export function registerAuthRoutes(app: Express) {
     res.clearCookie(REFRESH_COOKIE_NAME, opts);
     res.json({ success: true });
   });
+
+  app.post("/api/auth/google", async (req: Request, res: Response) => {
+    const { credential } = req.body ?? {};
+    if (!credential) {
+      res.status(400).json({ error: "credential is required" });
+      return;
+    }
+
+    try {
+      const verifyRes = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`
+      );
+      if (!verifyRes.ok) {
+        res.status(401).json({ error: "Invalid Google token" });
+        return;
+      }
+
+      const payload = await verifyRes.json() as { aud?: string; email?: string; name?: string; error?: string };
+
+      if (payload.error) {
+        res.status(401).json({ error: "Invalid Google token" });
+        return;
+      }
+
+      const clientId = process.env.GOOGLE_CLIENT_ID;
+      if (clientId && payload.aud !== clientId) {
+        res.status(401).json({ error: "Token audience mismatch" });
+        return;
+      }
+
+      const email = payload.email;
+      if (!email) {
+        res.status(400).json({ error: "No email in Google token" });
+        return;
+      }
+
+      const name = payload.name ?? email.split("@")[0];
+
+      let user = await db.getUserByEmail(email);
+      if (!user) {
+        const userId = await db.createUser(email, "", name);
+        user = await db.getUserById(userId);
+      }
+
+      if (!user) {
+        res.status(500).json({ error: "Failed to create user" });
+        return;
+      }
+
+      const { accessToken, refreshToken } = await createTokens(user.id, user.role ?? "user");
+      setAuthCookies(req, res, accessToken, refreshToken);
+      res.json({ success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+    } catch (error) {
+      console.error("[Auth] Google login failed", error);
+      res.status(500).json({ error: "Google login failed" });
+    }
+  });
 }

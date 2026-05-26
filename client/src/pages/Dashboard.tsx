@@ -87,8 +87,14 @@ export default function Dashboard() {
 
         {/* Stats Overview */}
         {statsLoading ? (
-          <div className="flex justify-center py-8">
-            <Spinner />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Card key={i} className="p-6 animate-pulse">
+                <div className="h-3 bg-muted/40 rounded w-2/3 mb-3" />
+                <div className="h-8 bg-muted/40 rounded w-1/2 mb-2" />
+                <div className="h-2 bg-muted/30 rounded w-3/4" />
+              </Card>
+            ))}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">

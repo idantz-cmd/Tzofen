@@ -87,6 +87,8 @@ export default defineConfig({
           "vendor-trpc": ["@trpc/client", "@trpc/react-query", "@tanstack/react-query"],
           "vendor-ui": ["@radix-ui/react-tabs", "@radix-ui/react-dialog", "@radix-ui/react-select", "lucide-react"],
           "vendor-charts": ["recharts"],
+          "vendor-markdown": ["react-markdown", "rehype-sanitize"],
+          "vendor-google-oauth": ["@react-oauth/google"],
         },
       },
     },

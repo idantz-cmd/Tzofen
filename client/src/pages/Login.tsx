@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Trophy } from "lucide-react";
 import { toast } from "sonner";
+import { GoogleLogin } from "@react-oauth/google";
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
 
 type Mode = "login" | "register";
 
@@ -14,6 +17,28 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [, navigate] = useLocation();
+
+  const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
+    if (!credentialResponse.credential) return;
+    try {
+      const res = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential: credentialResponse.credential }),
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error ?? "שגיאה בהתחברות עם גוגל");
+        return;
+      }
+      toast.success("התחברת בהצלחה!");
+      navigate("/");
+      window.location.reload();
+    } catch {
+      toast.error("שגיאת רשת");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,6 +191,27 @@ export default function Login() {
               {mode === "login" ? "כניסה" : "הרשמה"}
             </Button>
           </form>
+
+          {GOOGLE_CLIENT_ID && (
+            <>
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border/30" />
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-card px-2 text-muted-foreground">או התחבר עם</span>
+                </div>
+              </div>
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => toast.error("שגיאה בהתחברות עם גוגל")}
+                  size="large"
+                  width="100%"
+                />
+              </div>
+            </>
+          )}
         </div>
       </motion.div>
     </div>

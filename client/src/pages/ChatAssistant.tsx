@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { getLoginUrl } from "@/const";
-import { Streamdown } from "streamdown";
+import ReactMarkdown from "react-markdown";
+import rehypeSanitize from "rehype-sanitize";
 import { Send, BarChart3, Search, Target, Compass } from "lucide-react";
 import { toast } from "sonner";
 import AgentLoadingAnimation from "@/components/AgentLoadingAnimation";
@@ -285,7 +286,7 @@ ${data.responses.tactical.response}
                   )}
                   {message.role === "assistant" ? (
                     <div className="text-sm prose prose-invert prose-sm max-w-none">
-                      <Streamdown>{message.content}</Streamdown>
+                      <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{message.content}</ReactMarkdown>
                     </div>
                   ) : (
                     <p className="text-sm">{message.content}</p>

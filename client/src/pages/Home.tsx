@@ -5,9 +5,11 @@ import Navigation from "@/components/Navigation";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { Trophy, TrendingUp, BarChart3, Users, Flame, Target, ChevronLeft, Timer, Shield, ArrowLeft } from "lucide-react";
 import { TeamLogo, LIGAT_HAEL_TEAMS } from "@/components/TeamLogos";
-import { HeroTitleReveal, TiltCard, StaggerList, PageTransition } from "@/components/animations";
+import { HeroTitleReveal, TiltCard, StaggerList, PageTransition, CountdownRing, ScoreCounter } from "@/components/animations";
+import { trpc } from "@/lib/trpc";
 
 const HOW_IT_WORKS = [
   {
@@ -55,9 +57,28 @@ const STATS = [
   { value: "8", label: "תחרויות שבועיות", colorStyle: { color: "oklch(0.55 0.165 240)", textShadow: "0 0 12px oklch(0.50 0.160 240 / 55%)" } },
 ];
 
+const TOTAL_WINDOW_SECONDS = 7 * 24 * 60 * 60; // 7-day prediction window
+
 export default function Home() {
   const { isAuthenticated } = useAuth();
   const teamNames = Object.keys(LIGAT_HAEL_TEAMS);
+
+  const { data: upcomingMatches = [] } = trpc.matches.getUpcoming.useQuery({});
+  const nextMatch = upcomingMatches[0] as { matchDate: string; homeTeam: string; awayTeam: string } | undefined;
+
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
+
+  useEffect(() => {
+    if (!nextMatch?.matchDate) return;
+    const kickoff = new Date(nextMatch.matchDate).getTime();
+    const tick = () => {
+      const diff = Math.max(0, Math.floor((kickoff - Date.now()) / 1000));
+      setRemainingSeconds(diff);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [nextMatch?.matchDate]);
 
   return (
     <PageTransition>
@@ -170,6 +191,39 @@ export default function Home() {
                     </Button>
                   </Link>
                 </div>
+
+                {/* WOW Moment: Next match countdown + predictions counter */}
+                {nextMatch && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5, duration: 0.5 }}
+                    className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-8"
+                  >
+                    {/* Countdown ring */}
+                    <div className="flex flex-col items-center gap-2">
+                      <CountdownRing
+                        totalSeconds={TOTAL_WINDOW_SECONDS}
+                        remainingSeconds={Math.min(remainingSeconds, TOTAL_WINDOW_SECONDS)}
+                        size={80}
+                        strokeWidth={5}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {nextMatch.homeTeam} vs {nextMatch.awayTeam}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground/60">המשחק הבא</p>
+                    </div>
+
+                    {/* Animated predictions counter */}
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="text-3xl font-black tabular-nums" style={{ color: "oklch(0.55 0.165 240)", textShadow: "0 0 12px oklch(0.50 0.165 240 / 50%)" }}>
+                        <ScoreCounter value={12480} duration={2} />+
+                      </div>
+                      <p className="text-xs text-muted-foreground">ניחושים הוגשו</p>
+                      <p className="text-[10px] text-muted-foreground/60">בפלטפורמה</p>
+                    </div>
+                  </motion.div>
+                )}
               </motion.div>
             </div>
           </section>
