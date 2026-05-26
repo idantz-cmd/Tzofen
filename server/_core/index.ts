@@ -1,5 +1,6 @@
 ﻿import "dotenv/config";
 import express from "express";
+import cors from "cors";
 import { createServer } from "http";
 import net from "net";
 import helmet from "helmet";
@@ -14,6 +15,7 @@ import { serveStatic, setupVite } from "./vite";
 import { importMatchesHandler } from "../scheduled/importHandler";
 import { startResultsSync } from "../services/resultsSync";
 import { requestLogger, additionalSecurityHeaders } from "../middleware";
+import { ENV } from "./env";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -59,6 +61,10 @@ async function startServer() {
 
   // Security headers — disable CSP in dev so Vite's inline scripts work
   app.use(helmet({ contentSecurityPolicy: process.env.NODE_ENV !== "development" }));
+  app.use(cors({
+    origin: ENV.corsOrigin,
+    credentials: true,
+  }));
   app.use(additionalSecurityHeaders);
   app.use(cookieParser());
   app.use(requestLogger);
@@ -94,11 +100,10 @@ async function startServer() {
     serveStatic(app);
   }
 
-  const preferredPort = parseInt(process.env.PORT || "3000");
-  const port = await findAvailablePort(preferredPort);
+  const port = await findAvailablePort(ENV.port);
 
-  if (port !== preferredPort) {
-    console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
+  if (port !== ENV.port) {
+    console.log(`Port ${ENV.port} is busy, using port ${port} instead`);
   }
 
   server.listen(port, () => {

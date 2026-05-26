@@ -14,11 +14,19 @@ let _db: ReturnType<typeof drizzle> | null = null;
 
 export function getDb() {
   if (!_db) {
-    const dir = path.dirname(ENV.databasePath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    let client;
+    if (ENV.databaseUrl) {
+      // Turso cloud
+      client = createClient({
+        url: ENV.databaseUrl,
+        authToken: ENV.databaseAuthToken,
+      });
+    } else {
+      // Local SQLite file
+      const dir = path.dirname(ENV.databasePath);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      client = createClient({ url: `file:${ENV.databasePath}` });
     }
-    const client = createClient({ url: `file:${ENV.databasePath}` });
     _db = drizzle(client);
   }
   return _db;
