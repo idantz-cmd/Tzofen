@@ -7,7 +7,7 @@ import { Bell, X, Check } from "lucide-react";
 
 const tabs = [
   { icon: "📅", label: "משחקים", path: "/matches" },
-  { icon: "📰", label: "חדשות", path: "/news" },
+  { icon: "🏆", label: "גביע", path: "/cup" },
   { icon: "🏠", label: "בית", path: "/" },
   { icon: "📊", label: "פרופיל", path: "/dashboard" },
   { icon: "🧠", label: "ניבוי AI", path: "/ai-prediction" },

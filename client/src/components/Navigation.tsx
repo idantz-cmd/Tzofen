@@ -69,6 +69,16 @@ export default function Navigation() {
                 טבלאות
               </Button>
             </Link>
+            <Link href="/cup">
+              <Button
+                variant={isActive("/cup") ? "default" : "ghost"}
+                size="sm"
+                className="text-sm gap-1.5"
+                style={isActive("/cup") ? {} : { color: "oklch(0.78 0.170 70)" }}
+              >
+                🏆 גביע
+              </Button>
+            </Link>
             <Link href="/competitions">
               <Button variant={isActive("/competitions") ? "default" : "ghost"} size="sm" className="text-sm gap-1.5">
                 <Users className="w-4 h-4" />
@@ -186,6 +196,12 @@ export default function Navigation() {
                     <DropdownMenuItem>
                       <TrendingUp className="w-4 h-4 ml-2" />
                       טבלאות ליגה
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/cup">
+                    <DropdownMenuItem>
+                      <Trophy className="w-4 h-4 ml-2" style={{ color: "oklch(0.78 0.170 70)" }} />
+                      גביע המדינה
                     </DropdownMenuItem>
                   </Link>
                   <Link href="/competitions">

@@ -107,6 +107,23 @@ const stmts = [
   "ALTER TABLE users ADD COLUMN favTeam TEXT",
   "ALTER TABLE users ADD COLUMN plan TEXT DEFAULT 'free'",
 
+  // Cup support columns on matches
+  "ALTER TABLE matches ADD COLUMN competition_type TEXT DEFAULT 'premier_league'",
+  "ALTER TABLE matches ADD COLUMN cup_round TEXT",
+  "ALTER TABLE matches ADD COLUMN allows_draw INTEGER DEFAULT 1",
+
+  // Cup champion predictions table
+  `CREATE TABLE IF NOT EXISTS cup_champion_predictions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userId INTEGER NOT NULL,
+    season TEXT NOT NULL DEFAULT '2024-25',
+    teamName TEXT NOT NULL,
+    predictedAt TEXT,
+    isCorrect INTEGER,
+    pointsAwarded INTEGER DEFAULT 0,
+    UNIQUE(userId, season)
+  )`,
+
   // Rename old columns if they exist (SQLite doesn't support RENAME COLUMN before 3.25,
   // but libsql/turso is modern enough)
   // actualHomeScore / actualAwayScore — previously homeTeamScore / awayTeamScore

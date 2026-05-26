@@ -30,11 +30,20 @@ export const matches = sqliteTable('matches', {
   aiHomeProbability: real('aiHomeProbability'),
   aiDrawProbability: real('aiDrawProbability'),
   aiAwayProbability: real('aiAwayProbability'),
+  // Cup / competition fields
+  competitionType: text('competition_type', {
+    enum: ['premier_league', 'national_league', 'state_cup'],
+  }).default('premier_league'),
+  cupRound: text('cup_round', {
+    enum: ['round_of_32', 'round_of_16', 'quarter_final', 'semi_final', 'final'],
+  }),
+  allowsDraw: integer('allows_draw', { mode: 'boolean' }).default(true),
 }, (table) => ({
-  dateIdx:   index('match_date_idx').on(table.matchDate),
-  statusIdx: index('match_status_idx').on(table.status),
-  weekIdx:   index('match_week_idx').on(table.matchweek, table.season),
-  leagueIdx: index('match_league_idx').on(table.league),
+  dateIdx:        index('match_date_idx').on(table.matchDate),
+  statusIdx:      index('match_status_idx').on(table.status),
+  weekIdx:        index('match_week_idx').on(table.matchweek, table.season),
+  leagueIdx:      index('match_league_idx').on(table.league),
+  compRoundIdx:   index('match_comp_round_idx').on(table.competitionType, table.cupRound),
 }));
 
 export const predictions = sqliteTable('predictions', {
@@ -88,6 +97,18 @@ export const standings = sqliteTable('standings', {
   leagueSeasonIdx: index('std_league_season_idx').on(table.league, table.season),
 }));
 
+export const cupChampionPredictions = sqliteTable('cup_champion_predictions', {
+  id:            integer('id').primaryKey({ autoIncrement: true }),
+  userId:        integer('userId').notNull(),
+  season:        text('season').notNull().default('2024-25'),
+  teamName:      text('teamName').notNull(),
+  predictedAt:   text('predictedAt').default(new Date().toISOString()),
+  isCorrect:     integer('isCorrect', { mode: 'boolean' }),
+  pointsAwarded: integer('pointsAwarded').default(0),
+}, (table) => ({
+  userSeasonIdx: uniqueIndex('cup_champ_user_season').on(table.userId, table.season),
+}));
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Match = typeof matches.$inferSelect;
@@ -96,3 +117,4 @@ export type Prediction = typeof predictions.$inferSelect;
 export type InsertPrediction = typeof predictions.$inferInsert;
 export type LeaderboardScore = typeof leaderboardScores.$inferSelect;
 export type Standing = typeof standings.$inferSelect;
+export type CupChampionPrediction = typeof cupChampionPredictions.$inferSelect;
