@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, RefreshCw, WifiOff, X } from "lucide-react";
+import { RefreshCw, WifiOff, X } from "lucide-react";
 import { usePWA } from "@/hooks/usePWA";
 import { toast } from "sonner";
 
@@ -57,42 +57,6 @@ export function PWAPrompts() {
         )}
       </AnimatePresence>
 
-      {/* Install prompt banner */}
-      <AnimatePresence>
-        {canInstall && (
-          <motion.div
-            initial={{ y: 80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 380, damping: 36, delay: 3 }}
-            className="fixed bottom-20 inset-x-0 z-[55] px-4"
-            dir="rtl"
-          >
-            <div
-              className="rounded-2xl p-4 flex items-center gap-3 shadow-xl border border-white/10 backdrop-blur-md"
-              style={{ background: "oklch(0.18 0.045 258 / 0.72)" }}
-            >
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: "oklch(0.50 0.165 240 / 0.15)" }}
-              >
-                <Download className="w-5 h-5" style={{ color: "oklch(0.72 0.190 230)" }} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold">התקן את GetWinIL</p>
-                <p className="text-xs text-muted-foreground mt-0.5">גישה מהירה, תמיכה בלא-אינטרנט</p>
-              </div>
-              <button
-                onClick={async () => await install()}
-                className="shrink-0 text-xs font-bold rounded-xl px-3 py-2 transition-colors"
-                style={{ background: "oklch(0.50 0.165 240)", color: "white" }}
-              >
-                התקן
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   );
 }
