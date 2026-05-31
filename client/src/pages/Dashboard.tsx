@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import Navigation from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,38 +8,68 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
-import { Flame, Trophy, Target, TrendingUp, Crown } from "lucide-react";
+import { Flame, Trophy, Target, TrendingUp, Crown, BarChart3, CheckCircle2 } from "lucide-react";
+import { PageTransition } from "@/components/animations";
+
+const CHART_GRID   = "oklch(0.83 0.035 228 / 0.5)";
+const CHART_AXIS   = "oklch(0.46 0.040 242 / 0.8)";
+const CHART_TOOLTIP_STYLE = {
+  backgroundColor: "var(--card)",
+  border: "1px solid var(--border)",
+  borderRadius: "10px",
+  color: "var(--foreground)",
+  fontSize: "13px",
+};
+
+const STAT_CARDS = [
+  {
+    key: "accuracy",
+    label: "דיוק כללי",
+    icon: Target,
+    color: "oklch(0.55 0.165 240)",
+    glow: "oklch(0.50 0.165 240 / 0.55)",
+    sub: (s: any) => `${s?.correctPredictions || 0} מתוך ${s?.totalPredictions || 0}`,
+    value: (s: any) => `${s?.accuracyRate || 0}%`,
+  },
+  {
+    key: "points",
+    label: 'סה"כ נקודות',
+    icon: TrendingUp,
+    color: "oklch(0.65 0.160 200)",
+    glow: "oklch(0.60 0.155 202 / 0.55)",
+    sub: () => "נקודות מצטברות",
+    value: (s: any) => (s?.totalPoints || 0).toLocaleString("he-IL"),
+  },
+  {
+    key: "correct",
+    label: "תחזיות נכונות",
+    icon: CheckCircle2,
+    color: "oklch(0.55 0.165 240)",
+    glow: "oklch(0.50 0.165 240 / 0.55)",
+    sub: () => "תחזיות שהיו נכונות",
+    value: (s: any) => s?.correctPredictions || 0,
+  },
+  {
+    key: "total",
+    label: "סה״כ תחזיות",
+    icon: BarChart3,
+    color: "oklch(0.65 0.160 200)",
+    glow: "oklch(0.60 0.155 202 / 0.55)",
+    sub: () => "תחזיות שהוגשו",
+    value: (s: any) => s?.totalPredictions || 0,
+  },
+];
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [timeframe, setTimeframe] = useState<"week" | "month" | "all">("month");
+  const [_timeframe, setTimeframe] = useState<"week" | "month" | "all">("month");
 
-  // Fetch user dashboard stats
-  const { data: stats, isLoading: statsLoading } = trpc.dashboard.getStats.useQuery(undefined, {
-    enabled: !!user,
-  });
+  const { data: stats, isLoading: statsLoading } = trpc.dashboard.getStats.useQuery(undefined, { enabled: !!user });
+  const { data: recentPredictions = [], isLoading: predictionsLoading } = trpc.dashboard.getRecentPredictions.useQuery({ limit: 10 }, { enabled: !!user });
+  const { data: streakData } = trpc.streaks.getMine.useQuery(undefined, { enabled: !!user });
+  const { data: myCompetitions = [] } = trpc.competitions.getMine.useQuery(undefined, { enabled: !!user });
+  const { data: streakHistory = [] } = trpc.streaks.getHistory.useQuery(undefined, { enabled: !!user });
 
-  // Fetch recent predictions
-  const { data: recentPredictions = [], isLoading: predictionsLoading } = trpc.dashboard.getRecentPredictions.useQuery(
-    { limit: 10 },
-    { enabled: !!user }
-  );
-
-  // Fetch streak data
-  const { data: streakData } = trpc.streaks.getMine.useQuery(undefined, {
-    enabled: !!user,
-  });
-
-  // Fetch my competitions
-  const { data: myCompetitions = [] } = trpc.competitions.getMine.useQuery(undefined, {
-    enabled: !!user,
-  });
-
-  const { data: streakHistory = [] } = trpc.streaks.getHistory.useQuery(undefined, {
-    enabled: !!user,
-  });
-
-  // Mock weekly data - in production this would come from the API
   const mockWeeklyData = [
     { week: "שבוע 1", correct: 8, total: 12, points: 45 },
     { week: "שבוע 2", correct: 9, total: 13, points: 52 },
@@ -48,23 +79,16 @@ export default function Dashboard() {
 
   const getPredictionLabel = (pick: string) => {
     switch (pick) {
-      case "home":
-        return "ניצחון הבית";
-      case "draw":
-        return "תיקו";
-      case "away":
-        return "ניצחון חוץ";
-      default:
-        return "";
+      case "home":  return "ניצחון הבית";
+      case "draw":  return "תיקו";
+      case "away":  return "ניצחון חוץ";
+      default:      return "";
     }
   };
 
   const formatDate = (date: Date | string) => {
     const d = typeof date === "string" ? new Date(date) : date;
-    return new Intl.DateTimeFormat("he-IL", {
-      month: "short",
-      day: "numeric",
-    }).format(d);
+    return new Intl.DateTimeFormat("he-IL", { month: "short", day: "numeric" }).format(d);
   };
 
   if (!user) {
@@ -79,321 +103,284 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Navigation />
+    <PageTransition>
+      <div className="min-h-screen bg-background text-foreground">
+        <Navigation />
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-8">📊 לוח הבקרה שלי</h1>
+        <main className="max-w-7xl mx-auto px-4 py-8">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+            className="mb-8"
+          >
+            <h1 className="text-3xl font-black text-gradient-blue">לוח הבקרה שלי</h1>
+            <p className="text-sm text-muted-foreground mt-1">ביצועים, רצפים ותחזיות אחרונות</p>
+          </motion.div>
 
-        {/* Stats Overview */}
-        {statsLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Card key={i} className="p-6 animate-pulse">
-                <div className="h-3 bg-muted/40 rounded w-2/3 mb-3" />
-                <div className="h-8 bg-muted/40 rounded w-1/2 mb-2" />
-                <div className="h-2 bg-muted/30 rounded w-3/4" />
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-            <Card className="p-6">
-              <p className="text-sm text-muted-foreground mb-2">דיוק כללי</p>
-              <p className="text-3xl font-bold text-accent">{stats?.accuracyRate || 0}%</p>
-              <p className="text-xs text-muted-foreground mt-2">
-                {stats?.correctPredictions || 0} מתוך {stats?.totalPredictions || 0}
-              </p>
-            </Card>
-
-            <Card className="p-6">
-              <p className="text-sm text-muted-foreground mb-2">סה"כ נקודות</p>
-              <p className="text-3xl font-bold text-accent">
-                {(stats?.totalPoints || 0).toLocaleString("he-IL")}
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">נקודות מצטברות</p>
-            </Card>
-
-            <Card className="p-6">
-              <p className="text-sm text-muted-foreground mb-2">תחזיות נכונות</p>
-              <p className="text-3xl font-bold text-accent">
-                {stats?.correctPredictions || 0}
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">תחזיות שהיו נכונות</p>
-            </Card>
-
-            <Card className="p-6">
-              <p className="text-sm text-muted-foreground mb-2">סה"כ תחזיות</p>
-              <p className="text-3xl font-bold text-accent">
-                {stats?.totalPredictions || 0}
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">תחזיות שהוגשו</p>
-            </Card>
-
-            {/* Streak Card */}
-            <Card className="p-6 border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-transparent">
-              <div className="flex items-center gap-2 mb-2">
-                <Flame className="w-4 h-4 text-amber-400" />
-                <p className="text-sm text-muted-foreground">רצף נוכחי</p>
-              </div>
-              <p className="text-3xl font-bold text-amber-400">
-                {streakData?.currentStreak || 0}
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">
-                שיא: <span className="text-amber-400 font-bold">{streakData?.bestStreak || 0}</span> רצופות
-              </p>
-            </Card>
-          </div>
-        )}
-
-        {/* Charts and Recent Predictions */}
-        <Tabs defaultValue="performance" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="performance">ביצועים</TabsTrigger>
-            <TabsTrigger value="streaks">רצפים</TabsTrigger>
-            <TabsTrigger value="competitions">תחרויות</TabsTrigger>
-            <TabsTrigger value="recent">תחזיות אחרונות</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="performance" className="space-y-6">
-            {/* Weekly Performance Chart */}
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">ביצועים שבועיים</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={mockWeeklyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                  <XAxis dataKey="week" stroke="rgba(255,255,255,0.5)" />
-                  <YAxis stroke="rgba(255,255,255,0.5)" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "rgba(15, 20, 25, 0.95)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Legend />
-                  <Bar dataKey="correct" fill="#00d084" name="נכונות" />
-                  <Bar dataKey="total" fill="rgba(255,255,255,0.2)" name="סה״כ" />
-                </BarChart>
-              </ResponsiveContainer>
-            </Card>
-
-            {/* Points Trend Chart */}
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">מגמת נקודות</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={mockWeeklyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                  <XAxis dataKey="week" stroke="rgba(255,255,255,0.5)" />
-                  <YAxis stroke="rgba(255,255,255,0.5)" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "rgba(15, 20, 25, 0.95)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="points"
-                    stroke="#00d084"
-                    name="נקודות"
-                    strokeWidth={2}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </Card>
-          </TabsContent>
-
-          {/* Streaks Tab */}
-          <TabsContent value="streaks" className="space-y-6">
-            {/* Streak Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="p-6 border-amber-500/20">
-                <div className="flex items-center gap-2 mb-3">
-                  <Flame className="w-5 h-5 text-amber-400" />
-                  <h4 className="font-bold">רצף נוכחי</h4>
-                </div>
-                <p className="text-4xl font-black text-amber-400">{streakData?.currentStreak || 0}</p>
-                <p className="text-xs text-muted-foreground mt-2">תחזיות נכונות ברצף</p>
-              </Card>
-
-              <Card className="p-6 border-primary/20">
-                <div className="flex items-center gap-2 mb-3">
-                  <Trophy className="w-5 h-5 text-primary" />
-                  <h4 className="font-bold">שיא אישי</h4>
-                </div>
-                <p className="text-4xl font-black text-primary">{streakData?.bestStreak || 0}</p>
-                <p className="text-xs text-muted-foreground mt-2">הרצף הארוך ביותר שלך</p>
-              </Card>
-
-              <Card className="p-6 border-blue-500/20">
-                <div className="flex items-center gap-2 mb-3">
-                  <Target className="w-5 h-5 text-blue-400" />
-                  <h4 className="font-bold">תחזית נכונה אחרונה</h4>
-                </div>
-                <p className="text-lg font-bold text-blue-400">
-                  {streakData?.lastCorrectAt
-                    ? formatDate(streakData.lastCorrectAt)
-                    : "—"}
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">תאריך אחרון</p>
-              </Card>
+          {/* Stats Cards */}
+          {statsLoading ? (
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Card key={i} className="p-6 animate-pulse">
+                  <div className="h-3 bg-muted/40 rounded w-2/3 mb-3" />
+                  <div className="h-8 bg-muted/40 rounded w-1/2 mb-2" />
+                  <div className="h-2 bg-muted/30 rounded w-3/4" />
+                </Card>
+              ))}
             </div>
-
-            {/* Streak Badges */}
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Crown className="w-5 h-5 text-amber-400" />
-                תגים והישגים
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <StreakBadge
-                  emoji="🔥"
-                  title="התחלה"
-                  description="רצף של 3"
-                  unlocked={(streakData?.bestStreak || 0) >= 3}
-                />
-                <StreakBadge
-                  emoji="⚡"
-                  title="מומחה"
-                  description="רצף של 5"
-                  unlocked={(streakData?.bestStreak || 0) >= 5}
-                />
-                <StreakBadge
-                  emoji="🌟"
-                  title="כוכב"
-                  description="רצף של 10"
-                  unlocked={(streakData?.bestStreak || 0) >= 10}
-                />
-                <StreakBadge
-                  emoji="🏆"
-                  title="אלוף"
-                  description="רצף של 15"
-                  unlocked={(streakData?.bestStreak || 0) >= 15}
-                />
-              </div>
-            </Card>
-
-            {/* Streak History */}
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                היסטוריית רצפים
-              </h3>
-              {streakHistory.length === 0 ? (
-                <p className="text-muted-foreground text-center py-6">אין היסטוריה עדיין — התחל לחזות!</p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {streakHistory.map((pred: any) => (
-                    <div
-                      key={pred.id}
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold border ${
-                        pred.isCorrect
-                          ? "bg-primary/20 border-primary/40 text-primary"
-                          : "bg-red-500/20 border-red-500/40 text-red-400"
-                      }`}
-                      title={`${getPredictionLabel(pred.prediction)} — ${pred.isCorrect ? "נכון" : "שגוי"}`}
-                    >
-                      {pred.isCorrect ? "✓" : "✗"}
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+              {STAT_CARDS.map(({ key, label, icon: Icon, color, glow, value, sub }, i) => (
+                <motion.div
+                  key={key}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.08, duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
+                >
+                  <Card className="p-5 h-full border-border/20 hover:border-primary/20 transition-all duration-200 group">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${color.replace(")", " / 0.12)").replace("oklch(", "oklch(")}` }}>
+                        <Icon className="w-3.5 h-3.5" style={{ color }} />
+                      </div>
+                      <p className="text-xs text-muted-foreground font-medium">{label}</p>
                     </div>
-                  ))}
+                    <p className="text-3xl font-black tabular-nums" style={{ color, textShadow: `0 0 14px ${glow}` }}>
+                      {value(stats)}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-1.5">{sub(stats)}</p>
+                  </Card>
+                </motion.div>
+              ))}
+
+              {/* Streak card */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.32, duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
+              >
+                <Card className="p-5 h-full border-accent/20 hover:border-accent/40 transition-all duration-200"
+                  style={{ background: "linear-gradient(135deg, oklch(0.90 0.195 92 / 0.06) 0%, transparent 100%)" }}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "oklch(0.90 0.195 92 / 0.15)" }}>
+                      <Flame className="w-3.5 h-3.5" style={{ color: "oklch(0.78 0.185 90)" }} />
+                    </div>
+                    <p className="text-xs text-muted-foreground font-medium">רצף נוכחי</p>
+                  </div>
+                  <p className="text-3xl font-black tabular-nums" style={{ color: "oklch(0.78 0.185 90)", textShadow: "0 0 14px oklch(0.85 0.195 92 / 0.55)" }}>
+                    {streakData?.currentStreak || 0}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-1.5">
+                    שיא:{" "}
+                    <span className="font-bold" style={{ color: "oklch(0.78 0.185 90)" }}>
+                      {streakData?.bestStreak || 0}
+                    </span>{" "}
+                    רצופות
+                  </p>
+                </Card>
+              </motion.div>
+            </div>
+          )}
+
+          {/* Tabs */}
+          <Tabs defaultValue="performance" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4 bg-muted/10 border border-border/20 h-11">
+              <TabsTrigger value="performance" className="data-[state=active]:bg-primary/15 data-[state=active]:text-primary font-bold text-sm">ביצועים</TabsTrigger>
+              <TabsTrigger value="streaks" className="data-[state=active]:bg-primary/15 data-[state=active]:text-primary font-bold text-sm">רצפים</TabsTrigger>
+              <TabsTrigger value="competitions" className="data-[state=active]:bg-primary/15 data-[state=active]:text-primary font-bold text-sm">תחרויות</TabsTrigger>
+              <TabsTrigger value="recent" className="data-[state=active]:bg-primary/15 data-[state=active]:text-primary font-bold text-sm">תחזיות אחרונות</TabsTrigger>
+            </TabsList>
+
+            {/* Performance Tab */}
+            <TabsContent value="performance" className="space-y-5">
+              <Card className="p-6 border-border/20">
+                <h3 className="text-base font-bold mb-5 text-foreground">ביצועים שבועיים</h3>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={mockWeeklyData} barGap={4}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
+                    <XAxis dataKey="week" stroke={CHART_AXIS} tick={{ fill: CHART_AXIS, fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <YAxis stroke={CHART_AXIS} tick={{ fill: CHART_AXIS, fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: "oklch(0.50 0.165 240 / 0.06)" }} />
+                    <Legend wrapperStyle={{ fontSize: "13px", color: CHART_AXIS }} />
+                    <Bar dataKey="correct" fill="oklch(0.55 0.165 240)" name="נכונות" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="total" fill="oklch(0.83 0.035 228)" name='סה"כ' radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </Card>
+
+              <Card className="p-6 border-border/20">
+                <h3 className="text-base font-bold mb-5 text-foreground">מגמת נקודות</h3>
+                <ResponsiveContainer width="100%" height={280}>
+                  <LineChart data={mockWeeklyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
+                    <XAxis dataKey="week" stroke={CHART_AXIS} tick={{ fill: CHART_AXIS, fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <YAxis stroke={CHART_AXIS} tick={{ fill: CHART_AXIS, fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                    <Legend wrapperStyle={{ fontSize: "13px", color: CHART_AXIS }} />
+                    <Line type="monotone" dataKey="points" stroke="oklch(0.65 0.160 200)" name="נקודות" strokeWidth={2.5} dot={{ r: 4, fill: "oklch(0.65 0.160 200)", strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Card>
+            </TabsContent>
+
+            {/* Streaks Tab */}
+            <TabsContent value="streaks" className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[
+                  {
+                    icon: Flame, iconColor: "oklch(0.78 0.185 90)", bg: "oklch(0.90 0.195 92 / 0.08)",
+                    border: "oklch(0.90 0.195 92 / 0.25)", label: "רצף נוכחי",
+                    value: streakData?.currentStreak || 0, sub: "תחזיות נכונות ברצף",
+                  },
+                  {
+                    icon: Trophy, iconColor: "oklch(0.55 0.165 240)", bg: "oklch(0.50 0.165 240 / 0.06)",
+                    border: "oklch(0.50 0.165 240 / 0.25)", label: "שיא אישי",
+                    value: streakData?.bestStreak || 0, sub: "הרצף הארוך ביותר שלך",
+                  },
+                  {
+                    icon: Target, iconColor: "oklch(0.65 0.160 200)", bg: "oklch(0.65 0.160 200 / 0.06)",
+                    border: "oklch(0.65 0.160 200 / 0.25)", label: "תחזית נכונה אחרונה",
+                    value: streakData?.lastCorrectAt ? formatDate(streakData.lastCorrectAt) : "—",
+                    sub: "תאריך אחרון",
+                  },
+                ].map(({ icon: Icon, iconColor, bg, border, label, value, sub }) => (
+                  <Card key={label} className="p-6" style={{ background: bg, borderColor: border }}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Icon className="w-5 h-5" style={{ color: iconColor }} />
+                      <h4 className="font-bold text-sm">{label}</h4>
+                    </div>
+                    <p className="text-4xl font-black" style={{ color: iconColor }}>{value}</p>
+                    <p className="text-xs text-muted-foreground mt-2">{sub}</p>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Badges */}
+              <Card className="p-6 border-border/20">
+                <h3 className="text-base font-bold mb-4 flex items-center gap-2">
+                  <Crown className="w-4 h-4" style={{ color: "oklch(0.78 0.185 90)" }} />
+                  תגים והישגים
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <StreakBadge emoji="🔥" title="התחלה"  description="רצף של 3"  unlocked={(streakData?.bestStreak || 0) >= 3} />
+                  <StreakBadge emoji="⚡" title="מומחה"  description="רצף של 5"  unlocked={(streakData?.bestStreak || 0) >= 5} />
+                  <StreakBadge emoji="🌟" title="כוכב"   description="רצף של 10" unlocked={(streakData?.bestStreak || 0) >= 10} />
+                  <StreakBadge emoji="🏆" title="אלוף"   description="רצף של 15" unlocked={(streakData?.bestStreak || 0) >= 15} />
                 </div>
-              )}
-            </Card>
-          </TabsContent>
-
-          {/* Competitions Tab */}
-          <TabsContent value="competitions" className="space-y-4">
-            {myCompetitions.length === 0 ? (
-              <Card className="p-6 text-center">
-                <Trophy className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground">עדיין לא הצטרפת לתחרויות</p>
-                <p className="text-sm text-muted-foreground/70 mt-1">עבור לעמוד התחרויות כדי להצטרף או ליצור תחרות</p>
               </Card>
-            ) : (
-              myCompetitions.filter((c: any) => c.status === "active").map((comp: any) => (
-                <Card key={comp.id} className="p-5 border-border/30">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-bold text-foreground">{comp.name}</h3>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {comp.type === "tournament" ? "טורניר" : "דו-קרב"} • הנקודות שלך: <span className="text-primary font-bold">{comp.myPoints || 0}</span>
-                      </p>
-                    </div>
-                    <Badge className="bg-primary/20 text-primary border-primary/30">
-                      פעיל
-                    </Badge>
-                  </div>
-                </Card>
-              ))
-            )}
-          </TabsContent>
 
-          <TabsContent value="recent" className="space-y-4">
-            {predictionsLoading ? (
-              <div className="flex justify-center py-8">
-                <Spinner />
-              </div>
-            ) : recentPredictions.length === 0 ? (
-              <Card className="p-6 text-center">
-                <p className="text-muted-foreground">אין תחזיות עדיין</p>
-              </Card>
-            ) : (
-              recentPredictions.map((pred: any) => (
-                <Card key={pred.id} className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <p className="font-semibold">
-                          {pred.homeTeam || "—"} vs {pred.awayTeam || "—"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDate(pred.createdAt)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
+              {/* History */}
+              <Card className="p-6 border-border/20">
+                <h3 className="text-base font-bold mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-primary" />
+                  היסטוריית רצפים
+                </h3>
+                {streakHistory.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-6 text-sm">אין היסטוריה עדיין — התחל לחזות!</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {(streakHistory as any[]).map((pred) => (
                       <div
-                        className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg font-semibold ${
+                        key={pred.id}
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold border transition-all ${
                           pred.isCorrect
-                            ? "bg-green-600/20 text-green-400"
-                            : pred.isCorrect === false
-                              ? "bg-red-600/20 text-red-400"
-                              : "bg-yellow-600/20 text-yellow-400"
+                            ? "bg-primary/15 border-primary/35 text-primary"
+                            : "bg-destructive/15 border-destructive/30 text-destructive"
                         }`}
+                        title={`${getPredictionLabel(pred.prediction)} — ${pred.isCorrect ? "נכון" : "שגוי"}`}
                       >
-                        {pred.isCorrect ? "✓" : pred.isCorrect === false ? "✗" : "⏳"} {pred.points || 0} נקודות
+                        {pred.isCorrect ? "✓" : "✗"}
                       </div>
-                    </div>
+                    ))}
                   </div>
+                )}
+              </Card>
+            </TabsContent>
 
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground mb-1">התחזית שלך</p>
-                      <p className="font-semibold">
-                        {getPredictionLabel(pred.prediction)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground mb-1">התוצאה בפועל</p>
-                      <p className="font-semibold text-accent">
-                        {pred.actualResult ? getPredictionLabel(pred.actualResult) : "לא פורסמה"}
-                      </p>
-                    </div>
-                  </div>
+            {/* Competitions Tab */}
+            <TabsContent value="competitions" className="space-y-4">
+              {myCompetitions.length === 0 ? (
+                <Card className="p-10 text-center border-border/20">
+                  <Trophy className="w-12 h-12 text-muted-foreground/25 mx-auto mb-4" />
+                  <p className="text-muted-foreground font-medium">עדיין לא הצטרפת לתחרויות</p>
+                  <p className="text-sm text-muted-foreground/60 mt-1">עבור לעמוד התחרויות כדי להצטרף או ליצור תחרות</p>
                 </Card>
-              ))
-            )}
-          </TabsContent>
-        </Tabs>
-      </main>
-    </div>
+              ) : (
+                (myCompetitions as any[]).filter((c) => c.status === "active").map((comp) => (
+                  <Card key={comp.id} className="p-5 border-border/20 hover:border-primary/20 transition-all">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-bold text-foreground">{comp.name}</h3>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {comp.type === "tournament" ? "טורניר" : "דו-קרב"} • הנקודות שלך:{" "}
+                          <span className="text-primary font-bold">{comp.myPoints || 0}</span>
+                        </p>
+                      </div>
+                      <Badge className="bg-primary/15 text-primary border-primary/25 font-bold">פעיל</Badge>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </TabsContent>
+
+            {/* Recent Predictions Tab */}
+            <TabsContent value="recent" className="space-y-3">
+              {predictionsLoading ? (
+                <div className="flex justify-center py-10"><Spinner /></div>
+              ) : recentPredictions.length === 0 ? (
+                <Card className="p-10 text-center border-border/20">
+                  <p className="text-muted-foreground">אין תחזיות עדיין</p>
+                </Card>
+              ) : (
+                (recentPredictions as any[]).map((pred, i) => (
+                  <motion.div
+                    key={pred.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05, ease: [0.23, 1, 0.32, 1] }}
+                  >
+                    <Card className="p-4 border-border/20 hover:border-primary/15 transition-all">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <p className="font-semibold text-sm">{pred.homeTeam || "—"} vs {pred.awayTeam || "—"}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{formatDate(pred.createdAt)}</p>
+                        </div>
+                        <div
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold text-sm"
+                          style={
+                            pred.isCorrect
+                              ? { background: "oklch(0.55 0.165 240 / 0.12)", color: "oklch(0.55 0.165 240)", border: "1px solid oklch(0.55 0.165 240 / 0.25)" }
+                              : pred.isCorrect === false
+                              ? { background: "oklch(0.58 0.220 27 / 0.12)", color: "oklch(0.65 0.200 27)", border: "1px solid oklch(0.58 0.220 27 / 0.25)" }
+                              : { background: "oklch(0.90 0.195 92 / 0.12)", color: "oklch(0.72 0.185 90)", border: "1px solid oklch(0.90 0.195 92 / 0.25)" }
+                          }
+                        >
+                          {pred.isCorrect ? "✓" : pred.isCorrect === false ? "✗" : "⏳"} {pred.points || 0} נקודות
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm border-t border-border/10 pt-3">
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">התחזית שלך</p>
+                          <p className="font-semibold">{getPredictionLabel(pred.prediction)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">התוצאה בפועל</p>
+                          <p className="font-semibold text-primary">{pred.actualResult ? getPredictionLabel(pred.actualResult) : "לא פורסמה"}</p>
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+                ))
+              )}
+            </TabsContent>
+          </Tabs>
+        </main>
+      </div>
+    </PageTransition>
   );
 }
 
-/* ===== Streak Badge Component ===== */
 function StreakBadge({ emoji, title, description, unlocked }: {
   emoji: string;
   title: string;
@@ -401,17 +388,20 @@ function StreakBadge({ emoji, title, description, unlocked }: {
   unlocked: boolean;
 }) {
   return (
-    <div className={`relative p-4 rounded-xl border text-center transition-all ${
-      unlocked
-        ? "bg-amber-500/5 border-amber-500/30"
-        : "bg-muted/5 border-border/20 opacity-40 grayscale"
-    }`}>
+    <div
+      className={`relative p-4 rounded-xl border text-center transition-all ${
+        unlocked
+          ? "border-accent/30"
+          : "bg-muted/5 border-border/20 opacity-40 grayscale"
+      }`}
+      style={unlocked ? { background: "oklch(0.90 0.195 92 / 0.06)" } : {}}
+    >
       <div className="text-2xl mb-1">{emoji}</div>
       <p className={`text-sm font-bold ${unlocked ? "text-foreground" : "text-muted-foreground"}`}>{title}</p>
       <p className="text-[10px] text-muted-foreground">{description}</p>
       {unlocked && (
-        <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: "oklch(0.55 0.110 232)" }}>
-          <span className="text-[8px] text-white font-bold">✓</span>
+        <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "oklch(0.55 0.165 240)" }}>
+          <span className="text-[9px] text-white font-black">✓</span>
         </div>
       )}
     </div>
