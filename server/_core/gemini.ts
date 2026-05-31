@@ -9,7 +9,7 @@ function getClient(): GoogleGenerativeAI {
 export async function callGemini(prompt: string): Promise<string> {
   const genAI = getClient();
   const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
+    model: "gemini-2.0-flash",
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     tools: [{ googleSearch: {} } as any],
   });

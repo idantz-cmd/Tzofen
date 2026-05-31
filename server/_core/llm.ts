@@ -25,7 +25,7 @@ export type InvokeResult = {
   }>;
 };
 
-const MODEL_ID = "gemini-1.5-flash";
+const MODEL_ID = "gemini-2.0-flash";
 
 export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
   if (!ENV.aiApiKey) throw new Error("GEMINI_API_KEY not configured");
