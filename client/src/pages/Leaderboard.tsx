@@ -7,128 +7,202 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { LeaderboardSkeleton } from "@/components/ui/skeletons/LeaderboardSkeleton";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { PageTransition } from "@/components/animations";
+import { Trophy, Target, BarChart3, Users } from "lucide-react";
 
 export default function Leaderboard() {
   const { user } = useAuth();
   const [timeframe, setTimeframe] = useState<"all_time" | "weekly">("all_time");
 
-  // Fetch leaderboard data
   const { data: allTimeLeaderboard = [], isLoading: allTimeLoading, error: allTimeError, refetch: refetchAllTime } =
     trpc.leaderboard.getAllTime.useQuery({ limit: 100 });
 
   const { data: weeklyLeaderboard = [], isLoading: weeklyLoading, error: weeklyError, refetch: refetchWeekly } =
     trpc.leaderboard.getWeekly.useQuery({ limit: 100 });
 
-  // Fetch current user's position
-  const { data: userPosition } = trpc.leaderboard.getUserPosition.useQuery(undefined, {
-    enabled: !!user,
-  });
+  const { data: userPosition } = trpc.leaderboard.getUserPosition.useQuery(undefined, { enabled: !!user });
 
   const isLoading = timeframe === "all_time" ? allTimeLoading : weeklyLoading;
   const currentLeaderboard = timeframe === "all_time" ? allTimeLeaderboard : weeklyLeaderboard;
+  const userRank = (currentLeaderboard as any[]).findIndex((e) => e.userId === user?.id) + 1;
 
-  // Find user's rank in current leaderboard
-  const userRank = currentLeaderboard.findIndex((entry: any) => entry.userId === user?.id) + 1;
-
-  // Calculate stats
-  const totalPoints = currentLeaderboard.reduce((sum: number, entry: any) => sum + (entry.totalPoints || 0), 0);
+  const totalPredictions = (currentLeaderboard as any[]).reduce((s, e) => s + (e.totalPredictions || 0), 0);
   const avgAccuracy =
     currentLeaderboard.length > 0
-      ? (currentLeaderboard.reduce((sum: number, entry: any) => sum + (parseFloat(entry.accuracyRate) || 0), 0) /
-          currentLeaderboard.length).toFixed(1)
+      ? ((currentLeaderboard as any[]).reduce((s, e) => s + (parseFloat(e.accuracyRate) || 0), 0) / currentLeaderboard.length).toFixed(1)
       : "0";
-  const totalPredictions = currentLeaderboard.reduce((sum: number, entry: any) => sum + (entry.totalPredictions || 0), 0);
+
+  const SUMMARY_CARDS = [
+    {
+      label: "המנחש המוביל",
+      icon: Trophy,
+      color: "oklch(0.78 0.185 90)",
+      value: currentLeaderboard.length > 0 ? "מנחש מוביל" : "—",
+      sub: currentLeaderboard.length > 0
+        ? `${((currentLeaderboard as any[])[0]?.totalPoints || 0).toLocaleString("he-IL")} נקודות`
+        : "אין נתונים",
+    },
+    {
+      label: "דיוק ממוצע",
+      icon: Target,
+      color: "oklch(0.55 0.165 240)",
+      value: `${avgAccuracy}%`,
+      sub: "בקרב כל המשתתפים",
+    },
+    {
+      label: 'סה"כ תחזיות',
+      icon: BarChart3,
+      color: "oklch(0.65 0.160 200)",
+      value: totalPredictions.toLocaleString("he-IL"),
+      sub: "בקרב כל המשתתפים",
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Navigation />
+    <PageTransition>
+      <div className="min-h-screen bg-background text-foreground">
+        <Navigation />
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-8">🏆 לוח הדירוג</h1>
+        <main className="max-w-4xl mx-auto px-4 py-8">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+            className="mb-8"
+          >
+            <h1 className="text-3xl font-black text-gradient-blue">לוח הדירוג</h1>
+            <p className="text-sm text-muted-foreground mt-1">מי המנחש המדויק ביותר?</p>
+          </motion.div>
 
-        {/* Timeframe Tabs */}
-        <Tabs
-          value={timeframe}
-          onValueChange={(v) => setTimeframe(v as "all_time" | "weekly")}
-          className="mb-8"
-        >
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="all_time">כל הזמנים</TabsTrigger>
-            <TabsTrigger value="weekly">השבוע</TabsTrigger>
-          </TabsList>
+          {/* User position banner */}
+          {user && userRank > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mb-6"
+            >
+              <Card className="p-4 border-primary/25 flex items-center justify-between"
+                style={{ background: "oklch(0.50 0.165 240 / 0.06)" }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm text-white"
+                    style={{ background: "linear-gradient(135deg, oklch(0.58 0.165 238), oklch(0.40 0.160 248))" }}>
+                    #{userRank}
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm">המיקום שלך</p>
+                    <p className="text-xs text-muted-foreground">
+                      {userPosition?.totalPoints || 0} נקודות • {(userPosition?.accuracyRate ?? 0).toFixed(1)}% דיוק
+                    </p>
+                  </div>
+                </div>
+                <Trophy className="w-5 h-5" style={{ color: "oklch(0.55 0.165 240)" }} />
+              </Card>
+            </motion.div>
+          )}
 
-          <TabsContent value={timeframe} className="space-y-4">
-            {/* Leaderboard */}
-            {(timeframe === "all_time" ? allTimeError : weeklyError) ? (
-              <ErrorState
-                title="שגיאה בטעינת טבלת הדירוג"
-                onRetry={timeframe === "all_time" ? refetchAllTime : refetchWeekly}
-              />
-            ) : isLoading ? (
-              <LeaderboardSkeleton count={10} />
-            ) : (
-              <Card className="overflow-hidden">
-                <div className="divide-y divide-border">
-                  <div className="grid grid-cols-12 gap-4 p-4 bg-card/50 font-semibold text-sm">
-                    <div className="col-span-1 text-center">דירוג</div>
+          <Tabs value={timeframe} onValueChange={(v) => setTimeframe(v as "all_time" | "weekly")} className="mb-6">
+            <TabsList className="grid w-full grid-cols-2 bg-muted/10 border border-border/20 h-11 mb-6">
+              <TabsTrigger value="all_time" className="data-[state=active]:bg-primary/15 data-[state=active]:text-primary font-bold text-sm">
+                כל הזמנים
+              </TabsTrigger>
+              <TabsTrigger value="weekly" className="data-[state=active]:bg-secondary/15 data-[state=active]:text-secondary font-bold text-sm">
+                השבוע
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value={timeframe} className="space-y-5">
+              {(timeframe === "all_time" ? allTimeError : weeklyError) ? (
+                <ErrorState
+                  title="שגיאה בטעינת טבלת הדירוג"
+                  onRetry={timeframe === "all_time" ? refetchAllTime : refetchWeekly}
+                />
+              ) : isLoading ? (
+                <LeaderboardSkeleton count={10} />
+              ) : (
+                <Card className="overflow-hidden border-border/20">
+                  {/* Table header */}
+                  <div className="grid grid-cols-12 gap-4 p-4 border-b border-border/20 text-xs font-bold text-muted-foreground"
+                    style={{ background: "oklch(0.95 0.015 228 / 0.6)" }}>
+                    <div className="col-span-1 text-center">#</div>
                     <div className="col-span-4">שם</div>
                     <div className="col-span-3 text-center">נקודות</div>
                     <div className="col-span-2 text-center">דיוק</div>
-                    <div className="col-span-2 text-center">תחזוקות</div>
+                    <div className="col-span-2 text-center">תחזיות</div>
                   </div>
 
                   {currentLeaderboard.length === 0 ? (
-                    <div className="p-8 text-center text-muted-foreground">
-                      <p>אין נתונים זמינים</p>
+                    <div className="p-12 text-center">
+                      <Users className="w-10 h-10 text-muted-foreground/25 mx-auto mb-3" />
+                      <p className="text-muted-foreground text-sm">אין נתונים זמינים</p>
                     </div>
                   ) : (
                     <AnimatePresence>
-                      {currentLeaderboard.map((entry: any, index: number) => {
+                      {(currentLeaderboard as any[]).map((entry, index) => {
                         const rank = index + 1;
                         const isCurrentUser = entry.userId === user?.id;
+                        const medalColor =
+                          rank === 1 ? "oklch(0.78 0.185 90)"
+                          : rank === 2 ? "oklch(0.72 0.018 240)"
+                          : rank === 3 ? "oklch(0.62 0.110 44)"
+                          : undefined;
 
                         return (
                           <motion.div
                             key={entry.id ?? entry.userId}
                             layout
                             layoutId={String(entry.userId)}
-                            initial={{ opacity: 0, x: -20 }}
+                            initial={{ opacity: 0, x: -16 }}
                             animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            transition={{ type: "spring", stiffness: 300, damping: 30, delay: index * 0.03 }}
-                            className={`grid grid-cols-12 gap-4 p-4 items-center transition-colors ${
-                              isCurrentUser ? "bg-accent/10 border-r-4 border-accent" : "hover:bg-card/30"
+                            exit={{ opacity: 0, x: 16 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30, delay: index * 0.025 }}
+                            className={`grid grid-cols-12 gap-4 p-4 items-center border-b border-border/10 last:border-0 transition-colors ${
+                              isCurrentUser
+                                ? "border-r-2 border-primary"
+                                : "hover:bg-primary/[0.03]"
                             }`}
+                            style={isCurrentUser ? { background: "oklch(0.50 0.165 240 / 0.05)" } : {}}
                           >
                             <div className="col-span-1 text-center">
-                              <div className="flex items-center justify-center">
-                                {rank === 1 && <span className="text-2xl">🥇</span>}
-                                {rank === 2 && <span className="text-2xl">🥈</span>}
-                                {rank === 3 && <span className="text-2xl">🥉</span>}
-                                {rank > 3 && <span className="font-bold text-lg text-accent">#{rank}</span>}
+                              {rank <= 3 ? (
+                                <span className="text-xl">{["🥇", "🥈", "🥉"][rank - 1]}</span>
+                              ) : (
+                                <span className="font-black text-sm" style={{ color: medalColor ?? "oklch(0.55 0.040 240)" }}>
+                                  {rank}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="col-span-4 flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white shrink-0"
+                                style={{ background: `linear-gradient(135deg, ${medalColor ?? "oklch(0.55 0.165 240)"}, oklch(0.40 0.160 248))` }}>
+                                {rank}
+                              </div>
+                              <div>
+                                <p className="font-bold text-sm leading-tight">
+                                  {entry.name || "משתמש"}
+                                </p>
+                                {isCurrentUser && (
+                                  <span className="text-[10px] text-primary font-bold">אתה</span>
+                                )}
                               </div>
                             </div>
 
-                            <div className="col-span-4">
-                              <p className="font-semibold">
-                                {entry.userId ? "משתמש" : "לא ידוע"}
-                                {isCurrentUser && <span className="text-xs text-accent mr-2">(אתה)</span>}
-                              </p>
-                            </div>
-
                             <div className="col-span-3 text-center">
-                              <p className="text-lg font-bold text-accent">
+                              <p className="text-base font-black tabular-nums" style={{ color: "oklch(0.55 0.165 240)", textShadow: "0 0 10px oklch(0.50 0.165 240 / 0.45)" }}>
                                 {(entry.totalPoints || 0).toLocaleString("he-IL")}
                               </p>
                             </div>
 
                             <div className="col-span-2 text-center">
-                              <div className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-600/20 text-green-400 text-xs font-semibold">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold"
+                                style={{ background: "oklch(0.65 0.160 200 / 0.12)", color: "oklch(0.40 0.152 205)", border: "1px solid oklch(0.65 0.160 200 / 0.25)" }}>
                                 {(parseFloat(entry.accuracyRate || "0") || 0).toFixed(1)}%
-                              </div>
+                              </span>
                             </div>
 
-                            <div className="col-span-2 text-center text-sm text-muted-foreground">
+                            <div className="col-span-2 text-center text-sm text-muted-foreground tabular-nums">
                               {entry.totalPredictions || 0}
                             </div>
                           </motion.div>
@@ -136,54 +210,34 @@ export default function Leaderboard() {
                       })}
                     </AnimatePresence>
                   )}
-                </div>
-              </Card>
-            )}
+                </Card>
+              )}
 
-            {/* Stats Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="p-6 text-center">
-                <p className="text-sm text-muted-foreground mb-2">המנבא המובילי</p>
-                <p className="text-2xl font-bold text-accent">
-                  {currentLeaderboard.length > 0 ? "מנבא מובילי" : "—"}
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {currentLeaderboard.length > 0
-                    ? `${(currentLeaderboard[0]?.totalPoints || 0).toLocaleString("he-IL")} נקודות`
-                    : "אין נתונים"}
-                </p>
-              </Card>
-
-              <Card className="p-6 text-center">
-                <p className="text-sm text-muted-foreground mb-2">דיוק ממוצע</p>
-                <p className="text-2xl font-bold text-accent">{avgAccuracy}%</p>
-                <p className="text-xs text-muted-foreground mt-2">בקרב כל המשתתפים</p>
-              </Card>
-
-              <Card className="p-6 text-center">
-                <p className="text-sm text-muted-foreground mb-2">סה"כ תחזוקות</p>
-                <p className="text-2xl font-bold text-accent">
-                  {totalPredictions.toLocaleString("he-IL")}
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">בקרב כל המשתתפים</p>
-              </Card>
-            </div>
-
-            {/* User's Position */}
-            {user && userRank > 0 && (
-              <Card className="p-6 bg-accent/10 border-accent">
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground mb-2">המיקום שלך בדירוג</p>
-                  <p className="text-3xl font-bold text-accent mb-2">#{userRank}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {userPosition?.totalPoints || 0} נקודות • {(userPosition?.accuracyRate ?? 0).toFixed(1)}% דיוק
-                  </p>
-                </div>
-              </Card>
-            )}
-          </TabsContent>
-        </Tabs>
-      </main>
-    </div>
+              {/* Summary stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {SUMMARY_CARDS.map(({ label, icon: Icon, color, value, sub }, i) => (
+                  <motion.div
+                    key={label}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 + i * 0.08 }}
+                  >
+                    <Card className="p-5 text-center border-border/20 hover:border-primary/20 transition-all">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-3"
+                        style={{ background: `${color} / 0.12)`.replace("oklch(", "oklch(") }}>
+                        <Icon className="w-4 h-4" style={{ color }} />
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-1">{label}</p>
+                      <p className="text-xl font-black" style={{ color }}>{value}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1">{sub}</p>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </main>
+      </div>
+    </PageTransition>
   );
 }

@@ -171,7 +171,7 @@ function TeamRow({
       {isExpanded && (
         <tr>
           <td colSpan={11} className="pb-3 px-6">
-            <div className="rounded-xl p-4 border border-border/30" style={{ background: "oklch(0.20 0.045 258 / 0.6)" }}>
+            <div className="rounded-xl p-4 border border-border/20 bg-muted/20">
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
                 {[
                   { label: "משחקים", value: row.played },
@@ -223,7 +223,7 @@ function StandingsTable({ league }: { league: League }) {
 
       <Card className="overflow-hidden">
         {/* Zone legend */}
-        <div className="flex flex-wrap gap-3 px-4 py-2.5 border-b border-border/20 text-[11px]" style={{ background: "oklch(0.20 0.055 258 / 0.5)" }}>
+        <div className="flex flex-wrap gap-3 px-4 py-2.5 border-b border-border/20 text-[11px] bg-muted/30">
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-sm inline-block" style={{ background: "oklch(0.84 0.190 76 / 0.35)" }} />
             <span style={{ color: "oklch(0.84 0.190 76)" }}>מקום ראשון</span>
@@ -241,7 +241,7 @@ function StandingsTable({ league }: { league: League }) {
         <div className="overflow-x-auto">
           <table className="w-full text-right" dir="rtl">
             <thead>
-              <tr className="border-b border-border/40 text-xs" style={{ background: "oklch(0.22 0.060 258 / 0.6)" }}>
+              <tr className="border-b border-border/30 text-xs bg-muted/30">
                 <th className="py-3 px-3 text-center text-muted-foreground font-medium">#</th>
                 <th className="py-3 px-3 text-right text-muted-foreground font-medium">קבוצה</th>
                 <th className="py-3 px-2 text-center text-muted-foreground font-medium">מ'</th>
@@ -300,7 +300,7 @@ function StandingsTable({ league }: { league: League }) {
 function TopScorers() {
   return (
     <Card className="overflow-hidden">
-      <div className="px-4 py-3 border-b border-border/30 flex items-center gap-2" style={{ background: "oklch(0.22 0.060 258 / 0.6)" }}>
+      <div className="px-4 py-3 border-b border-border/20 flex items-center gap-2 bg-muted/25">
         <Star className="w-4 h-4" style={{ color: "oklch(0.84 0.190 76)" }} />
         <span className="font-bold text-sm">מלך השערים — ליגת העל 25/26</span>
       </div>
@@ -374,11 +374,11 @@ export default function Standings() {
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: "linear-gradient(135deg, oklch(0.55 0.110 232), oklch(0.38 0.080 215))" }}>
+            style={{ background: "linear-gradient(135deg, oklch(0.55 0.165 240), oklch(0.40 0.160 248))", boxShadow: "0 4px 16px oklch(0.50 0.165 240 / 0.35)" }}>
             <TrendingUp className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1">
-            <h1 className="text-3xl font-black tracking-tight">טבלאות ליגה 25/26</h1>
+            <h1 className="text-3xl font-black text-gradient-blue">טבלאות ליגה 25/26</h1>
             <p className="text-sm text-muted-foreground">ליגת העל והליגה הלאומית — עונת 2025/26</p>
           </div>
           {status && (
@@ -392,12 +392,12 @@ export default function Standings() {
 
         {/* League Tabs */}
         <Tabs value={league} onValueChange={(v) => setLeague(v as League)} className="space-y-6">
-          <TabsList className="grid grid-cols-2 w-full max-w-xs">
-            <TabsTrigger value="ligat_hael" className="gap-2">
+          <TabsList className="grid grid-cols-2 w-full max-w-xs bg-muted/10 border border-border/20 h-11">
+            <TabsTrigger value="ligat_hael" className="data-[state=active]:bg-primary/15 data-[state=active]:text-primary font-bold text-sm gap-2">
               <Trophy className="w-4 h-4" />
               ליגת העל
             </TabsTrigger>
-            <TabsTrigger value="ligah_leumit" className="gap-2">
+            <TabsTrigger value="ligah_leumit" className="data-[state=active]:bg-secondary/15 data-[state=active]:text-secondary font-bold text-sm gap-2">
               <Trophy className="w-4 h-4" />
               ליגה לאומית
             </TabsTrigger>

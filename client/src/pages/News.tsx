@@ -66,8 +66,8 @@ export default function News() {
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h1 className="text-2xl font-black text-foreground flex items-center gap-2">
-              <Newspaper className="w-6 h-6" style={{ color: "#0038A8" }} />
+            <h1 className="text-2xl font-black text-gradient-blue flex items-center gap-2">
+              <Newspaper className="w-6 h-6" style={{ color: "oklch(0.55 0.165 240)" }} />
               חדשות כדורגל ישראלי
             </h1>
             <p className="text-xs text-muted-foreground mt-0.5">
