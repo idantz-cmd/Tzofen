@@ -1,117 +1,60 @@
 import { z } from "zod";
-import { TRPCError } from "@trpc/server";
-import { publicProcedure, router } from "../_core/trpc";
-import { getTeamStats, getHeadToHead, predictMatch } from "../agents/agents";
-import { deepPredictMatch } from "../agents/deepPredictionAgent";
-import { orchestrateMatchPrediction } from "../agents/orchestratorAgent";
-
-// Simple in-memory rate limiter — 10 requests per minute per IP
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-
-function checkRateLimit(ip: string, maxPerMinute = 10) {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + 60_000 });
-    return;
-  }
-
-  if (entry.count >= maxPerMinute) {
-    throw new TRPCError({
-      code: "TOO_MANY_REQUESTS",
-      message: "יותר מדי בקשות — נסה שוב בעוד דקה",
-    });
-  }
-
-  entry.count++;
-}
+import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
+import {
+  queryAgent,
+  queryMultipleAgents,
+  getAllAgents,
+  AgentType,
+} from "../agents/agents";
 
 export const agentsRouter = router({
-  // List agents — empty until AI provider configured
+  // ── List all available agents ────────────────────────────────────────────────
   listAgents: publicProcedure.query(async () => {
-    return [];
+    return getAllAgents().map((agent) => ({
+      id: agent.id,
+      name: agent.name,
+      hebrewName: agent.hebrewName,
+      description: agent.description,
+      hebrewDescription: agent.hebrewDescription,
+      skills: agent.skills,
+      icon: agent.icon,
+    }));
   }),
 
-  // Get stats for a specific team
-  getTeamStats: publicProcedure
-    .input(z.object({ teamName: z.string().min(1) }))
-    .query(async ({ ctx, input }) => {
-      checkRateLimit((ctx as any).req?.ip ?? "unknown");
-      return await getTeamStats(input.teamName);
-    }),
-
-  // Get head-to-head stats between two teams
-  getHeadToHead: publicProcedure
-    .input(z.object({ team1: z.string().min(1), team2: z.string().min(1) }))
-    .query(async ({ ctx, input }) => {
-      checkRateLimit((ctx as any).req?.ip ?? "unknown");
-      return await getHeadToHead(input.team1, input.team2);
-    }),
-
-  // Predict match outcome based on real DB stats
-  predictMatch: publicProcedure
-    .input(
-      z.object({
-        homeTeam: z.string().min(1),
-        awayTeam: z.string().min(1),
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      checkRateLimit((ctx as any).req?.ip ?? "unknown");
-      return await predictMatch(input.homeTeam, input.awayTeam);
-    }),
-
-  // Deep AI match prediction (result, goals, corners, cards + Hebrew analysis)
-  deepPredictMatch: publicProcedure
-    .input(
-      z.object({
-        homeTeam: z.string().min(1),
-        awayTeam: z.string().min(1),
-        league: z.enum(["ligat_hael", "ligah_leumit"]).optional(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      checkRateLimit((ctx as any).req?.ip ?? "unknown", 5);
-      return await deepPredictMatch(
-        input.homeTeam,
-        input.awayTeam,
-        input.league ?? "ligat_hael"
-      );
-    }),
-
-  // Orchestrated prediction — all agents + QA + synthesis
-  orchestratePredict: publicProcedure
-    .input(
-      z.object({
-        homeTeam: z.string().min(1),
-        awayTeam: z.string().min(1),
-        league: z.enum(["ligat_hael", "ligah_leumit"]).optional(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      checkRateLimit((ctx as any).req?.ip ?? "unknown", 3);
-      return await orchestrateMatchPrediction(
-        input.homeTeam,
-        input.awayTeam,
-        input.league ?? "ligat_hael"
-      );
-    }),
-
-  // Legacy endpoints — kept for client compatibility
+  // ── Query a single specialist agent ─────────────────────────────────────────
   query: publicProcedure
     .input(
       z.object({
-        agentType: z.enum(["statistics", "research", "prediction", "tactical"]),
+        agentType: z.enum([
+          "statistics",
+          "research",
+          "prediction",
+          "tactical",
+          "bankroll",
+          "news",
+          "orchestrator",
+          "schedule",
+        ]),
         message: z.string().min(1).max(2000),
         matchId: z.number().optional(),
       })
     )
-    .mutation(async ({ ctx }) => {
-      checkRateLimit((ctx as any).req?.ip ?? "unknown");
-      throw new Error("Agents not configured");
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.id;
+      const response = await queryAgent(
+        input.agentType as AgentType,
+        input.message,
+        input.matchId,
+        userId
+      );
+      return {
+        success: true,
+        agentType: input.agentType,
+        response,
+      };
     }),
 
+  // ── Run all agents in parallel + orchestrator ────────────────────────────────
   queryAll: publicProcedure
     .input(
       z.object({
@@ -119,8 +62,93 @@ export const agentsRouter = router({
         matchId: z.number().optional(),
       })
     )
-    .mutation(async ({ ctx }) => {
-      checkRateLimit((ctx as any).req?.ip ?? "unknown");
-      throw new Error("Agents not configured");
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.id;
+      const responses = await queryMultipleAgents(
+        input.message,
+        input.matchId,
+        userId
+      );
+
+      return {
+        success: true,
+        responses: {
+          statistics: {
+            agentType: "statistics",
+            hebrewName: "סוכן סטטיסטיקה",
+            icon: "📊",
+            response: responses.statistics,
+          },
+          research: {
+            agentType: "research",
+            hebrewName: "סוכן חיפוש מידע",
+            icon: "🔍",
+            response: responses.research,
+          },
+          prediction: {
+            agentType: "prediction",
+            hebrewName: "סוכן חיזוי תוצאות",
+            icon: "🎯",
+            response: responses.prediction,
+          },
+          tactical: {
+            agentType: "tactical",
+            hebrewName: "סוכן ניתוח טקטי",
+            icon: "⚽",
+            response: responses.tactical,
+          },
+          news: {
+            agentType: "news",
+            hebrewName: "סוכן חדשות בזמן אמת",
+            icon: "📰",
+            response: responses.news,
+          },
+          schedule: {
+            agentType: "schedule",
+            hebrewName: "סוכן לוח משחקים ועומס",
+            icon: "📅",
+            response: responses.schedule,
+          },
+          orchestrator: {
+            agentType: "orchestrator",
+            hebrewName: "סוכן מסכם ראשי",
+            icon: "🧠",
+            response: responses.orchestrator,
+          },
+        },
+      };
+    }),
+
+  // ── Bankroll agent (protected — needs user history) ──────────────────────────
+  queryBankroll: protectedProcedure
+    .input(
+      z.object({
+        message: z.string().min(1).max(2000),
+        matchId: z.number().optional(),
+        /**
+         * Assumed decimal odds for the recommended bet (e.g. 1.85).
+         * If provided, injected into the message so the agent can compute Kelly.
+         */
+        assumedOdds: z.number().min(1.01).max(50).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Enrich message with odds if provided
+      const enrichedMessage = input.assumedOdds
+        ? `${input.message}\n\n[אורקל: הנחת אודס עשרוניים = ${input.assumedOdds}]`
+        : input.message;
+
+      const response = await queryAgent(
+        "bankroll",
+        enrichedMessage,
+        input.matchId,
+        ctx.user.id
+      );
+
+      return {
+        success: true,
+        agentType: "bankroll",
+        response,
+      };
     }),
 });

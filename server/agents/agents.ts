@@ -2,7 +2,7 @@ import { getDb } from "../db";
 import { matches } from "../../drizzle/schema";
 import { or, eq, and, isNotNull } from "drizzle-orm";
 
-export type AgentType = "statistics" | "research" | "prediction" | "tactical";
+export type { AgentType } from "./llmAgents";
 
 export interface TeamStats {
   teamName: string;
@@ -325,22 +325,4 @@ export async function predictMatch(
   };
 }
 
-// Legacy stubs — kept for router compatibility
-export function getAllAgents() {
-  return [];
-}
-
-export async function queryAgent(
-  _agentType: AgentType,
-  _userMessage: string,
-  _matchId?: number
-): Promise<string> {
-  throw new Error("Agents not configured");
-}
-
-export async function queryMultipleAgents(
-  _userMessage: string,
-  _matchId?: number
-): Promise<Record<AgentType, string>> {
-  throw new Error("Agents not configured");
-}
+export { getAgentConfig, getAllAgents, queryAgent, queryMultipleAgents } from "./llmAgents";
