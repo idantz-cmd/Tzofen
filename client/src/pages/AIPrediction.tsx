@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { PageTransition } from "@/components/animations";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -168,6 +169,7 @@ export default function AIPrediction() {
     : null;
 
   return (
+    <PageTransition>
     <div className="min-h-screen pb-24" dir="rtl">
       <Navigation />
 
@@ -176,19 +178,21 @@ export default function AIPrediction() {
         <motion.div
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
           className="text-center space-y-1"
         >
-          <div className="flex items-center justify-center gap-2 mb-2">
+          <div className="flex items-center justify-center gap-2 mb-3">
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg"
+              className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg"
               style={{
-                background: "linear-gradient(135deg, oklch(0.52 0.22 285), oklch(0.40 0.20 295))",
+                background: "linear-gradient(135deg, oklch(0.58 0.165 238), oklch(0.40 0.160 248))",
+                boxShadow: "0 8px 28px oklch(0.50 0.165 240 / 0.35)",
               }}
             >
-              <Brain className="w-5 h-5 text-white" />
+              <Brain className="w-6 h-6 text-white" />
             </div>
           </div>
-          <h1 className="text-2xl font-black" style={{ color: "oklch(0.20 0.06 250)" }}>
+          <h1 className="text-2xl font-black text-gradient-blue">
             צוות סוכני AI
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -209,13 +213,11 @@ export default function AIPrediction() {
                 predictMutation.reset();
               }}
               className="px-4 py-2 rounded-full text-sm font-bold transition-all"
-              style={{
-                background:
-                  selectedLeague === l
-                    ? "linear-gradient(135deg, oklch(0.52 0.22 285), oklch(0.40 0.20 295))"
-                    : "oklch(0.96 0.01 240)",
-                color: selectedLeague === l ? "white" : "oklch(0.40 0.06 250)",
-              }}
+              style={
+                selectedLeague === l
+                  ? { background: "linear-gradient(135deg, oklch(0.58 0.165 238), oklch(0.45 0.160 248))", color: "white", boxShadow: "0 4px 14px oklch(0.50 0.165 240 / 0.40)" }
+                  : { background: "oklch(0.96 0.015 228)", color: "oklch(0.40 0.060 242)", border: "1px solid oklch(0.83 0.035 228)" }
+              }
             >
               {LEAGUE_LABELS[l]}
             </button>
@@ -295,9 +297,7 @@ export default function AIPrediction() {
 
           <Button
             className="w-full gap-2"
-            style={{
-              background: "linear-gradient(135deg, oklch(0.52 0.22 285), oklch(0.40 0.20 295))",
-            }}
+            variant="default"
             onClick={handlePredict}
             disabled={predictMutation.isPending || (!homeTeam && !selectedMatch)}
           >
@@ -432,7 +432,7 @@ export default function AIPrediction() {
               {/* Analysis sections */}
               <Card className="p-4 space-y-4">
                 <h3 className="font-black text-base flex items-center gap-2">
-                  <Brain className="w-4 h-4" style={{ color: "oklch(0.52 0.22 285)" }} />
+                  <Brain className="w-4 h-4 text-primary" />
                   ניתוח מפורט
                 </h3>
 
@@ -459,14 +459,11 @@ export default function AIPrediction() {
 
               {/* Summary */}
               <Card
-                className="p-4"
-                style={{
-                  background: "linear-gradient(135deg, oklch(0.52 0.22 285 / 0.06), oklch(0.40 0.20 295 / 0.04))",
-                  borderColor: "oklch(0.52 0.22 285 / 0.25)",
-                }}
+                className="p-4 border-primary/20"
+                style={{ background: "oklch(0.50 0.165 240 / 0.05)" }}
               >
                 <div className="flex items-center gap-2 mb-3">
-                  <TrendingUp className="w-4 h-4" style={{ color: "oklch(0.52 0.22 285)" }} />
+                  <TrendingUp className="w-4 h-4 text-primary" />
                   <h3 className="font-black text-sm">סיכום מקצועי</h3>
                 </div>
                 <p className="text-sm leading-relaxed text-foreground/90">{pred.fullSummary}</p>
@@ -484,8 +481,9 @@ export default function AIPrediction() {
                       key={i}
                       className="text-xs font-medium px-2.5 py-1 rounded-full"
                       style={{
-                        background: "oklch(0.52 0.22 285 / 0.10)",
-                        color: "oklch(0.35 0.15 285)",
+                        background: i % 2 === 0 ? "oklch(0.55 0.165 240 / 0.10)" : "oklch(0.65 0.160 200 / 0.10)",
+                        color: i % 2 === 0 ? "oklch(0.38 0.155 242)" : "oklch(0.38 0.145 205)",
+                        border: `1px solid ${i % 2 === 0 ? "oklch(0.55 0.165 240 / 0.22)" : "oklch(0.65 0.160 200 / 0.22)"}`,
                       }}
                     >
                       {factor}
@@ -529,7 +527,7 @@ export default function AIPrediction() {
               {"agentReports" in pred && Array.isArray((pred as any).agentReports) && (
                 <Card className="p-4 space-y-3">
                   <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4" style={{ color: "oklch(0.52 0.22 285)" }} />
+                    <Users className="w-4 h-4 text-primary" />
                     <h3 className="font-black text-sm">דוחות סוכנים</h3>
                     {"qaOverallScore" in pred && (
                       <span className="text-xs text-muted-foreground mr-auto">
@@ -541,8 +539,7 @@ export default function AIPrediction() {
                     {(pred as any).agentReports.map((report: any) => (
                       <div
                         key={report.agentId}
-                        className="flex items-start gap-2.5 p-2.5 rounded-lg"
-                        style={{ background: "oklch(0.97 0.008 240)" }}
+                        className="flex items-start gap-2.5 p-2.5 rounded-lg bg-muted/20 border border-border/15"
                       >
                         {report.status === "success" ? (
                           <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "oklch(0.52 0.165 148)" }} />
@@ -611,5 +608,6 @@ export default function AIPrediction() {
         </AnimatePresence>
       </div>
     </div>
+    </PageTransition>
   );
 }
