@@ -271,7 +271,7 @@ async function main() {
   }
   console.log(`   Mode    : ${USE_DIRECT ? "Direct (api-sports.io)" : "RapidAPI"}`);
 
-  console.log("🚀 BetingApp Football Data Fetcher");
+  console.log("🚀 Tzofen Football Data Fetcher");
   console.log(`   Seasons : ${SEASONS_TO_FETCH.join(", ")}`);
   console.log(`   Leagues : ligat_hael (${LEAGUES.ligat_hael}), ligah_leumit (${LEAGUES.ligah_leumit})`);
   console.log(`   Dry run : ${DRY_RUN}`);
