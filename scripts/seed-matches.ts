@@ -16,7 +16,7 @@ import { eq, and } from "drizzle-orm";
 import { matches } from "../drizzle/schema";
 import { fetchUpcomingFixtures } from "../server/services/footballApi";
 
-const DB_PATH = process.env.DATABASE_PATH ?? path.join(process.cwd(), "data", "getwinil.db");
+const DB_PATH = process.env.DATABASE_PATH ?? path.join(process.cwd(), "data", "tzofen.db");
 const dir = path.dirname(DB_PATH);
 if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 const client = createClient({ url: `file:${DB_PATH}` });

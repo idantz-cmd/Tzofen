@@ -42,7 +42,7 @@ const LEAGUES = {
   ligah_leumit: 382, // Liga Leumit
 } as const;
 
-const DB_PATH = process.env.DATABASE_PATH ?? path.join(process.cwd(), "data", "getwinil.db");
+const DB_PATH = process.env.DATABASE_PATH ?? path.join(process.cwd(), "data", "tzofen.db");
 
 // ── CLI args ────────────────────────────────────────────────────────────────
 const args = process.argv.slice(2);

@@ -1,10 +1,11 @@
-# GetWinIL — Project Prompt
+# צופן (Tzofen) — Project Prompt
 
-## What is GetWinIL?
+## What is Tzofen?
 
-GetWinIL is an Israeli football predictions web app (PWA) built for fans of Ligat HaAl and the National League.
-Users predict match results, earn points for accuracy, climb a leaderboard, and compete against friends in private tournaments.
-The name fuses "Get Win" + "IL" (Israel), with the Star of David embedded in the branding.
+Tzofen (צופן) is an Israeli football predictions web app (PWA) built for fans of Ligat HaAl and the National League.
+Users predict match results, earn virtual points for accuracy, climb a leaderboard, and compete against friends in private tournaments.
+The name "צופן" means "code/cipher" in Hebrew — the app "deciphers" every match with AI.
+**No gambling, no real money — virtual points only.**
 
 ---
 
@@ -22,12 +23,22 @@ The name fuses "Get Win" + "IL" (Israel), with the Star of David embedded in the
 
 ---
 
+## Brand
+
+- **Name:** צופן / Tzofen
+- **Tagline:** תפסיק לנחש, תתחיל לנצח
+- **Colors:** Blue `#1F6BFF`, Green `#13CE66`, Purple `#8B4DFF`, Yellow `#FFC91F`, Red `#FF3B5C`, Ink `#15151E`
+- **Font:** Rubik (RTL Hebrew), always light mode
+- **Logo:** Magnifying glass with clock face (SVG inline)
+
+---
+
 ## Core Features
 
 ### Predictions
 - Users predict outcomes (Home Win / Draw / Away Win) for upcoming Ligat HaAl and National League matches
 - Optional confidence level per prediction
-- Points awarded when results are published; bonus for exact score predictions
+- Virtual points awarded when results are published; bonus for exact score predictions
 - Prediction lock-in before match kickoff
 
 ### Leaderboard
@@ -63,12 +74,6 @@ The name fuses "Get Win" + "IL" (Israel), with the Star of David embedded in the
 - Auto-scrolling banner across the top of the app
 - Pulls headlines from Israeli sports sites in real time
 
-### Background Animation
-- Realistic aerial stadium canvas animation
-- Alternating green grass stripes, full pitch markings
-- 22 players (blue Israel team vs red away) moving in 4-4-2 formation
-- Ball passing simulation between teammates
-
 ---
 
 ## Database Schema (key tables)
@@ -91,7 +96,7 @@ players          — teamId, name, jerseyNumber, position
 ## Project Structure
 
 ```
-betingapp/
+Tzofen/
 ├── client/
 │   └── src/
 │       ├── pages/
@@ -106,10 +111,6 @@ betingapp/
 │       │   ├── News.tsx          — scraped Israeli sports news
 │       │   └── AdminPanel.tsx    — data scraping controls (admin only)
 │       └── components/
-│           ├── animations/
-│           │   ├── FootballBackground.tsx  — aerial stadium canvas
-│           │   ├── ConfettiCelebration.tsx
-│           │   └── FireworksCelebration.tsx
 │           ├── layout/
 │           │   ├── BottomNav.tsx           — mobile navigation bar
 │           │   └── NewsTicker.tsx          — scrolling headlines
@@ -119,10 +120,8 @@ betingapp/
 │   │   ├── index.ts              — Express + tRPC server entry
 │   │   └── env.ts                — environment variable loader
 │   ├── agents/
-│   │   ├── orchestratorAgent.ts  — coordinates all AI agents
-│   │   ├── deepPredictionAgent.ts — Gemini prediction engine
-│   │   ├── newsScraperAgent.ts   — scrapes Israeli sports news
-│   │   └── agents.ts             — statistics + research agents
+│   │   ├── llmAgents.ts          — all Gemini AI agents definition
+│   │   └── agents.test.ts        — agent unit tests
 │   ├── routers/
 │   │   ├── matches.ts            — match CRUD + prediction endpoints
 │   │   ├── leagueData.ts         — standings + players endpoints
@@ -155,11 +154,11 @@ Home → Matches → Standings → Competitions → Leaderboard → AI Predictio
 
 ## Design Language
 
-- Dark theme by default, OKLCH color palette
-- Blue/white (Israel flag colors) primary palette
-- Glass-morphism cards (`card-glass` class)
-- RTL layout (Hebrew), `dir="rtl"` throughout
+- Always light mode (dark mode disabled)
+- Young/bright palette: Blue `#1F6BFF`, Green `#13CE66`, Purple `#8B4DFF`
+- RTL layout (Hebrew), `dir="rtl"` throughout, Rubik font
 - Framer Motion for all transitions and micro-animations
+- Category background system: each section has its own color tint
 - Responsive — mobile-first, PWA installable
 
 ---
@@ -174,7 +173,7 @@ npm run db:push    # run database migrations
 ```
 
 Environment variables needed (`.env.local`):
-- `DATABASE_URL` — SQLite file path or Turso URL
+- `DATABASE_PATH` — SQLite file path (e.g. `./data/tzofen.db`)
 - `GEMINI_API_KEY` — Google Gemini API key (for AI features)
 - `JWT_SECRET` — secret for signing auth tokens
 
@@ -182,9 +181,8 @@ Environment variables needed (`.env.local`):
 
 ## Future Roadmap
 
-- Real-money or virtual-currency betting pools
 - Push notifications for match results
 - Social sharing of predictions
 - Multi-league support (Champions League, Premier League)
 - Mobile native app (React Native)
-- Domain: getwIn.il (planned)
+- Domain: tzofen.il (planned)
