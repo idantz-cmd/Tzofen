@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navigation from "@/components/Navigation";
+import { useCategory } from "@/contexts/CategoryContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -41,6 +42,8 @@ function useGuestToken(): string {
 
 export default function Matches() {
   const { isAuthenticated } = useAuth();
+  const { setCategory } = useCategory();
+  useEffect(() => { setCategory("matches"); }, [setCategory]);
   const guestToken = useGuestToken();
   const [selectedLeague, setSelectedLeague] = useState<"ligat_hael" | "ligah_leumit">("ligat_hael");
   const [activeTab, setActiveTab] = useState<"upcoming" | "completed">("upcoming");
@@ -406,11 +409,11 @@ function MatchCard({
             <span className="text-sm font-bold text-muted-foreground">🔒 ניחוש נסגר — המשחק החל</span>
           </div>
         ) : hasPredicted ? (
-          <div className="p-3 rounded-lg" style={{ background: "oklch(0.78 0.155 72 / 0.07)", border: "1px solid oklch(0.78 0.155 72 / 0.22)" }}>
+          <div className="p-3 rounded-lg" style={{ background: "rgba(255,201,31,0.07)", border: "1px solid rgba(255,201,31,0.22)" }}>
             <div className="flex items-center gap-2">
-              <Lock className="w-4 h-4" style={{ color: "oklch(0.78 0.155 72)" }} />
-              <span className="text-sm font-bold" style={{ color: "oklch(0.78 0.155 72)" }}>החיזוי שלך ננעל</span>
-              <Badge className="mr-auto text-xs" style={{ background: "oklch(0.78 0.155 72 / 0.15)", color: "oklch(0.78 0.155 72)", border: "1px solid oklch(0.78 0.155 72 / 0.30)" }}>
+              <Lock className="w-4 h-4" style={{ color: "#B38900" }} />
+              <span className="text-sm font-bold" style={{ color: "#B38900" }}>החיזוי שלך ננעל</span>
+              <Badge className="mr-auto text-xs" style={{ background: "rgba(255,201,31,0.15)", color: "#B38900", border: "1px solid rgba(255,201,31,0.30)" }}>
                 {userPrediction.prediction === "home" ? homeHebrew :
                  userPrediction.prediction === "away" ? awayHebrew : "תיקו"}
               </Badge>
@@ -423,7 +426,7 @@ function MatchCard({
               {(["home", "draw", "away"] as const).map((pred) => {
                 const isSelected = selectedPrediction === pred;
                 const label = pred === "home" ? `${homeHebrew}` : pred === "draw" ? "תיקו" : `${awayHebrew}`;
-                const color = pred === "home" ? homeColors.primary : pred === "away" ? awayColors.primary : "oklch(0.65 0.130 80)";
+                const color = pred === "home" ? homeColors.primary : pred === "away" ? awayColors.primary : "#6B7280";
                 return (
                   <motion.button
                     key={pred}
@@ -465,10 +468,10 @@ function MatchCard({
                   className="mt-3 space-y-4 p-3 rounded-lg bg-muted/5 border border-border/15"
                 >
                   {([
-                    { label: "שערים ⚽", emoji: "⚽", value: goals, set: setGoals, color: "oklch(0.55 0.110 232)" },
-                    { label: "קרנות 🚩", emoji: "🚩", value: corners, set: setCorners, color: "oklch(0.65 0.160 200)" },
-                    { label: "כרטיסים צהובים 🟨", emoji: "🟨", value: yellowCards, set: setYellowCards, color: "oklch(0.82 0.185 92)" },
-                    { label: "כרטיסים אדומים 🟥", emoji: "🟥", value: redCards, set: setRedCards, color: "oklch(0.60 0.200 25)" },
+                    { label: "שערים ⚽", emoji: "⚽", value: goals, set: setGoals, color: "#1F6BFF" },
+                    { label: "קרנות 🚩", emoji: "🚩", value: corners, set: setCorners, color: "#8B4DFF" },
+                    { label: "כרטיסים צהובים 🟨", emoji: "🟨", value: yellowCards, set: setYellowCards, color: "#B38900" },
+                    { label: "כרטיסים אדומים 🟥", emoji: "🟥", value: redCards, set: setRedCards, color: "#FF3B5C" },
                   ] as const).map(({ label, value, set, color }) => (
                     <div key={label}>
                       <div className="flex items-center justify-between mb-2">
@@ -496,8 +499,8 @@ function MatchCard({
                         className="w-full h-2 rounded-full appearance-none cursor-pointer"
                         style={{
                           background: value !== null
-                            ? `linear-gradient(to left, ${color} ${((value) / 20) * 100}%, oklch(0.30 0.020 240) ${((value) / 20) * 100}%)`
-                            : "oklch(0.30 0.020 240)",
+                            ? `linear-gradient(to left, ${color} ${((value) / 20) * 100}%, #E2E8F0 ${((value) / 20) * 100}%)`
+                            : "#E2E8F0",
                           opacity: value !== null ? 1 : 0.45,
                         }}
                       />
@@ -655,7 +658,7 @@ function CompletedMatchCard({
   return (
     <Card className={`overflow-hidden border-border/20 ${userCorrect ? "border-primary/30" : ""}`}>
       <div className={`h-1 ${userPrediction ? "" : "bg-muted/30"}`}
-        style={userCorrect ? { background: "oklch(0.55 0.110 232)" } : userPrediction ? { background: "oklch(0.58 0.220 27 / 0.6)" } : {}} />
+        style={userCorrect ? { background: "#1F6BFF" } : userPrediction ? { background: "rgba(255,59,92,0.60)" } : {}} />
 
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
@@ -666,8 +669,8 @@ function CompletedMatchCard({
             <Badge
               className="text-[11px]"
               style={userCorrect
-                ? { background: "oklch(0.55 0.110 232 / 0.15)", color: "oklch(0.65 0.100 228)", border: "1px solid oklch(0.55 0.110 232 / 0.30)" }
-                : { background: "oklch(0.58 0.220 27 / 0.15)", color: "oklch(0.72 0.160 27)", border: "1px solid oklch(0.58 0.220 27 / 0.30)" }
+                ? { background: "rgba(31,107,255,0.12)", color: "#1F4CB3", border: "1px solid rgba(31,107,255,0.30)" }
+                : { background: "rgba(255,59,92,0.12)", color: "#CC1F45", border: "1px solid rgba(255,59,92,0.30)" }
               }
             >
               {userCorrect ? <><CheckCircle2 className="w-3 h-3 ml-1" /> צדקת!</> : "לא צדקת"}

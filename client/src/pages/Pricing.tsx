@@ -11,9 +11,10 @@ const PLANS = [
     period: null,
     badge: null,
     icon: Star,
-    color: "oklch(0.55 0.110 232)",
-    borderColor: "oklch(0.55 0.110 232 / 0.25)",
-    bgColor: "oklch(0.55 0.110 232 / 0.06)",
+    color: "#1F6BFF",
+    borderColor: "rgba(31,107,255,0.25)",
+    bgColor: "rgba(31,107,255,0.06)",
+    iconBgColor: "rgba(31,107,255,0.15)",
     features: [
       "5 חיזויים בשבוע",
       "גישה לטבלת הדירוג",
@@ -37,9 +38,10 @@ const PLANS = [
     period: "לחודש",
     badge: "הכי פופולרי",
     icon: Zap,
-    color: "oklch(0.65 0.200 250)",
-    borderColor: "oklch(0.65 0.200 250 / 0.50)",
-    bgColor: "oklch(0.65 0.200 250 / 0.08)",
+    color: "#8B4DFF",
+    borderColor: "rgba(139,77,255,0.50)",
+    bgColor: "rgba(139,77,255,0.08)",
+    iconBgColor: "rgba(139,77,255,0.15)",
     features: [
       "חיזויים ללא הגבלה",
       "ניתוח AI מתקדם",
@@ -63,9 +65,10 @@ const PLANS = [
     period: "לחודש",
     badge: "פרימיום",
     icon: Crown,
-    color: "oklch(0.75 0.190 70)",
-    borderColor: "oklch(0.75 0.190 70 / 0.50)",
-    bgColor: "oklch(0.75 0.190 70 / 0.07)",
+    color: "#D4A000",
+    borderColor: "rgba(212,160,0,0.50)",
+    bgColor: "rgba(212,160,0,0.07)",
+    iconBgColor: "rgba(212,160,0,0.15)",
     features: [
       "הכל מתוכנית פרו",
       "תחרויות פרטיות עם פרסים",
@@ -108,14 +111,14 @@ export default function Pricing() {
       {/* Header */}
       <div className="relative overflow-hidden py-20 px-6 text-center">
         <div className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(ellipse 80% 60% at 50% 0%, oklch(0.55 0.165 240 / 0.12), transparent)" }} />
+          style={{ background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(31,107,255,0.12), transparent)" }} />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold mb-4 border"
-            style={{ background: "oklch(0.55 0.165 240 / 0.10)", borderColor: "oklch(0.55 0.165 240 / 0.25)", color: "oklch(0.72 0.190 230)" }}>
+            style={{ background: "rgba(31,107,255,0.10)", borderColor: "rgba(31,107,255,0.25)", color: "#1F6BFF" }}>
             <Trophy className="w-3 h-3" /> תוכניות ומחירים
           </div>
           <h1 className="text-4xl font-black text-foreground mb-3">בחר את התוכנית שלך</h1>
@@ -154,7 +157,7 @@ export default function Pricing() {
 
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ background: `${plan.color.replace(")", " / 0.15)")}`, border: `1px solid ${plan.borderColor}` }}>
+                    style={{ background: plan.iconBgColor, border: `1px solid ${plan.borderColor}` }}>
                     <Icon className="w-5 h-5" style={{ color: plan.color }} />
                   </div>
                   <div>
@@ -221,9 +224,9 @@ export default function Pricing() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
           className="mt-16 text-center p-8 rounded-2xl border"
-          style={{ background: "oklch(0.55 0.165 240 / 0.07)", borderColor: "oklch(0.55 0.165 240 / 0.20)" }}
+          style={{ background: "rgba(31,107,255,0.07)", borderColor: "rgba(31,107,255,0.20)" }}
         >
-          <Trophy className="w-10 h-10 mx-auto mb-3" style={{ color: "oklch(0.72 0.190 230)" }} />
+          <Trophy className="w-10 h-10 mx-auto mb-3" style={{ color: "#1F6BFF" }} />
           <h3 className="text-xl font-black text-foreground mb-2">מוכן להתחיל לנצח?</h3>
           <p className="text-muted-foreground text-sm mb-5">הצטרף ל-1,200+ מנחשים שכבר מתחרים בפלטפורמה</p>
           <Button variant="accent" className="font-bold px-8" onClick={() => navigate("/login")}>

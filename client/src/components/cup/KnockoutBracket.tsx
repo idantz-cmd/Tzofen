@@ -51,8 +51,8 @@ function MatchSlot({ match, placeholder, onClick, isSelected }: MatchSlotProps) 
         style={{
           width: 180,
           height: CARD_H,
-          borderColor: "oklch(0.75 0.190 70 / 0.15)",
-          background: "oklch(0.14 0.040 252 / 0.4)",
+          borderColor: "rgba(212,160,0,0.15)",
+          background: "rgba(240,244,255,0.4)",
         }}
       >
         <span className="text-muted-foreground/30 text-xs">—</span>
@@ -74,9 +74,9 @@ function MatchSlot({ match, placeholder, onClick, isSelected }: MatchSlotProps) 
         width: 180,
         height: CARD_H,
         background: isSelected
-          ? "linear-gradient(135deg, oklch(0.75 0.190 70 / 0.18), oklch(0.75 0.190 70 / 0.08))"
-          : "linear-gradient(135deg, oklch(0.16 0.042 250), oklch(0.13 0.038 252))",
-        borderColor: isSelected ? "oklch(0.75 0.190 70 / 0.50)" : "oklch(0.75 0.190 70 / 0.18)",
+          ? "linear-gradient(135deg, rgba(212,160,0,0.18), rgba(212,160,0,0.08))"
+          : "linear-gradient(135deg, #F0F4FF, #F8FAFF)",
+        borderColor: isSelected ? "rgba(212,160,0,0.50)" : "rgba(212,160,0,0.18)",
       }}
     >
       {/* Teams */}
@@ -145,8 +145,8 @@ export function KnockoutBracket({ bracket }: Props) {
               }`}
               style={
                 activeRound === r.key
-                  ? { background: "oklch(0.75 0.190 70 / 0.80)" }
-                  : { background: "oklch(0.16 0.042 250 / 0.6)" }
+                  ? { background: "rgba(212,160,0,0.80)" }
+                  : { background: "rgba(240,244,255,0.6)" }
               }
             >
               {r.short} {count > 0 && <span className="opacity-70">({count})</span>}
@@ -192,7 +192,7 @@ export function KnockoutBracket({ bracket }: Props) {
                   >
                     <span
                       className="text-[10px] font-black px-2 py-0.5 rounded-full"
-                      style={{ background: "oklch(0.75 0.190 70 / 0.15)", color: "oklch(0.80 0.170 70)" }}
+                      style={{ background: "rgba(212,160,0,0.15)", color: "#D4A000" }}
                     >
                       {round.label}
                     </span>
@@ -228,7 +228,7 @@ export function KnockoutBracket({ bracket }: Props) {
                           >
                             <line
                               x1={0} y1={0} x2={24} y2={0}
-                              stroke="oklch(0.75 0.190 70 / 0.25)"
+                              stroke="rgba(212,160,0,0.25)"
                               strokeWidth={1.5}
                             />
                           </svg>
@@ -248,7 +248,7 @@ export function KnockoutBracket({ bracket }: Props) {
                             <line
                               x1={0} y1={0}
                               x2={0} y2={Math.abs(lineEnd - lineStart)}
-                              stroke="oklch(0.75 0.190 70 / 0.20)"
+                              stroke="rgba(212,160,0,0.20)"
                               strokeWidth={1.5}
                             />
                           </svg>
@@ -276,7 +276,7 @@ export function KnockoutBracket({ bracket }: Props) {
             />
             <motion.div
               className="fixed bottom-0 inset-x-0 z-50 p-4 rounded-t-2xl border-t border-border/40 max-w-lg mx-auto"
-              style={{ background: "oklch(0.13 0.038 252)" }}
+              style={{ background: "#F8FAFF" }}
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}

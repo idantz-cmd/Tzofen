@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useCategory } from "@/contexts/CategoryContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { RefreshCw, Newspaper, ExternalLink, Clock, Wifi } from "lucide-react";
@@ -44,6 +45,8 @@ function NewsCardSkeleton() {
 }
 
 export default function News() {
+  const { setCategory } = useCategory();
+  useEffect(() => { setCategory("news"); }, [setCategory]);
   const [source, setSource] = useState<Source>("all");
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -67,7 +70,7 @@ export default function News() {
         <div className="flex items-center justify-between mb-5">
           <div>
             <h1 className="text-2xl font-black text-gradient-blue flex items-center gap-2">
-              <Newspaper className="w-6 h-6" style={{ color: "oklch(0.55 0.165 240)" }} />
+              <Newspaper className="w-6 h-6" style={{ color: "#1F6BFF" }} />
               חדשות כדורגל ישראלי
             </h1>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -96,7 +99,7 @@ export default function News() {
               style={
                 source === tab.id
                   ? { background: tab.color, color: "white", boxShadow: `0 2px 8px ${tab.color}55` }
-                  : { background: "oklch(0.96 0.01 240)", color: "oklch(0.40 0.06 240)" }
+                  : { background: "#F8FAFF", color: "#475569" }
               }
             >
               {tab.label}
@@ -166,7 +169,7 @@ export default function News() {
                   ) : (
                     <div
                       className="w-24 h-16 rounded-lg flex-shrink-0 flex items-center justify-center"
-                      style={{ background: "oklch(0.94 0.02 240)" }}
+                      style={{ background: "#EEF3FF" }}
                     >
                       <span className="text-2xl">⚽</span>
                     </div>

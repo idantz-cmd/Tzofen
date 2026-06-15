@@ -597,16 +597,16 @@ function LeagueDataPanel() {
         </div>
         {status ? (
           <div className="grid grid-cols-3 gap-4">
-            <div className="text-center p-3 rounded-lg" style={{ background: "oklch(0.22 0.060 258 / 0.5)" }}>
-              <p className="text-2xl font-bold" style={{ color: "oklch(0.72 0.190 230)" }}>{status.teams}</p>
+            <div className="text-center p-3 rounded-lg" style={{ background: "rgba(31,107,255,0.08)" }}>
+              <p className="text-2xl font-bold" style={{ color: "#1F6BFF" }}>{status.teams}</p>
               <p className="text-xs text-muted-foreground mt-1">קבוצות</p>
             </div>
-            <div className="text-center p-3 rounded-lg" style={{ background: "oklch(0.22 0.060 258 / 0.5)" }}>
-              <p className="text-2xl font-bold" style={{ color: "oklch(0.84 0.190 76)" }}>{status.standings}</p>
+            <div className="text-center p-3 rounded-lg" style={{ background: "rgba(255,201,31,0.10)" }}>
+              <p className="text-2xl font-bold" style={{ color: "#B38900" }}>{status.standings}</p>
               <p className="text-xs text-muted-foreground mt-1">שורות טבלה</p>
             </div>
-            <div className="text-center p-3 rounded-lg" style={{ background: "oklch(0.22 0.060 258 / 0.5)" }}>
-              <p className="text-2xl font-bold" style={{ color: "oklch(0.72 0.190 230)" }}>{status.players}</p>
+            <div className="text-center p-3 rounded-lg" style={{ background: "rgba(19,206,102,0.08)" }}>
+              <p className="text-2xl font-bold" style={{ color: "#0DA855" }}>{status.players}</p>
               <p className="text-xs text-muted-foreground mt-1">שחקנים</p>
             </div>
           </div>
@@ -634,7 +634,7 @@ function LeagueDataPanel() {
             { icon: "④", label: "Skill 4 — גריפת עיר/מיקום קבוצה מדפי הקבוצות" },
           ].map((s) => (
             <div key={s.icon} className="flex items-start gap-2 text-muted-foreground">
-              <span style={{ color: "oklch(0.84 0.190 76)" }}>{s.icon}</span>
+              <span style={{ color: "#B38900" }}>{s.icon}</span>
               <span>{s.label}</span>
             </div>
           ))}
@@ -644,7 +644,7 @@ function LeagueDataPanel() {
           onClick={() => scrapeAll.mutate({ season: "25/26" })}
           disabled={scrapeAll.isPending}
           className="flex items-center gap-2"
-          style={scrapeAll.isPending ? {} : { background: "oklch(0.55 0.110 232)" }}
+          style={scrapeAll.isPending ? {} : { background: "#1F6BFF" }}
         >
           {scrapeAll.isPending ? (
             <>
@@ -660,7 +660,7 @@ function LeagueDataPanel() {
         </Button>
 
         {scrapeAll.data && (
-          <div className="mt-4 p-3 rounded-lg border border-border/40 text-sm space-y-1" style={{ background: "oklch(0.22 0.060 258 / 0.4)" }}>
+          <div className="mt-4 p-3 rounded-lg border border-border/40 text-sm space-y-1" style={{ background: "rgba(238,243,255,0.8)" }}>
             <p className="font-semibold text-green-400">✓ סריקה הושלמה</p>
             <p className="text-muted-foreground">קבוצות: {scrapeAll.data.teams}</p>
             <p className="text-muted-foreground">ליגת העל: {scrapeAll.data.standings?.ligat_hael} שורות</p>
@@ -685,10 +685,10 @@ function LeagueDataPanel() {
 
 // ── Segment visual config (colours / icons) — client-only, never sent to users
 const SEGMENT_UI = {
-  engaged:  { icon: Flame,         color: "oklch(0.55 0.110 232)", bg: "oklch(0.55 0.110 232 / 0.10)", border: "oklch(0.55 0.110 232 / 0.25)" },
-  active:   { icon: Activity,      color: "oklch(0.78 0.155 72)",  bg: "oklch(0.78 0.155 72  / 0.10)", border: "oklch(0.78 0.155 72  / 0.25)" },
-  fading:   { icon: TrendingDown,  color: "oklch(0.72 0.190 30)",  bg: "oklch(0.72 0.190 30  / 0.10)", border: "oklch(0.72 0.190 30  / 0.25)" },
-  dormant:  { icon: Moon,          color: "oklch(0.62 0.060 258)", bg: "oklch(0.62 0.060 258 / 0.10)", border: "oklch(0.62 0.060 258 / 0.25)" },
+  engaged:  { icon: Flame,         color: "#1F6BFF", bg: "rgba(31,107,255,0.10)",  border: "rgba(31,107,255,0.25)"  },
+  active:   { icon: Activity,      color: "#13CE66", bg: "rgba(19,206,102,0.10)",  border: "rgba(19,206,102,0.25)"  },
+  fading:   { icon: TrendingDown,  color: "#FFC91F", bg: "rgba(255,201,31,0.10)",  border: "rgba(255,201,31,0.25)"  },
+  dormant:  { icon: Moon,          color: "#6B7280", bg: "rgba(107,114,128,0.10)", border: "rgba(107,114,128,0.25)" },
 } as const;
 
 type SegmentKey = "engaged" | "active" | "fading" | "dormant";
@@ -821,7 +821,7 @@ function EngagementPanel() {
 
       {/* Notification composer — slides in when a segment is selected */}
       {selected && selectedSegment && (
-        <Card className="p-6 border-primary/20" style={{ background: "oklch(0.18 0.055 258)" }}>
+        <Card className="p-6 border-primary/20" style={{ background: "#F8FAFF" }}>
           <h3 className="font-bold mb-1">
             שלח התראה אל: <span style={{ color: SEGMENT_UI[selected].color }}>{selectedSegment.label}</span>
           </h3>

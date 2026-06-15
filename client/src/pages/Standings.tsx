@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
+import { useCategory } from "@/contexts/CategoryContext";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Spinner } from "@/components/ui/spinner";
@@ -55,9 +56,9 @@ const TOP_SCORERS = [
 
 // ── Zone helpers ────────────────────────────────────────────────────────────
 function getZone(position: number, total: number): { label: string; color: string; bg: string } | null {
-  if (position === 1) return { label: "אלוף", color: "oklch(0.84 0.190 76)", bg: "oklch(0.84 0.190 76 / 0.08)" };
-  if (position <= 4) return { label: "אירופה", color: "oklch(0.72 0.190 230)", bg: "oklch(0.72 0.190 230 / 0.07)" };
-  if (position > total - 3) return { label: "הורדה", color: "oklch(0.60 0.200 25)", bg: "oklch(0.60 0.200 25 / 0.07)" };
+  if (position === 1) return { label: "אלוף", color: "#B38900", bg: "rgba(179,137,0,0.08)" };
+  if (position <= 4) return { label: "אירופה", color: "#1F6BFF", bg: "rgba(31,107,255,0.07)" };
+  if (position > total - 3) return { label: "הורדה", color: "#FF3B5C", bg: "rgba(255,59,92,0.07)" };
   return null;
 }
 
@@ -71,9 +72,9 @@ function FormBadge({ form }: { form?: string | null }) {
           className="w-5 h-5 rounded text-[10px] font-bold flex items-center justify-center"
           style={{
             background:
-              r === "W" ? "oklch(0.52 0.165 145)"
-              : r === "L" ? "oklch(0.50 0.165 25)"
-              : "oklch(0.50 0.090 75)",
+              r === "W" ? "#13CE66"
+              : r === "L" ? "#FF3B5C"
+              : "#B38900",
             color: "white",
           }}
         >
@@ -112,9 +113,9 @@ function TeamRow({
   const zone = getZone(row.position, total);
 
   const medalColor =
-    row.position === 1 ? "oklch(0.84 0.190 76)"
-    : row.position === 2 ? "oklch(0.78 0.025 240)"
-    : row.position === 3 ? "oklch(0.62 0.110 44)"
+    row.position === 1 ? "#B38900"
+    : row.position === 2 ? "#94A3B8"
+    : row.position === 3 ? "#B45309"
     : undefined;
 
   return (
@@ -126,7 +127,7 @@ function TeamRow({
       >
         {/* Position */}
         <td className="py-3 px-3 text-center w-10">
-          <span className="font-bold text-sm" style={{ color: medalColor ?? "oklch(0.65 0.025 240)" }}>
+          <span className="font-bold text-sm" style={{ color: medalColor ?? "#64748B" }}>
             {row.position <= 3
               ? ["🥇","🥈","🥉"][row.position - 1]
               : row.position}
@@ -157,10 +158,10 @@ function TeamRow({
           <td key={i} className="py-3 px-2 text-center text-sm text-muted-foreground">{val}</td>
         ))}
         <td className="py-3 px-2 text-center text-sm font-medium"
-          style={{ color: row.goalDifference > 0 ? "oklch(0.65 0.165 145)" : row.goalDifference < 0 ? "oklch(0.60 0.165 25)" : "oklch(0.65 0.025 240)" }}>
+          style={{ color: row.goalDifference > 0 ? "#13CE66" : row.goalDifference < 0 ? "#FF3B5C" : "#64748B" }}>
           {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
         </td>
-        <td className="py-3 px-3 text-center font-black text-base" style={{ color: "oklch(0.72 0.190 230)" }}>
+        <td className="py-3 px-3 text-center font-black text-base" style={{ color: "#1F6BFF" }}>
           {row.points}
         </td>
         <td className="py-3 px-3 hidden md:table-cell">
@@ -175,11 +176,11 @@ function TeamRow({
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
                 {[
                   { label: "משחקים", value: row.played },
-                  { label: "ניצחונות", value: row.won, color: "oklch(0.62 0.165 145)" },
-                  { label: "תיקו", value: row.drawn, color: "oklch(0.75 0.140 75)" },
-                  { label: "הפסדים", value: row.lost, color: "oklch(0.60 0.165 25)" },
+                  { label: "ניצחונות", value: row.won, color: "#13CE66" },
+                  { label: "תיקו", value: row.drawn, color: "#FFC91F" },
+                  { label: "הפסדים", value: row.lost, color: "#FF3B5C" },
                   { label: "שערים", value: `${row.goalsFor}/${row.goalsAgainst}` },
-                  { label: "נקודות", value: row.points, color: "oklch(0.72 0.190 230)" },
+                  { label: "נקודות", value: row.points, color: "#1F6BFF" },
                 ].map((stat, i) => (
                   <div key={i} className="text-center">
                     <p className="text-xl font-black" style={{ color: stat.color }}>{stat.value}</p>
@@ -225,16 +226,16 @@ function StandingsTable({ league }: { league: League }) {
         {/* Zone legend */}
         <div className="flex flex-wrap gap-3 px-4 py-2.5 border-b border-border/20 text-[11px] bg-muted/30">
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-sm inline-block" style={{ background: "oklch(0.84 0.190 76 / 0.35)" }} />
-            <span style={{ color: "oklch(0.84 0.190 76)" }}>מקום ראשון</span>
+            <span className="w-3 h-3 rounded-sm inline-block" style={{ background: "rgba(179,137,0,0.35)" }} />
+            <span style={{ color: "#B38900" }}>מקום ראשון</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-sm inline-block" style={{ background: "oklch(0.72 0.190 230 / 0.25)" }} />
-            <span style={{ color: "oklch(0.72 0.190 230)" }}>אירופה (2-4)</span>
+            <span className="w-3 h-3 rounded-sm inline-block" style={{ background: "rgba(31,107,255,0.25)" }} />
+            <span style={{ color: "#1F6BFF" }}>אירופה (2-4)</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-sm inline-block" style={{ background: "oklch(0.60 0.200 25 / 0.25)" }} />
-            <span style={{ color: "oklch(0.60 0.200 25)" }}>הורדה</span>
+            <span className="w-3 h-3 rounded-sm inline-block" style={{ background: "rgba(255,59,92,0.25)" }} />
+            <span style={{ color: "#FF3B5C" }}>הורדה</span>
           </span>
         </div>
 
@@ -251,7 +252,7 @@ function StandingsTable({ league }: { league: League }) {
                 <th className="py-3 px-2 text-center text-muted-foreground font-medium">שב</th>
                 <th className="py-3 px-2 text-center text-muted-foreground font-medium">שנ</th>
                 <th className="py-3 px-2 text-center text-muted-foreground font-medium">הפ</th>
-                <th className="py-3 px-3 text-center font-medium" style={{ color: "oklch(0.72 0.190 230)" }}>נק'</th>
+                <th className="py-3 px-3 text-center font-medium" style={{ color: "#1F6BFF" }}>נק'</th>
                 <th className="py-3 px-3 text-right text-muted-foreground font-medium hidden md:table-cell">סדרה</th>
               </tr>
             </thead>
@@ -264,7 +265,7 @@ function StandingsTable({ league }: { league: League }) {
                 return (
                   <>
                     {showDivider && currZone?.label === "הורדה" && (
-                      <ZoneDivider key={`div-${idx}`} label="אזור הורדה" color="oklch(0.60 0.200 25)" />
+                      <ZoneDivider key={`div-${idx}`} label="אזור הורדה" color="#FF3B5C" />
                     )}
                     <TeamRow
                       key={row.id}
@@ -301,7 +302,7 @@ function TopScorers() {
   return (
     <Card className="overflow-hidden">
       <div className="px-4 py-3 border-b border-border/20 flex items-center gap-2 bg-muted/25">
-        <Star className="w-4 h-4" style={{ color: "oklch(0.84 0.190 76)" }} />
+        <Star className="w-4 h-4" style={{ color: "#B38900" }} />
         <span className="font-bold text-sm">מלך השערים — ליגת העל 25/26</span>
       </div>
       <div className="divide-y divide-border/20">
@@ -309,7 +310,7 @@ function TopScorers() {
           <div key={i} className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors">
             {/* Rank */}
             <span className="w-6 text-center font-black text-sm shrink-0"
-              style={{ color: i === 0 ? "oklch(0.84 0.190 76)" : i === 1 ? "oklch(0.78 0.025 240)" : i === 2 ? "oklch(0.62 0.110 44)" : "oklch(0.55 0.025 240)" }}>
+              style={{ color: i === 0 ? "#B38900" : i === 1 ? "#94A3B8" : i === 2 ? "#B45309" : "#64748B" }}>
               {i < 3 ? ["🥇","🥈","🥉"][i] : `${i + 1}`}
             </span>
 
@@ -322,13 +323,13 @@ function TopScorers() {
 
             {/* Goals */}
             <div className="text-right shrink-0">
-              <p className="font-black text-lg" style={{ color: "oklch(0.84 0.190 76)" }}>{scorer.goals}</p>
+              <p className="font-black text-lg" style={{ color: "#B38900" }}>{scorer.goals}</p>
               <p className="text-[10px] text-muted-foreground">שערים</p>
             </div>
 
             {/* Assists */}
             <div className="text-right shrink-0 hidden sm:block">
-              <p className="font-bold text-sm" style={{ color: "oklch(0.72 0.190 230)" }}>{scorer.assists}</p>
+              <p className="font-bold text-sm" style={{ color: "#1F6BFF" }}>{scorer.assists}</p>
               <p className="text-[10px] text-muted-foreground">בישולים</p>
             </div>
           </div>
@@ -347,10 +348,10 @@ function SeasonStats({ league }: { league: League }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {[
-        { label: "מוביל בטבלה", value: leader.teamName, sub: `${leader.points} נק'`, color: "oklch(0.84 0.190 76)" },
-        { label: "סה\"כ שערים", value: totalGoals, sub: "בעונה הנוכחית", color: "oklch(0.72 0.190 230)" },
-        { label: "ממוצע שערים", value: avgGoals, sub: "לכל משחק", color: "oklch(0.65 0.165 145)" },
-        { label: "קבוצות", value: rows.length, sub: "בליגה", color: "oklch(0.75 0.140 75)" },
+        { label: "מוביל בטבלה", value: leader.teamName, sub: `${leader.points} נק'`, color: "#B38900" },
+        { label: "סה\"כ שערים", value: totalGoals, sub: "בעונה הנוכחית", color: "#1F6BFF" },
+        { label: "ממוצע שערים", value: avgGoals, sub: "לכל משחק", color: "#13CE66" },
+        { label: "קבוצות", value: rows.length, sub: "בליגה", color: "#FFC91F" },
       ].map((s, i) => (
         <Card key={i} className="p-4 text-center">
           <p className="text-2xl font-black truncate" style={{ color: s.color }}>{s.value}</p>
@@ -363,6 +364,8 @@ function SeasonStats({ league }: { league: League }) {
 }
 
 export default function Standings() {
+  const { setCategory } = useCategory();
+  useEffect(() => { setCategory("leaderboard"); }, [setCategory]);
   const [league, setLeague] = useState<League>("ligat_hael");
   const { data: status } = trpc.leagueData.getDataStatus.useQuery();
 
@@ -374,7 +377,7 @@ export default function Standings() {
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: "linear-gradient(135deg, oklch(0.55 0.165 240), oklch(0.40 0.160 248))", boxShadow: "0 4px 16px oklch(0.50 0.165 240 / 0.35)" }}>
+            style={{ background: "linear-gradient(135deg, #1F6BFF, #1F4CB3)", boxShadow: "0 4px 16px rgba(31,107,255,0.35)" }}>
             <TrendingUp className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1">
@@ -384,7 +387,7 @@ export default function Standings() {
           {status && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className="w-2 h-2 rounded-full animate-pulse"
-                style={{ background: status.hasData ? "oklch(0.62 0.190 145)" : "oklch(0.78 0.155 72)" }} />
+                style={{ background: status.hasData ? "#13CE66" : "#FFC91F" }} />
               {status.hasData ? `${status.teams} קבוצות · ${status.standings} שורות` : "נתוני דוגמה"}
             </div>
           )}

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useCategory } from "@/contexts/CategoryContext";
 import { motion } from "framer-motion";
 import Navigation from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
@@ -29,6 +30,9 @@ interface AnalysisModule {
   description: string;
   icon: React.ReactNode;
   color: string;
+  bgActive: string;
+  borderActive: string;
+  shadowActive: string;
 }
 
 const ANALYSIS_MODULES: AnalysisModule[] = [
@@ -37,32 +41,46 @@ const ANALYSIS_MODULES: AnalysisModule[] = [
     name: "ניתוח סטטיסטי",
     description: "נתונים, ממוצעים, ומגמות מ-1990",
     icon: <BarChart3 className="w-4 h-4" />,
-    color: "oklch(0.55 0.165 240)",
+    color: "#1F6BFF",
+    bgActive: "rgba(31,107,255,0.10)",
+    borderActive: "rgba(31,107,255,0.40)",
+    shadowActive: "0 0 12px rgba(31,107,255,0.18)",
   },
   {
     id: "research",
     name: "מחקר ליגה",
     description: "מידע עדכני על קבוצות ושחקנים",
     icon: <Search className="w-4 h-4" />,
-    color: "oklch(0.65 0.160 200)",
+    color: "#8B4DFF",
+    bgActive: "rgba(139,77,255,0.10)",
+    borderActive: "rgba(139,77,255,0.40)",
+    shadowActive: "0 0 12px rgba(139,77,255,0.18)",
   },
   {
     id: "prediction",
     name: "מנוע חיזוי",
     description: "חיזויים מבוססי נתונים היסטוריים",
     icon: <Target className="w-4 h-4" />,
-    color: "oklch(0.55 0.165 240)",
+    color: "#1F6BFF",
+    bgActive: "rgba(31,107,255,0.10)",
+    borderActive: "rgba(31,107,255,0.40)",
+    shadowActive: "0 0 12px rgba(31,107,255,0.18)",
   },
   {
     id: "tactical",
     name: "ניתוח טקטי",
     description: "סגנון משחק, הרכבים, ותכסיסים",
     icon: <Compass className="w-4 h-4" />,
-    color: "oklch(0.65 0.160 200)",
+    color: "#8B4DFF",
+    bgActive: "rgba(139,77,255,0.10)",
+    borderActive: "rgba(139,77,255,0.40)",
+    shadowActive: "0 0 12px rgba(139,77,255,0.18)",
   },
 ];
 
 export default function ChatAssistant() {
+  const { setCategory } = useCategory();
+  useEffect(() => { setCategory("ai"); }, [setCategory]);
   const { isAuthenticated } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -158,7 +176,7 @@ export default function ChatAssistant() {
               className="text-center mb-10"
             >
               <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, oklch(0.58 0.165 238), oklch(0.40 0.160 248))", boxShadow: "0 8px 28px oklch(0.50 0.165 240 / 0.35)" }}>
+                style={{ background: "linear-gradient(135deg, #9D6FFF, #8B4DFF)", boxShadow: "0 8px 28px rgba(139,77,255,0.35)" }}>
                 <Brain className="w-7 h-7 text-white" />
               </div>
               <h1 className="text-3xl font-black text-gradient-blue mb-2">מערכת ניתוח מקצועית</h1>
@@ -176,7 +194,7 @@ export default function ChatAssistant() {
                   <Card className="p-4 border-border/20 hover:border-primary/20 transition-all">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ background: `${module.color} / 0.12)`.replace("oklch(", "oklch(") }}>
+                        style={{ background: module.bgActive }}>
                         <span style={{ color: module.color }}>{module.icon}</span>
                       </div>
                       <div>
@@ -241,7 +259,7 @@ export default function ChatAssistant() {
                   className="p-3 rounded-xl border text-right transition-all duration-200"
                   style={
                     active
-                      ? { background: `${module.color} / 0.10)`.replace("oklch(", "oklch("), borderColor: `${module.color} / 0.40)`.replace("oklch(", "oklch("), boxShadow: `0 0 12px ${module.color} / 0.18)`.replace("oklch(", "oklch(") }
+                      ? { background: module.bgActive, borderColor: module.borderActive, boxShadow: module.shadowActive }
                       : { borderColor: "var(--border)", background: "var(--card)", opacity: 0.85 }
                   }
                 >
@@ -263,14 +281,14 @@ export default function ChatAssistant() {
                   className="p-3 rounded-xl border text-right transition-all duration-200"
                   style={
                     active
-                      ? { background: "oklch(0.65 0.160 200 / 0.10)", borderColor: "oklch(0.65 0.160 200 / 0.40)", boxShadow: "0 0 12px oklch(0.65 0.160 200 / 0.18)" }
+                      ? { background: "rgba(139,77,255,0.10)", borderColor: "rgba(139,77,255,0.40)", boxShadow: "0 0 12px rgba(139,77,255,0.18)" }
                       : { borderColor: "var(--border)", background: "var(--card)", opacity: 0.85 }
                   }
                 >
-                  <div className="mb-1.5" style={{ color: active ? "oklch(0.65 0.160 200)" : "var(--muted-foreground)" }}>
+                  <div className="mb-1.5" style={{ color: active ? "#8B4DFF" : "var(--muted-foreground)" }}>
                     <Sparkles className="w-4 h-4" />
                   </div>
-                  <p className="font-bold text-xs" style={{ color: active ? "oklch(0.65 0.160 200)" : "var(--foreground)" }}>ניתוח מקיף</p>
+                  <p className="font-bold text-xs" style={{ color: active ? "#8B4DFF" : "var(--foreground)" }}>ניתוח מקיף</p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">כל המודולים ביחד</p>
                 </button>
               );
@@ -296,11 +314,11 @@ export default function ChatAssistant() {
                           : "bg-muted/20 border border-border/20 text-foreground rounded-tl-sm"
                       }`}
                       style={message.role === "user"
-                        ? { background: "linear-gradient(135deg, oklch(0.58 0.165 238), oklch(0.45 0.160 248))" }
+                        ? { background: "linear-gradient(135deg, #4D8FFF, #1F6BFF)" }
                         : {}}
                     >
                       {message.agentName && message.role === "assistant" && (
-                        <p className="text-xs font-bold mb-1.5" style={{ color: "oklch(0.55 0.165 240)" }}>
+                        <p className="text-xs font-bold mb-1.5" style={{ color: "#1F6BFF" }}>
                           {message.agentName}
                         </p>
                       )}

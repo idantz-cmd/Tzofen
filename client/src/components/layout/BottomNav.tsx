@@ -35,7 +35,7 @@ export function BottomNav() {
       <nav
         className="flex items-center justify-around px-2 py-1 border-t border-border/30"
         style={{
-          background: "oklch(0.99 0.008 228 / 0.95)",
+          background: "rgba(255,255,255,0.95)",
           backdropFilter: "blur(20px) saturate(180%)",
         }}
         aria-label="ניווט תחתי"
@@ -45,19 +45,19 @@ export function BottomNav() {
           if (tab.path === "/dashboard" && !isAuthenticated) return null;
 
           return (
-            <Link key={tab.path} href={tab.path}>
+            <Link key={tab.path} href={tab.path} aria-label={tab.label}>
               <motion.div
                 whileTap={{ scale: 0.9 }}
                 animate={{ scale: active ? 1.1 : 1 }}
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl cursor-pointer transition-colors ${
+                className={`flex flex-col items-center gap-0.5 px-3 py-1.5 min-h-[44px] min-w-[44px] justify-center rounded-xl cursor-pointer transition-colors ${
                   active ? "text-primary" : "text-muted-foreground"
                 }`}
               >
                 <span className="text-xl leading-none">{tab.icon}</span>
                 <span
                   className="text-[10px] font-bold leading-none"
-                  style={{ color: active ? "oklch(0.50 0.165 240)" : undefined }}
+                  style={{ color: active ? "#1F6BFF" : undefined }}
                 >
                   {tab.label}
                 </span>
@@ -65,7 +65,7 @@ export function BottomNav() {
                   <motion.div
                     layoutId="bottom-nav-indicator"
                     className="absolute bottom-1 w-1 h-1 rounded-full"
-                    style={{ background: "oklch(0.50 0.165 240)" }}
+                    style={{ background: "#1F6BFF" }}
                   />
                 )}
               </motion.div>
@@ -78,7 +78,7 @@ export function BottomNav() {
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => setDrawerOpen(true)}
-            className="relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl cursor-pointer text-muted-foreground"
+            className="relative flex flex-col items-center gap-0.5 px-3 py-1.5 min-h-[44px] min-w-[44px] justify-center rounded-xl cursor-pointer text-muted-foreground"
             aria-label="התראות"
           >
             <Bell className="w-5 h-5" />
@@ -88,7 +88,7 @@ export function BottomNav() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 className="absolute top-1 right-1.5 min-w-[16px] h-4 rounded-full flex items-center justify-center text-[9px] font-black text-white px-0.5"
-                style={{ background: "oklch(0.58 0.220 27)" }}
+                style={{ background: "#FF3B5C" }}
               >
                 {unread > 9 ? "9+" : unread}
               </motion.span>
@@ -110,7 +110,7 @@ export function BottomNav() {
             />
             <motion.div
               className="fixed bottom-0 inset-x-0 z-50 rounded-t-2xl border-t border-border/40 max-h-[70vh] flex flex-col"
-              style={{ background: "oklch(0.16 0.055 258)" }}
+              style={{ background: "#FFFFFF" }}
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
@@ -179,7 +179,7 @@ export function BottomNav() {
                             )}
                           </div>
                           {!n.read && (
-                            <span className="shrink-0 w-2 h-2 rounded-full mt-1.5" style={{ background: "oklch(0.50 0.165 240)" }} />
+                            <span className="shrink-0 w-2 h-2 rounded-full mt-1.5" style={{ background: "#1F6BFF" }} />
                           )}
                         </div>
                       </motion.div>

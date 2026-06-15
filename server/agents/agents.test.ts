@@ -39,7 +39,7 @@ describe("Agent Config", () => {
     expect(ids).toContain("research");
     expect(ids).toContain("prediction");
     expect(ids).toContain("tactical");
-    expect(ids).toContain("bankroll");
+    expect(ids).toContain("points-strategy");
     expect(ids).toContain("news");
     expect(ids).toContain("orchestrator");
     expect(ids).toContain("schedule");
@@ -61,10 +61,10 @@ describe("Agent Config", () => {
     });
   });
 
-  it("bankroll agent config contains Kelly Criterion", () => {
-    const config = getAgentConfig("bankroll");
-    expect(config.systemPrompt).toContain("Kelly");
-    expect(config.skills).toContain("Kelly Criterion");
+  it("points-strategy agent config focuses on confidence and points", () => {
+    const config = getAgentConfig("points-strategy");
+    expect(config.systemPrompt).toContain("confidence");
+    expect(config.skills).toContain("Confidence Tier Selection");
   });
 
   it("news agent config mentions real-time priorities", () => {
@@ -101,7 +101,7 @@ describe("queryAgent", () => {
     "research",
     "prediction",
     "tactical",
-    "bankroll",
+    "points-strategy",
     "orchestrator",
     "schedule",
   ];
@@ -132,13 +132,13 @@ describe("queryAgent", () => {
       choices: [{ message: { content: "ok" } }],
     } as any);
 
-    await queryAgent("bankroll", "כמה להמר?");
+    await queryAgent("points-strategy", "איזה ביטחון להשתמש?");
 
     const call = spy.mock.calls[0][0];
     expect(call.messages[0].role).toBe("system");
-    expect(call.messages[0].content).toContain("Kelly");
+    expect(call.messages[0].content).toContain("confidence");
     expect(call.messages[1].role).toBe("user");
-    expect(call.messages[1].content).toBe("כמה להמר?");
+    expect(call.messages[1].content).toBe("איזה ביטחון להשתמש?");
   });
 
   it("returns fallback message when LLM returns empty content", async () => {
@@ -186,8 +186,8 @@ describe("queryMultipleAgents", () => {
     expect(results.schedule).toBeTruthy();
     expect(results.orchestrator).toBeTruthy();
 
-    // bankroll is empty in multi-agent (queried on demand via queryBankroll)
-    expect(results.bankroll).toBe("");
+    // points-strategy is queried on demand via queryPointsStrategy, not in the multi-agent call
+    expect(results["points-strategy"]).toBe("");
 
     expect(spy).toHaveBeenCalledTimes(7);
   });

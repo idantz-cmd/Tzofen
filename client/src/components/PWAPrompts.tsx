@@ -36,7 +36,7 @@ export function PWAPrompts() {
           >
             <div
               className="mx-3 mt-3 px-4 py-3 rounded-xl flex items-center gap-3 shadow-lg"
-              style={{ background: "oklch(0.55 0.110 232)", color: "white" }}
+              style={{ background: "#1F6BFF", color: "white" }}
             >
               <RefreshCw className="w-4 h-4 shrink-0" />
               <div className="flex-1 min-w-0">

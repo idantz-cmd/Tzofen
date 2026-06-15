@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useCategory } from "@/contexts/CategoryContext";
 import { motion } from "framer-motion";
 import { Trophy, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
@@ -35,7 +36,7 @@ function RoundSection({ roundKey, label, matches }: {
         <div className="flex items-center gap-3">
           <span
             className="text-xs font-black px-2.5 py-1 rounded-full"
-            style={{ background: "oklch(0.75 0.190 70 / 0.15)", color: "oklch(0.80 0.170 70)" }}
+            style={{ background: "rgba(212,160,0,0.15)", color: "#D4A000" }}
           >
             🏆 {label}
           </span>
@@ -56,6 +57,8 @@ function RoundSection({ roundKey, label, matches }: {
 }
 
 export default function Cup() {
+  const { setCategory } = useCategory();
+  useEffect(() => { setCategory("cup"); }, [setCategory]);
   const { data, isLoading } = trpc.cup.getBracket.useQuery({ season: SEASON });
 
   const bracket = data?.bracket ?? {
@@ -76,7 +79,7 @@ export default function Cup() {
       <div className="relative overflow-hidden">
         <div
           className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(ellipse 80% 60% at 50% 0%, oklch(0.75 0.190 70 / 0.12), transparent)" }}
+          style={{ background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212,160,0,0.12), transparent)" }}
         />
         <div className="max-w-4xl mx-auto px-4 pt-10 pb-8">
           <motion.div
@@ -87,9 +90,9 @@ export default function Cup() {
           >
             <div
               className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
-              style={{ background: "linear-gradient(135deg, oklch(0.75 0.190 70 / 0.30), oklch(0.75 0.190 70 / 0.15))", border: "1.5px solid oklch(0.75 0.190 70 / 0.40)" }}
+              style={{ background: "linear-gradient(135deg, rgba(212,160,0,0.30), rgba(212,160,0,0.15))", border: "1.5px solid rgba(212,160,0,0.40)" }}
             >
-              <Trophy className="w-6 h-6" style={{ color: "oklch(0.80 0.170 70)" }} />
+              <Trophy className="w-6 h-6" style={{ color: "#D4A000" }} />
             </div>
             <div>
               <h1 className="text-3xl font-black text-foreground">גביע המדינה {SEASON}</h1>
@@ -106,7 +109,7 @@ export default function Cup() {
         {/* Champion Picker */}
         <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <h2 className="text-base font-black text-foreground mb-3 flex items-center gap-2">
-            <Trophy className="w-4 h-4" style={{ color: "oklch(0.80 0.170 70)" }} />
+            <Trophy className="w-4 h-4" style={{ color: "#D4A000" }} />
             ניחוש אלוף
           </h2>
           <ChampionPicker season={SEASON} />
@@ -115,7 +118,7 @@ export default function Cup() {
         {/* Bracket */}
         <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <h2 className="text-base font-black text-foreground mb-4 flex items-center gap-2">
-            <span style={{ color: "oklch(0.80 0.170 70)" }}>🗺️</span>
+            <span style={{ color: "#D4A000" }}>🗺️</span>
             עץ הגביע
           </h2>
 
@@ -127,9 +130,9 @@ export default function Cup() {
           ) : totalMatches === 0 ? (
             <div
               className="text-center py-16 rounded-2xl border border-dashed"
-              style={{ borderColor: "oklch(0.75 0.190 70 / 0.20)" }}
+              style={{ borderColor: "rgba(212,160,0,0.20)" }}
             >
-              <Trophy className="w-10 h-10 mx-auto mb-3 opacity-20" style={{ color: "oklch(0.80 0.170 70)" }} />
+              <Trophy className="w-10 h-10 mx-auto mb-3 opacity-20" style={{ color: "#D4A000" }} />
               <p className="text-muted-foreground font-bold">משחקי גביע יתווספו בקרוב</p>
               <p className="text-muted-foreground/60 text-sm mt-1">מנהל האפליקציה יעדכן את הלוח</p>
             </div>
@@ -137,8 +140,8 @@ export default function Cup() {
             <div
               className="p-4 rounded-2xl border"
               style={{
-                background: "oklch(0.12 0.038 252 / 0.6)",
-                borderColor: "oklch(0.75 0.190 70 / 0.15)",
+                background: "rgba(248,250,255,0.9)",
+                borderColor: "rgba(212,160,0,0.15)",
               }}
             >
               <KnockoutBracket bracket={bracket} />
@@ -150,7 +153,7 @@ export default function Cup() {
         {totalMatches > 0 && (
           <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
             <h2 className="text-base font-black text-foreground mb-4 flex items-center gap-2">
-              <span style={{ color: "oklch(0.80 0.170 70)" }}>📋</span>
+              <span style={{ color: "#D4A000" }}>📋</span>
               כל משחקי הגביע
             </h2>
             <div className="space-y-3">

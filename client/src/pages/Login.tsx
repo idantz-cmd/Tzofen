@@ -66,7 +66,7 @@ export default function Login() {
       });
       const data = await res.json();
       if (!res.ok) { toast.error(data.error ?? "שגיאה"); return; }
-      toast.success(mode === "login" ? "התחברת בהצלחה!" : "ברוך הבא ל-GetWinIL!");
+      toast.success(mode === "login" ? "התחברת בהצלחה!" : "ברוך הבא לצופן!");
       navigate("/");
       window.location.reload();
     } catch { toast.error("שגיאת רשת");
@@ -83,28 +83,39 @@ export default function Login() {
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className="hidden lg:flex lg:w-[52%] flex-col justify-between p-12 relative overflow-hidden"
         style={{
-          background: "linear-gradient(160deg, oklch(0.14 0.060 248) 0%, oklch(0.10 0.040 248) 100%)",
+          background: "linear-gradient(160deg, #0F3080 0%, #091A55 100%)",
         }}
       >
         {/* Gradient blobs */}
-        <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-20 blur-3xl pointer-events-none"
-          style={{ background: "oklch(0.55 0.165 240)" }} />
-        <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-10 blur-3xl pointer-events-none"
-          style={{ background: "oklch(0.78 0.155 72)" }} />
+        <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-25 blur-3xl pointer-events-none"
+          style={{ background: "#1F6BFF" }} />
+        <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-15 blur-3xl pointer-events-none"
+          style={{ background: "#8B4DFF" }} />
 
         {/* Logo */}
         <div>
-          <div className="inline-block" dir="ltr">
-            <div className="h-[2.5px] rounded-full mb-[5px]" style={{ background: "#4a9eff" }} />
-            <div className="flex items-center gap-0">
-              <span className="font-light text-[2.2rem] tracking-tight text-white" style={{ fontFamily: "'Rubik', sans-serif" }}>Get</span>
-              <span className="font-black text-[2.2rem] tracking-tight text-white" style={{ fontFamily: "'Rubik', sans-serif" }}>Win</span>
-              <span className="text-[14px] font-bold mx-[3px] relative text-white" style={{ top: "-3px" }}>✡</span>
-              <span className="font-black text-[2.2rem] tracking-tight text-white" style={{ fontFamily: "'Rubik', sans-serif" }}>L</span>
+          <div className="flex items-center gap-3">
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)" }}
+            >
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                <circle cx="10.5" cy="10.5" r="6.5" stroke="white" strokeWidth="1.7" fill="none"/>
+                <line x1="10.5" y1="10.5" x2="8.2" y2="7.8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="10.5" y1="10.5" x2="12.8" y2="7.8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                <circle cx="10.5" cy="4.5" r="0.8" fill="rgba(255,255,255,0.7)"/>
+                <circle cx="16.5" cy="10.5" r="0.8" fill="rgba(255,255,255,0.7)"/>
+                <circle cx="10.5" cy="16.5" r="0.8" fill="rgba(255,255,255,0.7)"/>
+                <circle cx="4.5" cy="10.5" r="0.8" fill="rgba(255,255,255,0.7)"/>
+                <circle cx="10.5" cy="10.5" r="1.1" fill="white"/>
+                <line x1="15.5" y1="15.5" x2="20" y2="20" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+              </svg>
             </div>
-            <div className="h-[2.5px] rounded-full mt-[5px]" style={{ background: "#4a9eff" }} />
+            <div>
+              <p className="font-black text-3xl text-white" style={{ fontFamily: "'Rubik', sans-serif" }}>צופן</p>
+              <p className="text-white/55 text-sm">תפסיק לנחש, תתחיל לנצח</p>
+            </div>
           </div>
-          <p className="text-white/50 text-sm mt-3">פלטפורמת החיזויים המקצועית לכדורגל הישראלי</p>
         </div>
 
         {/* Features */}
@@ -119,8 +130,8 @@ export default function Login() {
               className="flex items-center gap-4"
             >
               <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: "oklch(0.55 0.110 232 / 0.18)", border: "1px solid oklch(0.55 0.110 232 / 0.25)" }}>
-                <Icon className="w-5 h-5" style={{ color: "oklch(0.72 0.190 230)" }} />
+                style={{ background: "rgba(31,107,255,0.15)", border: "1px solid rgba(31,107,255,0.25)" }}>
+                <Icon className="w-5 h-5" style={{ color: "#4D8FFF" }} />
               </div>
               <p className="text-white/80 text-sm font-medium">{text}</p>
             </motion.div>
@@ -129,11 +140,11 @@ export default function Login() {
 
         {/* Social proof */}
         <div className="flex items-center gap-4 p-4 rounded-2xl"
-          style={{ background: "oklch(0.55 0.110 232 / 0.10)", border: "1px solid oklch(0.55 0.110 232 / 0.18)" }}>
+          style={{ background: "rgba(31,107,255,0.10)", border: "1px solid rgba(31,107,255,0.18)" }}>
           <div className="flex -space-x-2 rtl:space-x-reverse">
             {["🧑", "👩", "👨", "🧑‍💻"].map((e, i) => (
               <div key={i} className="w-8 h-8 rounded-full flex items-center justify-center text-base border-2"
-                style={{ background: `oklch(${0.45 + i * 0.06} 0.10 ${230 + i * 15})`, borderColor: "oklch(0.14 0.060 248)" }}>
+                style={{ background: ["#3D6FE0","#2E5FD0","#5580E8","#6B90F0"][i], borderColor: "#091A55" }}>
                 {e}
               </div>
             ))}
@@ -155,15 +166,20 @@ export default function Login() {
         >
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
-            <div className="inline-block" dir="ltr">
-              <div className="h-[2px] rounded-full mb-1" style={{ background: "#0038A8" }} />
-              <div className="flex items-center justify-center">
-                <span className="font-light text-[1.6rem] tracking-tight" style={{ color: "#0038A8", fontFamily: "'Rubik', sans-serif" }}>Get</span>
-                <span className="font-black text-[1.6rem] tracking-tight" style={{ color: "#0038A8", fontFamily: "'Rubik', sans-serif" }}>Win</span>
-                <span className="text-[11px] font-bold mx-[2px] relative" style={{ color: "#0038A8", top: "-2px" }}>✡</span>
-                <span className="font-black text-[1.6rem] tracking-tight" style={{ color: "#0038A8", fontFamily: "'Rubik', sans-serif" }}>L</span>
+            <div className="flex items-center justify-center gap-2.5">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: "linear-gradient(150deg, #4D8FFF, #1F6BFF)", boxShadow: "0 2px 10px rgba(31,107,255,0.38)" }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <circle cx="10.5" cy="10.5" r="6.5" stroke="white" strokeWidth="1.7" fill="none"/>
+                  <line x1="10.5" y1="10.5" x2="8.2" y2="7.8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                  <line x1="10.5" y1="10.5" x2="12.8" y2="7.8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="10.5" cy="10.5" r="1.1" fill="white"/>
+                  <line x1="15.5" y1="15.5" x2="20" y2="20" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+                </svg>
               </div>
-              <div className="h-[2px] rounded-full mt-1" style={{ background: "#0038A8" }} />
+              <span className="font-black text-2xl" style={{ color: "#1F6BFF", fontFamily: "'Rubik', sans-serif" }}>צופן</span>
             </div>
           </div>
 
@@ -290,7 +306,7 @@ export default function Login() {
           {/* Pricing link */}
           <p className="text-center text-xs text-muted-foreground mt-6">
             רוצה יותר יכולות?{" "}
-            <a href="/pricing" className="font-bold hover:underline" style={{ color: "oklch(0.55 0.165 240)" }}>
+            <a href="/pricing" className="font-bold hover:underline" style={{ color: "#1F6BFF" }}>
               ראה את תוכניות המנוי <Star className="w-3 h-3 inline" />
             </a>
           </p>

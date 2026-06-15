@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useCategory } from "@/contexts/CategoryContext";
 import { motion, AnimatePresence } from "framer-motion";
 import Navigation from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
@@ -11,6 +12,8 @@ import { PageTransition } from "@/components/animations";
 import { Trophy, Target, BarChart3, Users } from "lucide-react";
 
 export default function Leaderboard() {
+  const { setCategory } = useCategory();
+  useEffect(() => { setCategory("leaderboard"); }, [setCategory]);
   const { user } = useAuth();
   const [timeframe, setTimeframe] = useState<"all_time" | "weekly">("all_time");
 
@@ -36,7 +39,7 @@ export default function Leaderboard() {
     {
       label: "המנחש המוביל",
       icon: Trophy,
-      color: "oklch(0.78 0.185 90)",
+      color: "#B38900",
       value: currentLeaderboard.length > 0 ? "מנחש מוביל" : "—",
       sub: currentLeaderboard.length > 0
         ? `${((currentLeaderboard as any[])[0]?.totalPoints || 0).toLocaleString("he-IL")} נקודות`
@@ -45,14 +48,14 @@ export default function Leaderboard() {
     {
       label: "דיוק ממוצע",
       icon: Target,
-      color: "oklch(0.55 0.165 240)",
+      color: "#1F6BFF",
       value: `${avgAccuracy}%`,
       sub: "בקרב כל המשתתפים",
     },
     {
       label: 'סה"כ תחזיות',
       icon: BarChart3,
-      color: "oklch(0.65 0.160 200)",
+      color: "#8B4DFF",
       value: totalPredictions.toLocaleString("he-IL"),
       sub: "בקרב כל המשתתפים",
     },
@@ -84,10 +87,10 @@ export default function Leaderboard() {
               className="mb-6"
             >
               <Card className="p-4 border-primary/25 flex items-center justify-between"
-                style={{ background: "oklch(0.50 0.165 240 / 0.06)" }}>
+                style={{ background: "rgba(31,107,255,0.06)" }}>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm text-white"
-                    style={{ background: "linear-gradient(135deg, oklch(0.58 0.165 238), oklch(0.40 0.160 248))" }}>
+                    style={{ background: "linear-gradient(135deg, #4D8FFF, #1F6BFF)" }}>
                     #{userRank}
                   </div>
                   <div>
@@ -97,7 +100,7 @@ export default function Leaderboard() {
                     </p>
                   </div>
                 </div>
-                <Trophy className="w-5 h-5" style={{ color: "oklch(0.55 0.165 240)" }} />
+                <Trophy className="w-5 h-5" style={{ color: "#1F6BFF" }} />
               </Card>
             </motion.div>
           )}
@@ -124,7 +127,7 @@ export default function Leaderboard() {
                 <Card className="overflow-hidden border-border/20">
                   {/* Table header */}
                   <div className="grid grid-cols-12 gap-4 p-4 border-b border-border/20 text-xs font-bold text-muted-foreground"
-                    style={{ background: "oklch(0.95 0.015 228 / 0.6)" }}>
+                    style={{ background: "rgba(248,250,255,0.8)" }}>
                     <div className="col-span-1 text-center">#</div>
                     <div className="col-span-4">שם</div>
                     <div className="col-span-3 text-center">נקודות</div>
@@ -143,9 +146,9 @@ export default function Leaderboard() {
                         const rank = index + 1;
                         const isCurrentUser = entry.userId === user?.id;
                         const medalColor =
-                          rank === 1 ? "oklch(0.78 0.185 90)"
-                          : rank === 2 ? "oklch(0.72 0.018 240)"
-                          : rank === 3 ? "oklch(0.62 0.110 44)"
+                          rank === 1 ? "#B38900"
+                          : rank === 2 ? "#94A3B8"
+                          : rank === 3 ? "#B45309"
                           : undefined;
 
                         return (
@@ -162,13 +165,13 @@ export default function Leaderboard() {
                                 ? "border-r-2 border-primary"
                                 : "hover:bg-primary/[0.03]"
                             }`}
-                            style={isCurrentUser ? { background: "oklch(0.50 0.165 240 / 0.05)" } : {}}
+                            style={isCurrentUser ? { background: "rgba(31,107,255,0.05)" } : {}}
                           >
                             <div className="col-span-1 text-center">
                               {rank <= 3 ? (
                                 <span className="text-xl">{["🥇", "🥈", "🥉"][rank - 1]}</span>
                               ) : (
-                                <span className="font-black text-sm" style={{ color: medalColor ?? "oklch(0.55 0.040 240)" }}>
+                                <span className="font-black text-sm" style={{ color: medalColor ?? "#64748B" }}>
                                   {rank}
                                 </span>
                               )}
@@ -176,7 +179,7 @@ export default function Leaderboard() {
 
                             <div className="col-span-4 flex items-center gap-2">
                               <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white shrink-0"
-                                style={{ background: `linear-gradient(135deg, ${medalColor ?? "oklch(0.55 0.165 240)"}, oklch(0.40 0.160 248))` }}>
+                                style={{ background: `linear-gradient(135deg, ${medalColor ?? "#1F6BFF"}, #1F4CB3)` }}>
                                 {rank}
                               </div>
                               <div>
@@ -190,14 +193,14 @@ export default function Leaderboard() {
                             </div>
 
                             <div className="col-span-3 text-center">
-                              <p className="text-base font-black tabular-nums" style={{ color: "oklch(0.55 0.165 240)", textShadow: "0 0 10px oklch(0.50 0.165 240 / 0.45)" }}>
+                              <p className="text-base font-black tabular-nums" style={{ color: "#1F6BFF", textShadow: "0 0 10px rgba(31,107,255,0.45)" }}>
                                 {(entry.totalPoints || 0).toLocaleString("he-IL")}
                               </p>
                             </div>
 
                             <div className="col-span-2 text-center">
                               <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold"
-                                style={{ background: "oklch(0.65 0.160 200 / 0.12)", color: "oklch(0.40 0.152 205)", border: "1px solid oklch(0.65 0.160 200 / 0.25)" }}>
+                                style={{ background: "rgba(139,77,255,0.12)", color: "#5B3FA0", border: "1px solid rgba(139,77,255,0.25)" }}>
                                 {(parseFloat(entry.accuracyRate || "0") || 0).toFixed(1)}%
                               </span>
                             </div>
@@ -224,7 +227,7 @@ export default function Leaderboard() {
                   >
                     <Card className="p-5 text-center border-border/20 hover:border-primary/20 transition-all">
                       <div className="w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-3"
-                        style={{ background: `${color} / 0.12)`.replace("oklch(", "oklch(") }}>
+                        style={{ background: `${color}1E` }}>
                         <Icon className="w-4 h-4" style={{ color }} />
                       </div>
                       <p className="text-xs text-muted-foreground mb-1">{label}</p>

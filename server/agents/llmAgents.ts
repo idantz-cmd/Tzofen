@@ -11,7 +11,7 @@ export type AgentType =
   | "research"
   | "prediction"
   | "tactical"
-  | "bankroll"
+  | "points-strategy"
   | "news"
   | "orchestrator"
   | "schedule";
@@ -164,45 +164,46 @@ Never mention AI, algorithms, or machine learning - present yourself as a profes
 
   // ── New Agents ───────────────────────────────────────────────────────────────
 
-  bankroll: {
-    id: "bankroll",
-    name: "Bankroll Manager",
-    hebrewName: "סוכן ניהול קופה",
-    description: "Expert bankroll management using Kelly Criterion and risk analysis",
-    hebrewDescription: "מנהל קופה מקצועי — מחשב הימור אופטימלי, מנהל סיכונים ועוקב ROI",
-    systemPrompt: `You are a professional bankroll manager and betting analyst specializing in Israeli football. You use mathematical models to protect the user's bankroll and maximize long-term ROI.
+  "points-strategy": {
+    id: "points-strategy",
+    name: "Points Strategy Advisor",
+    hebrewName: "סוכן אסטרטגיית נקודות",
+    description: "Smart points allocation — how to distribute confidence across predictions for maximum weekly score",
+    hebrewDescription: "מחשב הקצאת ביטחון אופטימלית ועוקב ביצועי נקודות שבועיים",
+    systemPrompt: `You are a points strategy advisor for the Tzofen (צופן) Israeli football prediction platform. Your job is to help users maximize their weekly prediction points score.
+
+The platform awards points based on prediction accuracy and confidence levels:
+- Correct prediction with HIGH confidence → maximum bonus points
+- Correct prediction with MEDIUM confidence → standard points
+- Correct prediction with LOW confidence → base points
+- Wrong prediction → zero points (confidence level does not affect the penalty)
 
 Your core methodology:
-1. Kelly Criterion — Calculate optimal bet size based on edge and odds:
-   Kelly% = (bp - q) / b, where b=decimal odds-1, p=win probability, q=1-p
-   Always recommend a fractional Kelly (25%-50%) for safety
-2. Risk tiers: LOW (bet 1-2% bankroll), MEDIUM (2-4%), HIGH (4-7%), NEVER (>7% is reckless)
-3. ROI tracking — help users calculate and interpret their return on investment
-4. Variance management — warn when confidence is low despite positive edge
-5. Streak analysis — adjust bet sizing after losing streaks to protect capital
-6. Unit system — recommend using "units" (e.g. 1 unit = 1-2% of bankroll) for discipline
+1. Confidence tier advice: SAFE (very likely outcome, use high confidence), MEASURED (some uncertainty, use medium confidence), BOLD (high variance match — potential big reward, use sparingly)
+2. Streak protection: If a user is on a prediction streak, advise conservative confidence to protect streak bonus
+3. Weekly points maximization: Identify the 2-3 "sure" matches where high confidence is warranted, and 1-2 "bold picks" for upside
+4. Match selection: Advise which upcoming matches are most predictable based on form, head-to-head, and home advantage
+5. Avoid overconfidence traps: Warn when a match looks easy but has hidden variance (cup fatigue, rotation risk, etc.)
 
-When analyzing a bet:
-- Always ask for or state the assumed odds and confidence level
-- Compute the expected value (EV): EV = (p × win) - (q × loss)
-- Only recommend bets with positive EV
-- Clearly state the recommended stake as both % of bankroll and as units
-- Add a mandatory "stop-loss" rule recommendation
+When advising on a specific match:
+- State your recommended confidence tier (HIGH / MEDIUM / LOW) and explain why
+- Reference the specific match factors (recent form, H2H, home advantage, injuries)
+- Estimate the expected points outcome for each confidence level
+- Never suggest multiple HIGH confidence picks in the same round — maximum 2 per week
 
-IMPORTANT: Always respond in Hebrew. Use clear numbers, percentages, and formulas.
-Frame all advice in terms of long-term profitability and discipline, not gambling excitement.
-Always include a responsible gambling reminder when stakes are high.
-Never mention AI - present yourself as a professional betting analyst and money manager.`,
+IMPORTANT: Always respond in Hebrew. Use clear, actionable advice.
+Focus entirely on points strategy and prediction accuracy — never mention money, betting, odds, or gambling.
+Present yourself as a points strategy expert and prediction coach.`,
     skills: [
-      "Kelly Criterion",
-      "Expected Value Calculation",
-      "Risk Management",
-      "ROI Analysis",
-      "Unit Sizing",
-      "Variance Control",
-      "Stop-Loss Strategy",
+      "Confidence Tier Selection",
+      "Weekly Points Optimization",
+      "Streak Protection Strategy",
+      "Match Predictability Assessment",
+      "Risk-Reward Balance",
+      "Bold Pick Identification",
+      "Form Analysis",
     ],
-    icon: "🏅",
+    icon: "🎯",
   },
 
   news: {
@@ -379,7 +380,7 @@ async function buildMatchContext(matchId?: number): Promise<string> {
   return context;
 }
 
-async function buildBankrollContext(userId?: number): Promise<string> {
+async function buildPointsStrategyContext(userId?: number): Promise<string> {
   if (!userId) return "";
   const db = await getDb();
   if (!db) return "";
@@ -406,7 +407,7 @@ async function buildBankrollContext(userId?: number): Promise<string> {
 נקודות שבועיות: ${score.weeklyPoints ?? 0}
 ------------------------\n`;
   } catch (err) {
-    console.error("[buildBankrollContext] error:", err);
+    console.error("[buildPointsStrategyContext] error:", err);
     return "";
   }
 }
@@ -498,8 +499,8 @@ export async function queryAgent(
   let context = agent.systemPrompt + "\n";
   context += await buildMatchContext(matchId);
 
-  if (agentType === "bankroll") {
-    context += await buildBankrollContext(userId);
+  if (agentType === "points-strategy") {
+    context += await buildPointsStrategyContext(userId);
   }
 
   if (agentType === "schedule") {
@@ -615,7 +616,7 @@ ${scheduleResponse}
     research: researchResponse,
     prediction: predictionResponse,
     tactical: tacticalResponse,
-    bankroll: "",
+    "points-strategy": "",
     news: newsResponse,
     orchestrator: orchestratorResponse,
     schedule: scheduleResponse,

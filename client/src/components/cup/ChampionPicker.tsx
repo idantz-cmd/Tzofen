@@ -53,22 +53,22 @@ export function ChampionPicker({ season = "2024-25" }: Props) {
       <div
         className="flex items-center justify-between p-4 rounded-2xl border"
         style={{
-          background: "linear-gradient(135deg, oklch(0.75 0.190 70 / 0.12), oklch(0.75 0.190 70 / 0.06))",
-          borderColor: "oklch(0.75 0.190 70 / 0.30)",
+          background: "linear-gradient(135deg, rgba(212,160,0,0.12), rgba(212,160,0,0.06))",
+          borderColor: "rgba(212,160,0,0.30)",
         }}
       >
         <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: "oklch(0.75 0.190 70 / 0.20)" }}
+            style={{ background: "rgba(212,160,0,0.20)" }}
           >
-            <Trophy className="w-5 h-5" style={{ color: "oklch(0.80 0.170 70)" }} />
+            <Trophy className="w-5 h-5" style={{ color: "#D4A000" }} />
           </div>
           <div>
             <p className="font-black text-foreground text-sm">ניחוש אלוף הגביע</p>
             <p className="text-xs text-muted-foreground">
-              <Star className="w-3 h-3 inline ml-1" style={{ color: "oklch(0.80 0.170 70)" }} />
-              <span className="font-bold" style={{ color: "oklch(0.80 0.170 70)" }}>15 נקודות בונוס</span> אם תצדק!
+              <Star className="w-3 h-3 inline ml-1" style={{ color: "#D4A000" }} />
+              <span className="font-bold" style={{ color: "#D4A000" }}>15 נקודות בונוס</span> אם תצדק!
             </p>
           </div>
         </div>
@@ -109,7 +109,7 @@ export function ChampionPicker({ season = "2024-25" }: Props) {
           >
             <div
               className="p-4 rounded-2xl border"
-              style={{ background: "oklch(0.14 0.040 252 / 0.8)", borderColor: "oklch(0.75 0.190 70 / 0.20)" }}
+              style={{ background: "rgba(240,244,255,0.95)", borderColor: "rgba(212,160,0,0.20)" }}
             >
               <p className="text-sm font-bold text-foreground mb-3">בחר את האלוף שלך:</p>
               <div className="grid grid-cols-4 gap-2">
@@ -131,7 +131,7 @@ export function ChampionPicker({ season = "2024-25" }: Props) {
                       <TeamLogo teamName={team} size="sm" />
                       <span className="text-[9px] text-muted-foreground leading-tight text-center line-clamp-2">{team}</span>
                       {pct > 0 && (
-                        <span className="text-[8px] font-bold" style={{ color: "oklch(0.80 0.170 70)" }}>
+                        <span className="text-[8px] font-bold" style={{ color: "#D4A000" }}>
                           {pct}%
                         </span>
                       )}

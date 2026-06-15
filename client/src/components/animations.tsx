@@ -149,7 +149,7 @@ export function PredictionLock({
             transition={{ duration: 0.6, ease: 'easeOut' }}
             style={{
               background:
-                'radial-gradient(circle, oklch(0.78 0.155 72 / 40%) 0%, transparent 70%)',
+                'radial-gradient(circle, rgba(255,201,31,0.40) 0%, transparent 70%)',
             }}
           />
         )}
@@ -209,10 +209,10 @@ export function StaggerList({ children, staggerDelay = 0.07, className = '' }: S
 type ResultType = 'win' | 'draw' | 'loss' | 'pending'
 
 const resultStyles: Record<ResultType, { bg: string; border: string; text: string; glow: string }> = {
-  win:     { bg: 'oklch(0.65 0.145 72 / 20%)',  border: 'oklch(0.78 0.155 72 / 55%)', text: 'oklch(0.85 0.140 75)',  glow: '0 0 14px oklch(0.78 0.155 72 / 45%)' },
-  draw:    { bg: 'oklch(0.55 0 0 / 15%)',        border: 'oklch(0.65 0 0 / 35%)',      text: 'oklch(0.80 0.010 240)', glow: 'none' },
-  loss:    { bg: 'oklch(0.58 0.180 27 / 18%)',   border: 'oklch(0.62 0.180 27 / 45%)', text: 'oklch(0.72 0.160 27)',  glow: '0 0 10px oklch(0.62 0.180 27 / 35%)' },
-  pending: { bg: 'oklch(0.45 0.080 232 / 15%)',  border: 'oklch(0.55 0.090 232 / 30%)',text: 'oklch(0.70 0.090 228)', glow: 'none' },
+  win:     { bg: 'rgba(255,201,31,0.20)',  border: 'rgba(255,201,31,0.55)', text: '#B38900',  glow: '0 0 14px rgba(255,201,31,0.45)' },
+  draw:    { bg: 'rgba(100,116,139,0.15)', border: 'rgba(100,116,139,0.35)', text: '#94A3B8', glow: 'none' },
+  loss:    { bg: 'rgba(255,59,92,0.18)',   border: 'rgba(255,59,92,0.45)',  text: '#CC1F45',  glow: '0 0 10px rgba(255,59,92,0.35)' },
+  pending: { bg: 'rgba(31,107,255,0.15)',  border: 'rgba(31,107,255,0.30)', text: '#6B8FCC',  glow: 'none' },
 }
 
 interface MorphingResultBadgeProps {
@@ -303,7 +303,7 @@ export function TiltCard({ children, className = '', style, maxTilt = 12 }: Tilt
           background: useTransform(
             [highlightX, highlightY],
             ([hx, hy]) =>
-              `radial-gradient(circle 120px at ${hx} ${hy}, oklch(1 0 0 / 12%), transparent 70%)`,
+              `radial-gradient(circle 120px at ${hx} ${hy}, rgba(255,255,255,0.12), transparent 70%)`,
           ),
         }}
       />
@@ -366,11 +366,11 @@ export function ParticleBurst({ trigger }: { trigger: boolean }) {
                   height: isAmber ? 6 : 4,
                   borderRadius: '50%',
                   background: isAmber
-                    ? 'oklch(0.78 0.155 72)'
-                    : 'oklch(0.65 0.110 228)',
+                    ? '#FFC91F'
+                    : '#4D8FFF',
                   boxShadow: isAmber
-                    ? '0 0 6px oklch(0.78 0.155 72 / 80%)'
-                    : '0 0 5px oklch(0.60 0.100 228 / 70%)',
+                    ? '0 0 6px rgba(255,201,31,0.80)'
+                    : '0 0 5px rgba(31,107,255,0.70)',
                 }}
                 initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
                 animate={{
@@ -420,13 +420,13 @@ export function CountdownRing({
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
         <defs>
           <linearGradient id="ring-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%"   stopColor="oklch(0.55 0.110 232)" />
-            <stop offset="100%" stopColor="oklch(0.78 0.155 72)" />
+            <stop offset="0%"   stopColor="#1F6BFF" />
+            <stop offset="100%" stopColor="#FFC91F" />
           </linearGradient>
         </defs>
         {/* Track */}
         <circle cx={size / 2} cy={size / 2} r={r} fill="none"
-          stroke="oklch(0.25 0.035 248)" strokeWidth={strokeWidth} />
+          stroke="#1A2A4A" strokeWidth={strokeWidth} />
         {/* Progress */}
         <motion.circle
           cx={size / 2} cy={size / 2} r={r} fill="none"

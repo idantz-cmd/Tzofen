@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useCategory } from "@/contexts/CategoryContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition } from "@/components/animations";
 import { Card } from "@/components/ui/card";
@@ -23,6 +24,7 @@ import {
   XCircle,
   Newspaper,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 
 type League = "ligat_hael" | "ligah_leumit";
@@ -45,6 +47,9 @@ function ProbBar({
   homeLabel: string;
   awayLabel: string;
 }) {
+  const homeLevel = homeProb >= 60 ? "ביטחון גבוה" : homeProb >= 40 ? "ביטחון בינוני" : "ביטחון נמוך";
+  const awayLevel = awayProb >= 60 ? "ביטחון גבוה" : awayProb >= 40 ? "ביטחון בינוני" : "ביטחון נמוך";
+
   return (
     <div className="space-y-2">
       <div className="flex justify-between text-xs text-muted-foreground font-medium">
@@ -55,34 +60,26 @@ function ProbBar({
       <div className="flex h-6 rounded-full overflow-hidden text-xs font-bold">
         <div
           className="flex items-center justify-center transition-all"
-          style={{
-            width: `${homeProb}%`,
-            background: "oklch(0.52 0.165 148)",
-            color: "white",
-          }}
+          style={{ width: `${homeProb}%`, background: "#1F6BFF", color: "white" }}
         >
           {homeProb >= 15 ? `${homeProb}%` : ""}
         </div>
         <div
           className="flex items-center justify-center transition-all"
-          style={{
-            width: `${drawProb}%`,
-            background: "oklch(0.65 0.08 60)",
-            color: "white",
-          }}
+          style={{ width: `${drawProb}%`, background: "#6B7280", color: "white" }}
         >
           {drawProb >= 12 ? `${drawProb}%` : ""}
         </div>
         <div
           className="flex items-center justify-center transition-all"
-          style={{
-            width: `${awayProb}%`,
-            background: "oklch(0.52 0.165 25)",
-            color: "white",
-          }}
+          style={{ width: `${awayProb}%`, background: "#13CE66", color: "white" }}
         >
           {awayProb >= 15 ? `${awayProb}%` : ""}
         </div>
+      </div>
+      <div className="flex justify-between text-[10px] text-muted-foreground">
+        <span style={{ color: "#1F6BFF" }}>{homeLevel}</span>
+        <span style={{ color: "#13CE66" }}>{awayLevel}</span>
       </div>
     </div>
   );
@@ -90,16 +87,17 @@ function ProbBar({
 
 function ConfidenceBadge({ level }: { level: "low" | "medium" | "high" }) {
   const map = {
-    low: { label: "אמינות נמוכה", color: "oklch(0.60 0.15 25)" },
-    medium: { label: "אמינות בינונית", color: "oklch(0.60 0.13 60)" },
-    high: { label: "אמינות גבוהה", color: "oklch(0.52 0.165 148)" },
+    low:    { label: "ביטחון נמוך",   bg: "#FF3B5C", color: "white" },
+    medium: { label: "ביטחון בינוני", bg: "#FFC91F", color: "#15151E" },
+    high:   { label: "ביטחון גבוה",   bg: "#13CE66", color: "white" },
   };
+  const { label, bg, color } = map[level];
   return (
     <span
-      className="text-xs font-bold px-2 py-0.5 rounded-full text-white"
-      style={{ background: map[level].color }}
+      className="text-xs font-bold px-2 py-0.5 rounded-full"
+      style={{ background: bg, color }}
     >
-      {map[level].label}
+      {label}
     </span>
   );
 }
@@ -127,7 +125,41 @@ function StatChip({
   );
 }
 
+function AiAccuracyBanner() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.1 }}
+    >
+      <Card
+        className="p-3 flex items-center gap-3"
+        style={{ background: "linear-gradient(135deg, rgba(139,77,255,0.06), rgba(31,107,255,0.06))", border: "1px solid rgba(139,77,255,0.18)" }}
+      >
+        <div
+          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+          style={{ background: "linear-gradient(135deg, #9D6FFF, #8B4DFF)" }}
+        >
+          <Sparkles className="w-4 h-4 text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-bold" style={{ color: "#8B4DFF" }}>8 סוכני AI במקביל · Gemini 2.0 Flash</p>
+          <p className="text-[11px] text-muted-foreground">סטטיסטיקה · מחקר · טקטיקה · חדשות · חיזוי · לוח · QA · אורקסטרציה</p>
+        </div>
+        <span
+          className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0"
+          style={{ background: "#FFC91F", color: "#15151E" }}
+        >
+          BETA
+        </span>
+      </Card>
+    </motion.div>
+  );
+}
+
 export default function AIPrediction() {
+  const { setCategory } = useCategory();
+  useEffect(() => { setCategory("ai"); }, [setCategory]);
   const [selectedLeague, setSelectedLeague] = useState<League>("ligat_hael");
   const [homeTeam, setHomeTeam] = useState("");
   const [awayTeam, setAwayTeam] = useState("");
@@ -168,6 +200,19 @@ export default function AIPrediction() {
       : "תיקו"
     : null;
 
+  const resultBg =
+    pred?.result === "home_win"
+      ? "rgba(19,206,102,0.13)"
+      : pred?.result === "away_win"
+      ? "rgba(255,59,92,0.13)"
+      : "rgba(255,201,31,0.13)";
+
+  function qaScoreBg(score: number) {
+    if (score >= 75) return { bg: "#13CE66", color: "white" };
+    if (score >= 50) return { bg: "#FFC91F", color: "#15151E" };
+    return { bg: "#FF3B5C", color: "white" };
+  }
+
   return (
     <PageTransition>
     <div className="min-h-screen pb-24" dir="rtl">
@@ -185,8 +230,8 @@ export default function AIPrediction() {
             <div
               className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg"
               style={{
-                background: "linear-gradient(135deg, oklch(0.58 0.165 238), oklch(0.40 0.160 248))",
-                boxShadow: "0 8px 28px oklch(0.50 0.165 240 / 0.35)",
+                background: "linear-gradient(135deg, #9D6FFF, #8B4DFF)",
+                boxShadow: "0 8px 28px rgba(139,77,255,0.35)",
               }}
             >
               <Brain className="w-6 h-6 text-white" />
@@ -196,9 +241,12 @@ export default function AIPrediction() {
             צוות סוכני AI
           </h1>
           <p className="text-sm text-muted-foreground">
-            4 סוכנים במקביל · חדשות בזמן אמת · QA · סינתזת Gemini
+            8 סוכנים במקביל · חדשות בזמן אמת · QA · סינתזת Gemini
           </p>
         </motion.div>
+
+        {/* AI accuracy banner */}
+        <AiAccuracyBanner />
 
         {/* League selector */}
         <div className="flex gap-2 justify-center">
@@ -215,8 +263,8 @@ export default function AIPrediction() {
               className="px-4 py-2 rounded-full text-sm font-bold transition-all"
               style={
                 selectedLeague === l
-                  ? { background: "linear-gradient(135deg, oklch(0.58 0.165 238), oklch(0.45 0.160 248))", color: "white", boxShadow: "0 4px 14px oklch(0.50 0.165 240 / 0.40)" }
-                  : { background: "oklch(0.96 0.015 228)", color: "oklch(0.40 0.060 242)", border: "1px solid oklch(0.83 0.035 228)" }
+                  ? { background: "linear-gradient(135deg, #4D8FFF, #1F6BFF)", color: "white", boxShadow: "0 4px 14px rgba(31,107,255,0.40)" }
+                  : { background: "#EEF3FF", color: "#1F6BFF", border: "1px solid rgba(31,107,255,0.20)" }
               }
             >
               {LEAGUE_LABELS[l]}
@@ -332,14 +380,10 @@ export default function AIPrediction() {
                     <ConfidenceBadge level={pred.confidence} />
                     {"qaOverallScore" in pred && (
                       <span
-                        className="text-xs font-bold px-2 py-0.5 rounded-full text-white flex items-center gap-1"
+                        className="text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1"
                         style={{
-                          background:
-                            (pred as any).qaOverallScore >= 75
-                              ? "oklch(0.52 0.165 148)"
-                              : (pred as any).qaOverallScore >= 50
-                              ? "oklch(0.60 0.13 60)"
-                              : "oklch(0.52 0.165 25)",
+                          background: qaScoreBg((pred as any).qaOverallScore).bg,
+                          color: qaScoreBg((pred as any).qaOverallScore).color,
                         }}
                       >
                         <ShieldCheck className="w-3 h-3" />
@@ -352,12 +396,7 @@ export default function AIPrediction() {
 
                 <div className="flex items-center justify-around gap-4 mb-5">
                   <div className="flex flex-col items-center gap-2">
-                    <TeamBadge
-                      teamName={pred.homeTeam}
-                      logoUrl={selectedMatch?.logo1}
-                      size="lg"
-                      showName
-                    />
+                    <TeamBadge teamName={pred.homeTeam} logoUrl={selectedMatch?.logo1} size="lg" showName />
                   </div>
                   <div className="flex flex-col items-center gap-1">
                     <span className="text-3xl font-black tabular-nums" style={{ direction: "ltr" }}>
@@ -366,25 +405,13 @@ export default function AIPrediction() {
                     <Badge
                       variant="secondary"
                       className="text-xs font-bold"
-                      style={{
-                        background:
-                          pred.result === "home_win"
-                            ? "oklch(0.52 0.165 148 / 0.15)"
-                            : pred.result === "away_win"
-                            ? "oklch(0.52 0.165 25 / 0.15)"
-                            : "oklch(0.65 0.08 60 / 0.15)",
-                      }}
+                      style={{ background: resultBg }}
                     >
                       {resultLabel}
                     </Badge>
                   </div>
                   <div className="flex flex-col items-center gap-2">
-                    <TeamBadge
-                      teamName={pred.awayTeam}
-                      logoUrl={selectedMatch?.logo2}
-                      size="lg"
-                      showName
-                    />
+                    <TeamBadge teamName={pred.awayTeam} logoUrl={selectedMatch?.logo2} size="lg" showName />
                   </div>
                 </div>
 
@@ -403,26 +430,26 @@ export default function AIPrediction() {
                   label="סה״כ שערים"
                   value={`${pred.predictedHomeGoals + pred.predictedAwayGoals}`}
                   sub={pred.totalGoalsOver25 ? "מעל 2.5 ✓" : "מתחת 2.5"}
-                  color="oklch(0.97 0.015 148 / 0.6)"
+                  color="rgba(19,206,102,0.10)"
                 />
                 <StatChip
                   label="קרנות"
                   value={`${pred.predictedCorners}`}
                   sub={pred.cornersOver95 ? "מעל 9.5 ✓" : "מתחת 9.5"}
-                  color="oklch(0.97 0.015 240 / 0.6)"
+                  color="rgba(31,107,255,0.08)"
                 />
                 <StatChip
                   label="כרטיסים צהובים"
                   value={`${pred.predictedYellowCards}`}
                   sub={pred.yellowCardsOver35 ? "מעל 3.5 ✓" : "מתחת 3.5"}
-                  color="oklch(0.97 0.04 60 / 0.6)"
+                  color="rgba(255,201,31,0.12)"
                 />
               </div>
 
               {pred.redCardExpected && (
                 <div
                   className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium"
-                  style={{ background: "oklch(0.97 0.03 25 / 0.8)", color: "oklch(0.45 0.18 25)" }}
+                  style={{ background: "rgba(255,59,92,0.10)", color: "#CC1F45" }}
                 >
                   <AlertTriangle className="w-4 h-4 shrink-0" />
                   צפוי כרטיס אדום במשחק זה
@@ -437,15 +464,15 @@ export default function AIPrediction() {
                 </h3>
 
                 {[
-                  { icon: <Target className="w-4 h-4" />, title: "תוצאה", text: pred.resultReasoning, color: "oklch(0.52 0.165 148)" },
-                  { icon: <CircleDot className="w-4 h-4" />, title: "שערים", text: pred.goalsReasoning, color: "oklch(0.52 0.165 240)" },
-                  { icon: <Flag className="w-4 h-4" />, title: "קרנות", text: pred.cornersReasoning, color: "oklch(0.52 0.165 200)" },
-                  { icon: <AlertTriangle className="w-4 h-4" />, title: "כרטיסים", text: pred.cardsReasoning, color: "oklch(0.60 0.14 60)" },
+                  { icon: <Target className="w-4 h-4" />, title: "תוצאה",   text: pred.resultReasoning,  color: "#13CE66" },
+                  { icon: <CircleDot className="w-4 h-4" />, title: "שערים", text: pred.goalsReasoning,   color: "#1F6BFF" },
+                  { icon: <Flag className="w-4 h-4" />,      title: "קרנות", text: pred.cornersReasoning, color: "#8B4DFF" },
+                  { icon: <AlertTriangle className="w-4 h-4" />, title: "כרטיסים", text: pred.cardsReasoning, color: "#FFC91F" },
                 ].map((item) => (
                   <div key={item.title} className="flex gap-3">
                     <div
                       className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
-                      style={{ background: "oklch(0.96 0.01 240)", color: item.color }}
+                      style={{ background: "#F0F4FF", color: item.color }}
                     >
                       {item.icon}
                     </div>
@@ -460,7 +487,7 @@ export default function AIPrediction() {
               {/* Summary */}
               <Card
                 className="p-4 border-primary/20"
-                style={{ background: "oklch(0.50 0.165 240 / 0.05)" }}
+                style={{ background: "rgba(31,107,255,0.05)" }}
               >
                 <div className="flex items-center gap-2 mb-3">
                   <TrendingUp className="w-4 h-4 text-primary" />
@@ -472,7 +499,7 @@ export default function AIPrediction() {
               {/* Key factors */}
               <Card className="p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <Zap className="w-4 h-4" style={{ color: "oklch(0.60 0.14 60)" }} />
+                  <Zap className="w-4 h-4" style={{ color: "#FFC91F" }} />
                   <h3 className="font-black text-sm">גורמים מרכזיים</h3>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -480,11 +507,11 @@ export default function AIPrediction() {
                     <span
                       key={i}
                       className="text-xs font-medium px-2.5 py-1 rounded-full"
-                      style={{
-                        background: i % 2 === 0 ? "oklch(0.55 0.165 240 / 0.10)" : "oklch(0.65 0.160 200 / 0.10)",
-                        color: i % 2 === 0 ? "oklch(0.38 0.155 242)" : "oklch(0.38 0.145 205)",
-                        border: `1px solid ${i % 2 === 0 ? "oklch(0.55 0.165 240 / 0.22)" : "oklch(0.65 0.160 200 / 0.22)"}`,
-                      }}
+                      style={
+                        i % 2 === 0
+                          ? { background: "rgba(31,107,255,0.10)", color: "#1F4CB3", border: "1px solid rgba(31,107,255,0.22)" }
+                          : { background: "rgba(139,77,255,0.10)", color: "#6B2FD6", border: "1px solid rgba(139,77,255,0.22)" }
+                      }
                     >
                       {factor}
                     </span>
@@ -496,11 +523,11 @@ export default function AIPrediction() {
               {"newsHeadlines" in pred && Array.isArray((pred as any).newsHeadlines) && (pred as any).newsHeadlines.length > 0 && (
                 <Card className="p-4 space-y-3">
                   <div className="flex items-center gap-2">
-                    <Newspaper className="w-4 h-4" style={{ color: "oklch(0.52 0.165 25)" }} />
+                    <Newspaper className="w-4 h-4" style={{ color: "#FF3B5C" }} />
                     <h3 className="font-black text-sm">חדשות רלוונטיות</h3>
                     <span
                       className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white ml-auto"
-                      style={{ background: "oklch(0.52 0.165 25)" }}
+                      style={{ background: "#FF3B5C" }}
                     >
                       LIVE
                     </span>
@@ -514,9 +541,7 @@ export default function AIPrediction() {
                     ))}
                   </ul>
                   {"newsInfluence" in pred && (pred as any).newsInfluence && (
-                    <p
-                      className="text-xs italic text-muted-foreground border-t border-border/40 pt-2"
-                    >
+                    <p className="text-xs italic text-muted-foreground border-t border-border/40 pt-2">
                       {(pred as any).newsInfluence}
                     </p>
                   )}
@@ -536,51 +561,47 @@ export default function AIPrediction() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    {(pred as any).agentReports.map((report: any) => (
-                      <div
-                        key={report.agentId}
-                        className="flex items-start gap-2.5 p-2.5 rounded-lg bg-muted/20 border border-border/15"
-                      >
-                        {report.status === "success" ? (
-                          <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "oklch(0.52 0.165 148)" }} />
-                        ) : report.status === "partial" ? (
-                          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "oklch(0.60 0.14 60)" }} />
-                        ) : (
-                          <XCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "oklch(0.52 0.165 25)" }} />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-bold">{report.agentName}</span>
-                            <span
-                              className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white"
-                              style={{
-                                background:
-                                  report.qaScore >= 75
-                                    ? "oklch(0.52 0.165 148)"
-                                    : report.qaScore >= 50
-                                    ? "oklch(0.60 0.13 60)"
-                                    : "oklch(0.52 0.165 25)",
-                              }}
-                            >
-                              {report.qaScore}/100
-                            </span>
-                            <span className="text-[10px] text-muted-foreground mr-auto" dir="ltr">
-                              {report.executionMs}ms
-                            </span>
-                          </div>
-                          <p className="text-xs text-foreground/70 mt-0.5 leading-snug">{report.summary}</p>
-                          {report.qaIssues.length > 0 && (
-                            <ul className="mt-1 space-y-0.5">
-                              {report.qaIssues.map((issue: string, j: number) => (
-                                <li key={j} className="text-[10px] text-orange-600 flex gap-1">
-                                  <span>⚠</span>{issue}
-                                </li>
-                              ))}
-                            </ul>
+                    {(pred as any).agentReports.map((report: any) => {
+                      const qs = qaScoreBg(report.qaScore);
+                      return (
+                        <div
+                          key={report.agentId}
+                          className="flex items-start gap-2.5 p-2.5 rounded-lg bg-muted/20 border border-border/15"
+                        >
+                          {report.status === "success" ? (
+                            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "#13CE66" }} />
+                          ) : report.status === "partial" ? (
+                            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "#FFC91F" }} />
+                          ) : (
+                            <XCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "#FF3B5C" }} />
                           )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs font-bold">{report.agentName}</span>
+                              <span
+                                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                                style={{ background: qs.bg, color: qs.color }}
+                              >
+                                {report.qaScore}/100
+                              </span>
+                              <span className="text-[10px] text-muted-foreground mr-auto" dir="ltr">
+                                {report.executionMs}ms
+                              </span>
+                            </div>
+                            <p className="text-xs text-foreground/70 mt-0.5 leading-snug">{report.summary}</p>
+                            {report.qaIssues.length > 0 && (
+                              <ul className="mt-1 space-y-0.5">
+                                {report.qaIssues.map((issue: string, j: number) => (
+                                  <li key={j} className="text-[10px] text-orange-600 flex gap-1">
+                                    <span>⚠</span>{issue}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   {"qaReport" in pred && (pred as any).qaReport && (
                     <p className="text-xs text-muted-foreground border-t border-border/40 pt-2">

@@ -5,7 +5,7 @@ export function MatchCardSkeleton({ count = 5 }: { count?: number }) {
         <div
           key={i}
           className="rounded-xl border border-border/20 overflow-hidden animate-pulse"
-          style={{ background: "oklch(0.97 0.015 228 / 0.6)" }}
+          style={{ background: "rgba(248,250,255,0.6)" }}
         >
           <div className="h-1 bg-gray-200/40" />
           <div className="p-4">

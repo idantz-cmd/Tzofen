@@ -6,7 +6,7 @@ import { Target, X, UserPlus, LogIn } from "lucide-react";
 
 // ── Queued prediction stored in localStorage across the redirect ──────────────
 
-const QUEUE_KEY = "getwnil_queued_prediction";
+const QUEUE_KEY = "tzofen_queued_prediction";
 const QUEUE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 export interface QueuedPrediction {
@@ -86,7 +86,7 @@ export function ConversionModal({ isOpen, onClose, onGuestContinue, queued }: Pr
           {/* Sheet */}
           <motion.div
             className="fixed bottom-0 inset-x-0 z-50 rounded-t-2xl border-t border-border/40 pb-safe"
-            style={{ background: "oklch(0.16 0.055 258)" }}
+            style={{ background: "#FFFFFF" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
@@ -111,11 +111,11 @@ export function ConversionModal({ isOpen, onClose, onGuestContinue, queued }: Pr
               {queued && (
                 <div
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl mb-5 border border-border/30"
-                  style={{ background: "oklch(0.55 0.110 232 / 0.12)" }}
+                  style={{ background: "rgba(31,107,255,0.12)" }}
                 >
                   <Target
                     className="w-4 h-4 shrink-0"
-                    style={{ color: "oklch(0.72 0.190 230)" }}
+                    style={{ color: "#1F6BFF" }}
                   />
                   <div className="min-w-0">
                     <p className="text-xs text-muted-foreground truncate">
@@ -123,7 +123,7 @@ export function ConversionModal({ isOpen, onClose, onGuestContinue, queued }: Pr
                     </p>
                     <p
                       className="text-sm font-bold truncate"
-                      style={{ color: "oklch(0.72 0.190 230)" }}
+                      style={{ color: "#1F6BFF" }}
                     >
                       הניחוש שלך: {predictionLabel}
                     </p>

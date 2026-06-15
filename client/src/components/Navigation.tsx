@@ -15,32 +15,37 @@ export default function Navigation() {
 
   return (
     <div className="sticky top-0 z-50">
-    <nav className="border-b border-border/40" style={{ background: "oklch(0.99 0.008 228 / 0.92)", backdropFilter: "blur(24px) saturate(180%)", borderBottomColor: "oklch(0.50 0.160 240 / 0.22)" }}>
+    <nav className="border-b border-border/40" style={{ background: "rgba(255,255,255,0.92)", backdropFilter: "blur(24px) saturate(180%)", borderBottomColor: "rgba(31,107,255,0.18)" }}>
       <div className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 hover:opacity-85 transition-opacity select-none">
-            {/* Icon: Star of David on Israeli blue */}
+            {/* Tzofen icon: magnifying glass with clock face */}
             <div
               className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: "linear-gradient(150deg, #0038A8, #001E6B)", boxShadow: "0 2px 10px #0038A855" }}
+              style={{ background: "linear-gradient(150deg, #4D8FFF, #1F6BFF)", boxShadow: "0 2px 10px rgba(31,107,255,0.38)" }}
             >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <polygon points="12,2.5 21,18.5 3,18.5" stroke="white" strokeWidth="1.6" fill="none" strokeLinejoin="round"/>
-                <polygon points="12,21.5 3,5.5 21,5.5" stroke="white" strokeWidth="1.6" fill="none" strokeLinejoin="round"/>
+                {/* Lens / clock face */}
+                <circle cx="10.5" cy="10.5" r="6.5" stroke="white" strokeWidth="1.7" fill="none"/>
+                {/* Clock hands at 10:10 */}
+                <line x1="10.5" y1="10.5" x2="8.2" y2="7.8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="10.5" y1="10.5" x2="12.8" y2="7.8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                {/* Score dots at cardinal points */}
+                <circle cx="10.5" cy="4.5" r="0.8" fill="rgba(255,255,255,0.7)"/>
+                <circle cx="16.5" cy="10.5" r="0.8" fill="rgba(255,255,255,0.7)"/>
+                <circle cx="10.5" cy="16.5" r="0.8" fill="rgba(255,255,255,0.7)"/>
+                <circle cx="4.5" cy="10.5" r="0.8" fill="rgba(255,255,255,0.7)"/>
+                {/* Football center dot */}
+                <circle cx="10.5" cy="10.5" r="1.1" fill="white"/>
+                {/* Handle */}
+                <line x1="15.5" y1="15.5" x2="20" y2="20" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
               </svg>
             </div>
-            {/* Text: GetWin✡IL framed by Israeli flag stripes */}
-            <div className="leading-none" dir="ltr">
-              <div className="h-[2px] rounded-full mb-[3px]" style={{ background: "#0038A8" }} />
-              <div className="flex items-center">
-                <span className="font-light text-[1.05rem] tracking-tight" style={{ color: "#0038A8", fontFamily: "'Rubik', sans-serif" }}>Get</span>
-                <span className="font-black text-[1.05rem] tracking-tight" style={{ color: "#0038A8", fontFamily: "'Rubik', sans-serif" }}>Win</span>
-                <span className="text-[9px] font-bold mx-[1px] relative" style={{ color: "#0038A8", top: "-1px" }}>✡</span>
-                <span className="font-black text-[1.05rem] tracking-tight" style={{ color: "#0038A8", fontFamily: "'Rubik', sans-serif" }}>L</span>
-              </div>
-              <div className="h-[2px] rounded-full mt-[3px]" style={{ background: "#0038A8" }} />
-            </div>
+            {/* Brand name */}
+            <span className="font-black text-[1.15rem] tracking-tight" style={{ color: "#1F6BFF", fontFamily: "'Rubik', sans-serif" }}>
+              צופן
+            </span>
           </Link>
 
           {/* Navigation Links */}
@@ -74,7 +79,7 @@ export default function Navigation() {
                 variant={isActive("/cup") ? "default" : "ghost"}
                 size="sm"
                 className="text-sm gap-1.5"
-                style={isActive("/cup") ? {} : { color: "oklch(0.78 0.170 70)" }}
+                style={isActive("/cup") ? {} : { color: "#E6A800" }}
               >
                 🏆 גביע
               </Button>
@@ -126,7 +131,7 @@ export default function Navigation() {
                   <Button variant="outline" size="sm" className="gap-2 border-border/40">
                     <div
                       className="w-6 h-6 rounded-full flex items-center justify-center"
-                      style={{ background: "linear-gradient(135deg, oklch(0.58 0.165 238), oklch(0.40 0.160 248))" }}
+                      style={{ background: "linear-gradient(135deg, #4D8FFF, #1F6BFF)" }}
                     >
                       <User className="w-3.5 h-3.5 text-white" />
                     </div>
@@ -200,7 +205,7 @@ export default function Navigation() {
                   </Link>
                   <Link href="/cup">
                     <DropdownMenuItem>
-                      <Trophy className="w-4 h-4 ml-2" style={{ color: "oklch(0.78 0.170 70)" }} />
+                      <Trophy className="w-4 h-4 ml-2" style={{ color: "#E6A800" }} />
                       גביע המדינה
                     </DropdownMenuItem>
                   </Link>

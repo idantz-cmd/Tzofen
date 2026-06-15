@@ -6,6 +6,7 @@ import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useCategory } from "@/contexts/CategoryContext";
 import { Trophy, TrendingUp, BarChart3, Users, Flame, Target, ChevronLeft, Timer, Shield, ArrowLeft } from "lucide-react";
 import { TeamLogo, LIGAT_HAEL_TEAMS } from "@/components/TeamLogos";
 import { HeroTitleReveal, TiltCard, StaggerList, PageTransition, CountdownRing, ScoreCounter } from "@/components/animations";
@@ -18,8 +19,8 @@ const HOW_IT_WORKS = [
     desc: "עיין במשחקים הקרובים בליגת העל והליגה הלאומית. צפה בניתוחים מקצועיים ובנתונים היסטוריים.",
     icon: Timer,
     href: "/matches",
-    cardStyle: { background: "linear-gradient(135deg, oklch(0.50 0.165 240 / 0.14), oklch(0.40 0.155 248 / 0.06))" },
-    iconStyle: { color: "oklch(0.55 0.165 240)", filter: "drop-shadow(0 0 6px oklch(0.50 0.165 240 / 70%))" },
+    cardStyle: { background: "linear-gradient(135deg, rgba(31,107,255,0.14), rgba(31,107,255,0.06))" },
+    iconStyle: { color: "#1F6BFF", filter: "drop-shadow(0 0 6px rgba(31,107,255,0.70))" },
   },
   {
     step: "02",
@@ -27,8 +28,8 @@ const HOW_IT_WORKS = [
     desc: "הגש את החיזוי שלך — תוצאה, כמות שערים, קרנות, כרטיסים. ככל שתדייק יותר, תצבור יותר נקודות.",
     icon: Target,
     href: "/matches",
-    cardStyle: { background: "linear-gradient(135deg, oklch(0.65 0.160 200 / 0.14), oklch(0.50 0.145 210 / 0.06))" },
-    iconStyle: { color: "oklch(0.65 0.160 200)", filter: "drop-shadow(0 0 6px oklch(0.60 0.155 202 / 70%))" },
+    cardStyle: { background: "linear-gradient(135deg, rgba(19,206,102,0.14), rgba(19,206,102,0.06))" },
+    iconStyle: { color: "#13CE66", filter: "drop-shadow(0 0 6px rgba(19,206,102,0.70))" },
   },
   {
     step: "03",
@@ -36,31 +37,33 @@ const HOW_IT_WORKS = [
     desc: "צבור נקודות, בנה רצפי הצלחה, התחרה מול חברים ועלה בטבלת הדירוג השבועית והכללית.",
     icon: Trophy,
     href: "/leaderboard",
-    cardStyle: { background: "linear-gradient(135deg, oklch(0.90 0.195 92 / 0.16), oklch(0.80 0.180 88 / 0.06))" },
-    iconStyle: { color: "oklch(0.75 0.185 90)", filter: "drop-shadow(0 0 6px oklch(0.85 0.195 92 / 60%))" },
+    cardStyle: { background: "linear-gradient(135deg, rgba(255,201,31,0.16), rgba(255,201,31,0.06))" },
+    iconStyle: { color: "#E6A800", filter: "drop-shadow(0 0 6px rgba(255,201,31,0.60))" },
   },
 ];
 
 const FEATURES = [
-  { icon: BarChart3, title: "ניתוח מקצועי", desc: "נתונים היסטוריים מ-1990 ועד היום, סטטיסטיקות מעמיקות וניתוח מגמות.", iconColor: "oklch(0.55 0.165 240)", href: "/chat" },
-  { icon: Users, title: "תחרויות ישירות", desc: "אתגר חברים לדו-קרב חיזויים, צור טורנירים פרטיים והתחרה על הכבוד.", iconColor: "oklch(0.65 0.160 200)", href: "/competitions" },
-  { icon: Flame, title: "רצפי הצלחה", desc: "בנה רצפים של חיזויים נכונים ברצף. ככל שהרצף ארוך יותר — הבונוס גדול יותר.", iconColor: "oklch(0.75 0.185 90)", href: "/dashboard" },
-  { icon: Trophy, title: "דירוג שבועי", desc: "טבלת דירוג מתעדכנת כל שבוע. המובילים מקבלים תגים מיוחדים ומעמד בקהילה.", iconColor: "oklch(0.82 0.190 92)", href: "/leaderboard" },
-  { icon: Shield, title: "חיזוי מתקדם", desc: "חזה שערים, קרנות, כרטיסים צהובים ואדומים — וצבור נקודות בונוס על דיוק.", iconColor: "oklch(0.55 0.165 240)", href: "/matches" },
-  { icon: TrendingUp, title: "צ'אט קהילתי", desc: "דון עם מתחרים אחרים, שתף ניתוחים, ולמד מהמומחים בקהילה.", iconColor: "oklch(0.65 0.160 200)", href: "/user-chat" },
+  { icon: BarChart3, title: "פיצוח AI מקצועי", desc: "צוות AI שמפענח כל משחק — נתוני ליגת העל מ-1990 ועד היום.", iconColor: "#8B4DFF", href: "/chat" },
+  { icon: Users, title: "תחרויות ישירות", desc: "אתגר חברים לדו-קרב חיזויים, צור טורנירים פרטיים והתחרה על הכבוד.", iconColor: "#1F6BFF", href: "/competitions" },
+  { icon: Flame, title: "רצפי הצלחה", desc: "בנה רצפים של חיזויים נכונים ברצף. ככל שהרצף ארוך יותר — הבונוס גדול יותר.", iconColor: "#FF3B5C", href: "/dashboard" },
+  { icon: Trophy, title: "דירוג שבועי", desc: "טבלת דירוג מתעדכנת כל שבוע. המובילים מקבלים תגים מיוחדים ומעמד בקהילה.", iconColor: "#FFC91F", href: "/leaderboard" },
+  { icon: Shield, title: "חיזוי מתקדם", desc: "חזה שערים, קרנות, כרטיסים צהובים ואדומים — וצבור נקודות בונוס על דיוק.", iconColor: "#1F6BFF", href: "/matches" },
+  { icon: TrendingUp, title: "שיתוף וקהילה", desc: "שתף ניחושים לוואטסאפ, דון עם מתחרים אחרים, ולמד מהמומחים בקהילה.", iconColor: "#13CE66", href: "/user-chat" },
 ];
 
 const STATS = [
-  { value: "72%", label: "דיוק חיזויים", colorStyle: { color: "oklch(0.75 0.185 90)", textShadow: "0 0 12px oklch(0.85 0.195 92 / 65%)" } },
-  { value: "1,200+", label: "מתחרים פעילים", colorStyle: { color: "oklch(0.55 0.165 240)", textShadow: "0 0 12px oklch(0.50 0.165 240 / 60%)" } },
-  { value: "14", label: "רצף שיא", colorStyle: { color: "oklch(0.65 0.160 200)", textShadow: "0 0 10px oklch(0.60 0.155 202 / 55%)" } },
-  { value: "8", label: "תחרויות שבועיות", colorStyle: { color: "oklch(0.55 0.165 240)", textShadow: "0 0 12px oklch(0.50 0.160 240 / 55%)" } },
+  { value: "בתקופת הרצה", label: "דיוק AI — עקבו בזמן אמת", colorStyle: { color: "#8B4DFF" } },
+  { value: "1,200+", label: "מתחרים פעילים", colorStyle: { color: "#1F6BFF" } },
+  { value: "14", label: "רצף שיא", colorStyle: { color: "#13CE66" } },
+  { value: "8", label: "תחרויות שבועיות", colorStyle: { color: "#1F6BFF" } },
 ];
 
 const TOTAL_WINDOW_SECONDS = 7 * 24 * 60 * 60; // 7-day prediction window
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
+  const { setCategory } = useCategory();
+  useEffect(() => { setCategory("home"); }, [setCategory]);
   const teamNames = Object.keys(LIGAT_HAEL_TEAMS);
 
   const { data: upcomingMatches = [] } = trpc.matches.getUpcoming.useQuery({});
@@ -91,11 +94,11 @@ export default function Home() {
             {/* Gradient overlays */}
             <div
               className="absolute inset-0"
-              style={{ background: "linear-gradient(to bottom, oklch(0.50 0.165 240 / 0.12), transparent 60%)" }}
+              style={{ background: "linear-gradient(to bottom, rgba(31,107,255,0.10), transparent 60%)" }}
             />
             <div
               className="absolute inset-0"
-              style={{ background: "radial-gradient(ellipse 70% 50% at 50% 0%, oklch(0.50 0.165 240 / 0.14), transparent)" }}
+              style={{ background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(31,107,255,0.12), transparent)" }}
             />
 
             <div className="relative max-w-5xl mx-auto px-4 text-center">
@@ -126,16 +129,16 @@ export default function Home() {
                   transition={{ delay: 0.2 }}
                   className="inline-flex items-center gap-2 rounded-full px-4 py-2 mb-6 border"
                   style={{
-                    background: "oklch(0.50 0.165 240 / 0.10)",
-                    borderColor: "oklch(0.50 0.165 240 / 0.35)",
-                    boxShadow: "0 0 12px oklch(0.50 0.165 240 / 0.20)",
+                    background: "rgba(31,107,255,0.10)",
+                    borderColor: "rgba(31,107,255,0.35)",
+                    boxShadow: "0 0 12px rgba(31,107,255,0.18)",
                   }}
                 >
                   <div
                     className="w-2 h-2 rounded-full animate-pulse"
-                    style={{ background: "oklch(0.55 0.165 240)", boxShadow: "0 0 8px oklch(0.50 0.165 240 / 0.9)" }}
+                    style={{ background: "#1F6BFF", boxShadow: "0 0 8px rgba(31,107,255,0.85)" }}
                   />
-                  <span className="text-sm font-semibold" style={{ color: "oklch(0.40 0.160 240)" }}>
+                  <span className="text-sm font-semibold" style={{ color: "#1848CC" }}>
                     ליגת העל • ליגה לאומית • עונת 2025/26
                   </span>
                 </motion.div>
@@ -148,19 +151,19 @@ export default function Home() {
                   className="mb-4"
                 >
                   <h1 className="text-4xl md:text-6xl font-black leading-tight mb-2">
-                    <span className="text-foreground">חזה את התוצאה.</span>
+                    <span className="text-foreground">תפסיק לנחש,</span>
                   </h1>
                   <HeroTitleReveal
-                    words={["הוכח", "שאתה", "הכי", "טוב."]}
+                    words={["תתחיל", "לנצח."]}
                     className="text-4xl md:text-6xl font-black"
                   />
                 </motion.div>
 
                 <p className="text-lg md:text-xl text-muted-foreground mb-2 max-w-2xl mx-auto">
-                  פלטפורמת החיזויים המקצועית לכדורגל הישראלי
+                  צוות AI שמפענח כל משחק — תתחרה מול כל ישראל
                 </p>
-                <p className="text-base mb-8 font-medium" style={{ color: "oklch(0.55 0.165 240)", textShadow: "0 0 8px oklch(0.50 0.165 240 / 0.40)" }}>
-                  נתח • חזה • התחרה • עלה בדירוג
+                <p className="text-base mb-8 font-medium" style={{ color: "#1F6BFF" }}>
+                  פצח • חזה • התחרה • עלה בדירוג
                 </p>
 
                 {/* CTA Buttons */}
@@ -217,7 +220,7 @@ export default function Home() {
 
                   {/* Animated predictions counter — always visible */}
                   <div className="flex flex-col items-center gap-1">
-                    <div className="text-3xl font-black tabular-nums" style={{ color: "oklch(0.55 0.165 240)", textShadow: "0 0 12px oklch(0.50 0.165 240 / 50%)" }}>
+                    <div className="text-3xl font-black tabular-nums" style={{ color: "#1F6BFF", textShadow: "0 0 12px rgba(31,107,255,0.45)" }}>
                       <ScoreCounter value={12480} duration={2} />+
                     </div>
                     <p className="text-xs text-muted-foreground">ניחושים הוגשו</p>
@@ -229,7 +232,7 @@ export default function Home() {
           </section>
 
           {/* Stats Banner */}
-          <section className="py-8 border-y border-border/30" style={{ background: "oklch(0.94 0.018 228 / 0.85)" }}>
+          <section className="py-8 border-y border-border/30" style={{ background: "rgba(238,243,255,0.85)" }}>
             <div className="max-w-5xl mx-auto px-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
                 {STATS.map((stat, i) => (
@@ -273,12 +276,12 @@ export default function Home() {
                   <Link href={item.href}>
                     <TiltCard className="p-6 h-full cursor-pointer group" style={item.cardStyle}>
                       <div className="flex items-center justify-center gap-3 mb-4">
-                        <span className="text-3xl font-black" style={{ color: "oklch(0.40 0.110 240)" }}>{item.step}</span>
+                        <span className="text-3xl font-black" style={{ color: "#1848CC" }}>{item.step}</span>
                         <item.icon className="w-6 h-6" style={item.iconStyle} />
                       </div>
                       <h3 className="text-xl font-bold text-foreground mb-2">{item.title}</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed mb-3">{item.desc}</p>
-                      <div className="flex items-center justify-center gap-1 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "oklch(0.55 0.165 240)" }}>
+                      <div className="flex items-center justify-center gap-1 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "#1F6BFF" }}>
                         לחץ להתחיל <ArrowLeft className="w-3 h-3" />
                       </div>
                     </TiltCard>
@@ -289,7 +292,7 @@ export default function Home() {
           </section>
 
           {/* Features Grid */}
-          <section className="py-16 border-y border-border/30" style={{ background: "oklch(0.95 0.014 222 / 0.75)" }}>
+          <section className="py-16 border-y border-border/30" style={{ background: "rgba(240,244,255,0.75)" }}>
             <div className="max-w-5xl mx-auto px-4">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -400,7 +403,7 @@ export default function Home() {
           {/* Footer */}
           <footer className="border-t border-border/20 py-8 text-center">
             <p className="text-sm text-muted-foreground">
-              GetWinIL ✡ © 2025 — פלטפורמת חיזויים מקצועית לכדורגל הישראלי
+              צופן © 2025 — פיצוח כדורגל ישראלי בעזרת AI
             </p>
           </footer>
         </main>

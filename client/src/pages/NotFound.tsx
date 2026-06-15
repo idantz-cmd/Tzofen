@@ -22,12 +22,12 @@ export default function NotFound() {
             transition={{ delay: 0.1, duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
             className="text-[9rem] font-black leading-none mb-4 select-none"
             style={{
-              background: "linear-gradient(135deg, oklch(0.72 0.130 228) 0%, oklch(0.55 0.165 240) 40%, oklch(0.65 0.160 200) 100%)",
+              background: "linear-gradient(135deg, #4D8FFF 0%, #1F6BFF 40%, #8B4DFF 100%)",
               WebkitBackgroundClip: "text",
               backgroundClip: "text",
               WebkitTextFillColor: "transparent",
               color: "transparent",
-              filter: "drop-shadow(0 0 28px oklch(0.50 0.165 240 / 0.35))",
+              filter: "drop-shadow(0 0 28px rgba(31,107,255,0.35))",
             }}
           >
             404

@@ -28,16 +28,16 @@ export default function Competitions() {
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             className="w-20 h-20 rounded-2xl mx-auto mb-6 flex items-center justify-center"
             style={{
-              background: "linear-gradient(135deg, oklch(0.55 0.165 240 / 0.15), oklch(0.65 0.160 200 / 0.10))",
-              border: "1px solid oklch(0.55 0.165 240 / 0.25)",
-              boxShadow: "0 8px 32px oklch(0.50 0.165 240 / 0.20)",
+              background: "linear-gradient(135deg, rgba(31,107,255,0.15), rgba(139,77,255,0.10))",
+              border: "1px solid rgba(31,107,255,0.25)",
+              boxShadow: "0 8px 32px rgba(31,107,255,0.20)",
             }}
           >
-            <Swords className="w-10 h-10" style={{ color: "oklch(0.55 0.165 240)" }} />
+            <Swords className="w-10 h-10" style={{ color: "#1F6BFF" }} />
           </motion.div>
 
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mb-4 border"
-            style={{ background: "oklch(0.90 0.195 92 / 0.10)", borderColor: "oklch(0.90 0.195 92 / 0.30)", color: "oklch(0.72 0.185 90)" }}>
+            style={{ background: "rgba(255,201,31,0.10)", borderColor: "rgba(255,201,31,0.30)", color: "#B38900" }}>
             <Zap className="w-3 h-3" /> בקרוב
           </div>
 
@@ -56,11 +56,11 @@ export default function Competitions() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 + i * 0.08, ease: [0.23, 1, 0.32, 1] }}
               className="p-5 rounded-xl border border-border/20 hover:border-primary/20 transition-all duration-200"
-              style={{ background: "oklch(1 0 0 / 0.5)" }}
+              style={{ background: "rgba(255,255,255,0.5)" }}
             >
               <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-3"
-                style={{ background: "oklch(0.50 0.165 240 / 0.10)" }}>
-                <Icon className="w-4.5 h-4.5" style={{ color: "oklch(0.55 0.165 240)" }} />
+                style={{ background: "rgba(31,107,255,0.10)" }}>
+                <Icon className="w-4.5 h-4.5" style={{ color: "#1F6BFF" }} />
               </div>
               <p className="font-bold text-sm mb-1">{label}</p>
               <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
@@ -74,7 +74,7 @@ export default function Competitions() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
           className="text-center p-6 rounded-xl border border-border/20 text-sm text-muted-foreground"
-          style={{ background: "oklch(0.96 0.015 228 / 0.6)" }}
+          style={{ background: "rgba(248,250,255,0.6)" }}
         >
           <p>נעדכן אותך ברגע שהתחרויות יהיו זמינות 🏆</p>
         </motion.div>

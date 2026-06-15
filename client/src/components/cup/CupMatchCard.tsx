@@ -62,15 +62,15 @@ export function CupMatchCard({ match, userPrediction, onPredict }: Props) {
       animate={{ opacity: 1, y: 0 }}
       className="rounded-2xl border overflow-hidden"
       style={{
-        background: "linear-gradient(135deg, oklch(0.16 0.042 250), oklch(0.13 0.038 252))",
-        borderColor: "oklch(0.75 0.190 70 / 0.20)",
+        background: "linear-gradient(135deg, #F0F4FF, #F8FAFF)",
+        borderColor: "rgba(212,160,0,0.20)",
       }}
     >
       {/* Round badge */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <span
           className="text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider"
-          style={{ background: "oklch(0.75 0.190 70 / 0.18)", color: "oklch(0.80 0.170 70)" }}
+          style={{ background: "rgba(212,160,0,0.18)", color: "#D4A000" }}
         >
           🏆 {roundLabel}
         </span>
@@ -115,7 +115,7 @@ export function CupMatchCard({ match, userPrediction, onPredict }: Props) {
           {isFinished && match.actualResult && (
             <span
               className="text-[9px] font-bold px-2 py-0.5 rounded-full"
-              style={{ background: "oklch(0.75 0.190 70 / 0.15)", color: "oklch(0.80 0.170 70)" }}
+              style={{ background: "rgba(212,160,0,0.15)", color: "#D4A000" }}
             >
               {match.actualResult === "home" ? match.homeTeam : match.awayTeam} ניצחה
             </span>

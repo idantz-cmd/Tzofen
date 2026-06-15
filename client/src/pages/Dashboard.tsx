@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useCategory } from "@/contexts/CategoryContext";
 import { motion } from "framer-motion";
 import Navigation from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
@@ -11,8 +12,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { Flame, Trophy, Target, TrendingUp, Crown, BarChart3, CheckCircle2 } from "lucide-react";
 import { PageTransition } from "@/components/animations";
 
-const CHART_GRID   = "oklch(0.83 0.035 228 / 0.5)";
-const CHART_AXIS   = "oklch(0.46 0.040 242 / 0.8)";
+const CHART_GRID   = "rgba(226,232,240,0.5)";
+const CHART_AXIS   = "rgba(100,116,139,0.8)";
 const CHART_TOOLTIP_STYLE = {
   backgroundColor: "var(--card)",
   border: "1px solid var(--border)",
@@ -26,8 +27,8 @@ const STAT_CARDS = [
     key: "accuracy",
     label: "דיוק כללי",
     icon: Target,
-    color: "oklch(0.55 0.165 240)",
-    glow: "oklch(0.50 0.165 240 / 0.55)",
+    color: "#1F6BFF",
+    glow: "rgba(31,107,255,0.55)",
     sub: (s: any) => `${s?.correctPredictions || 0} מתוך ${s?.totalPredictions || 0}`,
     value: (s: any) => `${s?.accuracyRate || 0}%`,
   },
@@ -35,8 +36,8 @@ const STAT_CARDS = [
     key: "points",
     label: 'סה"כ נקודות',
     icon: TrendingUp,
-    color: "oklch(0.65 0.160 200)",
-    glow: "oklch(0.60 0.155 202 / 0.55)",
+    color: "#8B4DFF",
+    glow: "rgba(139,77,255,0.55)",
     sub: () => "נקודות מצטברות",
     value: (s: any) => (s?.totalPoints || 0).toLocaleString("he-IL"),
   },
@@ -44,8 +45,8 @@ const STAT_CARDS = [
     key: "correct",
     label: "תחזיות נכונות",
     icon: CheckCircle2,
-    color: "oklch(0.55 0.165 240)",
-    glow: "oklch(0.50 0.165 240 / 0.55)",
+    color: "#13CE66",
+    glow: "rgba(19,206,102,0.55)",
     sub: () => "תחזיות שהיו נכונות",
     value: (s: any) => s?.correctPredictions || 0,
   },
@@ -53,14 +54,16 @@ const STAT_CARDS = [
     key: "total",
     label: "סה״כ תחזיות",
     icon: BarChart3,
-    color: "oklch(0.65 0.160 200)",
-    glow: "oklch(0.60 0.155 202 / 0.55)",
+    color: "#8B4DFF",
+    glow: "rgba(139,77,255,0.55)",
     sub: () => "תחזיות שהוגשו",
     value: (s: any) => s?.totalPredictions || 0,
   },
 ];
 
 export default function Dashboard() {
+  const { setCategory } = useCategory();
+  useEffect(() => { setCategory("profile"); }, [setCategory]);
   const { user } = useAuth();
   const [_timeframe, setTimeframe] = useState<"week" | "month" | "all">("month");
 
@@ -141,7 +144,7 @@ export default function Dashboard() {
                 >
                   <Card className="p-5 h-full border-border/20 hover:border-primary/20 transition-all duration-200 group">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${color.replace(")", " / 0.12)").replace("oklch(", "oklch(")}` }}>
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${color}1A` }}>
                         <Icon className="w-3.5 h-3.5" style={{ color }} />
                       </div>
                       <p className="text-xs text-muted-foreground font-medium">{label}</p>
@@ -161,19 +164,19 @@ export default function Dashboard() {
                 transition={{ delay: 0.32, duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
               >
                 <Card className="p-5 h-full border-accent/20 hover:border-accent/40 transition-all duration-200"
-                  style={{ background: "linear-gradient(135deg, oklch(0.90 0.195 92 / 0.06) 0%, transparent 100%)" }}>
+                  style={{ background: "linear-gradient(135deg, rgba(255,201,31,0.06) 0%, transparent 100%)" }}>
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "oklch(0.90 0.195 92 / 0.15)" }}>
-                      <Flame className="w-3.5 h-3.5" style={{ color: "oklch(0.78 0.185 90)" }} />
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(255,201,31,0.15)" }}>
+                      <Flame className="w-3.5 h-3.5" style={{ color: "#B38900" }} />
                     </div>
                     <p className="text-xs text-muted-foreground font-medium">רצף נוכחי</p>
                   </div>
-                  <p className="text-3xl font-black tabular-nums" style={{ color: "oklch(0.78 0.185 90)", textShadow: "0 0 14px oklch(0.85 0.195 92 / 0.55)" }}>
+                  <p className="text-3xl font-black tabular-nums" style={{ color: "#B38900", textShadow: "0 0 14px rgba(255,201,31,0.55)" }}>
                     {streakData?.currentStreak || 0}
                   </p>
                   <p className="text-[11px] text-muted-foreground mt-1.5">
                     שיא:{" "}
-                    <span className="font-bold" style={{ color: "oklch(0.78 0.185 90)" }}>
+                    <span className="font-bold" style={{ color: "#B38900" }}>
                       {streakData?.bestStreak || 0}
                     </span>{" "}
                     רצופות
@@ -201,10 +204,10 @@ export default function Dashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
                     <XAxis dataKey="week" stroke={CHART_AXIS} tick={{ fill: CHART_AXIS, fontSize: 12 }} axisLine={false} tickLine={false} />
                     <YAxis stroke={CHART_AXIS} tick={{ fill: CHART_AXIS, fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: "oklch(0.50 0.165 240 / 0.06)" }} />
+                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: "rgba(31,107,255,0.06)" }} />
                     <Legend wrapperStyle={{ fontSize: "13px", color: CHART_AXIS }} />
-                    <Bar dataKey="correct" fill="oklch(0.55 0.165 240)" name="נכונות" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="total" fill="oklch(0.83 0.035 228)" name='סה"כ' radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="correct" fill="#1F6BFF" name="נכונות" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="total" fill="#E2E8F0" name='סה"כ' radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </Card>
@@ -218,7 +221,7 @@ export default function Dashboard() {
                     <YAxis stroke={CHART_AXIS} tick={{ fill: CHART_AXIS, fontSize: 12 }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                     <Legend wrapperStyle={{ fontSize: "13px", color: CHART_AXIS }} />
-                    <Line type="monotone" dataKey="points" stroke="oklch(0.65 0.160 200)" name="נקודות" strokeWidth={2.5} dot={{ r: 4, fill: "oklch(0.65 0.160 200)", strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="points" stroke="#8B4DFF" name="נקודות" strokeWidth={2.5} dot={{ r: 4, fill: "#8B4DFF", strokeWidth: 0 }} activeDot={{ r: 6 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </Card>
@@ -229,18 +232,16 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
                   {
-                    icon: Flame, iconColor: "oklch(0.78 0.185 90)", bg: "oklch(0.90 0.195 92 / 0.08)",
-                    border: "oklch(0.90 0.195 92 / 0.25)", label: "רצף נוכחי",
-                    value: streakData?.currentStreak || 0, sub: "תחזיות נכונות ברצף",
+                    icon: Flame,       iconColor: "#B38900", bg: "rgba(255,201,31,0.08)",  border: "rgba(255,201,31,0.25)",
+                    label: "רצף נוכחי", value: streakData?.currentStreak || 0, sub: "תחזיות נכונות ברצף",
                   },
                   {
-                    icon: Trophy, iconColor: "oklch(0.55 0.165 240)", bg: "oklch(0.50 0.165 240 / 0.06)",
-                    border: "oklch(0.50 0.165 240 / 0.25)", label: "שיא אישי",
-                    value: streakData?.bestStreak || 0, sub: "הרצף הארוך ביותר שלך",
+                    icon: Trophy,      iconColor: "#1F6BFF", bg: "rgba(31,107,255,0.06)",  border: "rgba(31,107,255,0.25)",
+                    label: "שיא אישי", value: streakData?.bestStreak || 0, sub: "הרצף הארוך ביותר שלך",
                   },
                   {
-                    icon: Target, iconColor: "oklch(0.65 0.160 200)", bg: "oklch(0.65 0.160 200 / 0.06)",
-                    border: "oklch(0.65 0.160 200 / 0.25)", label: "תחזית נכונה אחרונה",
+                    icon: Target,      iconColor: "#8B4DFF", bg: "rgba(139,77,255,0.06)",  border: "rgba(139,77,255,0.25)",
+                    label: "תחזית נכונה אחרונה",
                     value: streakData?.lastCorrectAt ? formatDate(streakData.lastCorrectAt) : "—",
                     sub: "תאריך אחרון",
                   },
@@ -259,7 +260,7 @@ export default function Dashboard() {
               {/* Badges */}
               <Card className="p-6 border-border/20">
                 <h3 className="text-base font-bold mb-4 flex items-center gap-2">
-                  <Crown className="w-4 h-4" style={{ color: "oklch(0.78 0.185 90)" }} />
+                  <Crown className="w-4 h-4" style={{ color: "#B38900" }} />
                   תגים והישגים
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -350,10 +351,10 @@ export default function Dashboard() {
                           className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold text-sm"
                           style={
                             pred.isCorrect
-                              ? { background: "oklch(0.55 0.165 240 / 0.12)", color: "oklch(0.55 0.165 240)", border: "1px solid oklch(0.55 0.165 240 / 0.25)" }
+                              ? { background: "rgba(31,107,255,0.12)", color: "#1F6BFF", border: "1px solid rgba(31,107,255,0.25)" }
                               : pred.isCorrect === false
-                              ? { background: "oklch(0.58 0.220 27 / 0.12)", color: "oklch(0.65 0.200 27)", border: "1px solid oklch(0.58 0.220 27 / 0.25)" }
-                              : { background: "oklch(0.90 0.195 92 / 0.12)", color: "oklch(0.72 0.185 90)", border: "1px solid oklch(0.90 0.195 92 / 0.25)" }
+                              ? { background: "rgba(255,59,92,0.12)", color: "#CC1F45", border: "1px solid rgba(255,59,92,0.25)" }
+                              : { background: "rgba(255,201,31,0.12)", color: "#B38900", border: "1px solid rgba(255,201,31,0.25)" }
                           }
                         >
                           {pred.isCorrect ? "✓" : pred.isCorrect === false ? "✗" : "⏳"} {pred.points || 0} נקודות
@@ -394,13 +395,13 @@ function StreakBadge({ emoji, title, description, unlocked }: {
           ? "border-accent/30"
           : "bg-muted/5 border-border/20 opacity-40 grayscale"
       }`}
-      style={unlocked ? { background: "oklch(0.90 0.195 92 / 0.06)" } : {}}
+      style={unlocked ? { background: "rgba(255,201,31,0.06)" } : {}}
     >
       <div className="text-2xl mb-1">{emoji}</div>
       <p className={`text-sm font-bold ${unlocked ? "text-foreground" : "text-muted-foreground"}`}>{title}</p>
       <p className="text-[10px] text-muted-foreground">{description}</p>
       {unlocked && (
-        <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "oklch(0.55 0.165 240)" }}>
+        <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "#1F6BFF" }}>
           <span className="text-[9px] text-white font-black">✓</span>
         </div>
       )}

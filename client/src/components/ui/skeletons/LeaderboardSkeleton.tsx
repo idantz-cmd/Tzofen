@@ -5,7 +5,7 @@ export function LeaderboardSkeleton({ count = 8 }: { count?: number }) {
         <div
           key={i}
           className="flex items-center gap-3 p-3 rounded-xl border border-border/20"
-          style={{ background: "oklch(0.97 0.015 228 / 0.5)" }}
+          style={{ background: "rgba(248,250,255,0.5)" }}
         >
           <div className="w-8 h-8 rounded-full bg-gray-200/50 shrink-0" />
           <div className="w-9 h-9 rounded-full bg-gray-200/40 shrink-0" />

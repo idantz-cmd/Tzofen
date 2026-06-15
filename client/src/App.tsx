@@ -4,8 +4,8 @@ import { Route, Switch } from "wouter";
 import { lazy, Suspense } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { FloatingParticles } from "./components/animations/FloatingParticles";
-import { FootballBackground } from "./components/animations/FootballBackground";
+import { CategoryProvider } from "./contexts/CategoryContext";
+import { CategoryBackground } from "./components/layout/CategoryBackground";
 import { BottomNav } from "./components/layout/BottomNav";
 import { PWAPrompts } from "./components/PWAPrompts";
 
@@ -59,22 +59,22 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light" switchable={true}>
-        <TooltipProvider>
-          <FloatingParticles />
-          <FootballBackground />
-          <div className="mesh-orb-3" aria-hidden="true" />
-          <Toaster />
-          <PWAPrompts />
-          <div className="flex flex-col min-h-screen">
-            <div className="flex-1">
-              <Router />
+      <ThemeProvider defaultTheme="light" switchable={false}>
+        <CategoryProvider>
+          <TooltipProvider>
+            <CategoryBackground />
+            <Toaster />
+            <PWAPrompts />
+            <div className="flex flex-col min-h-screen">
+              <div className="flex-1">
+                <Router />
+              </div>
+              <div className="md:hidden sticky bottom-0 z-50">
+                <BottomNav />
+              </div>
             </div>
-            <div className="md:hidden sticky bottom-0 z-50">
-              <BottomNav />
-            </div>
-          </div>
-        </TooltipProvider>
+          </TooltipProvider>
+        </CategoryProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

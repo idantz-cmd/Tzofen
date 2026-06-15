@@ -30,7 +30,7 @@ export const agentsRouter = router({
           "research",
           "prediction",
           "tactical",
-          "bankroll",
+          "points-strategy",
           "news",
           "orchestrator",
           "schedule",
@@ -119,35 +119,25 @@ export const agentsRouter = router({
       };
     }),
 
-  // ── Bankroll agent (protected — needs user history) ──────────────────────────
-  queryBankroll: protectedProcedure
+  // ── Points-strategy agent (protected — uses user prediction history) ─────────
+  queryPointsStrategy: protectedProcedure
     .input(
       z.object({
         message: z.string().min(1).max(2000),
         matchId: z.number().optional(),
-        /**
-         * Assumed decimal odds for the recommended bet (e.g. 1.85).
-         * If provided, injected into the message so the agent can compute Kelly.
-         */
-        assumedOdds: z.number().min(1.01).max(50).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Enrich message with odds if provided
-      const enrichedMessage = input.assumedOdds
-        ? `${input.message}\n\n[אורקל: הנחת אודס עשרוניים = ${input.assumedOdds}]`
-        : input.message;
-
       const response = await queryAgent(
-        "bankroll",
-        enrichedMessage,
+        "points-strategy",
+        input.message,
         input.matchId,
         ctx.user.id
       );
 
       return {
         success: true,
-        agentType: "bankroll",
+        agentType: "points-strategy",
         response,
       };
     }),
