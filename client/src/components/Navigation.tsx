@@ -191,6 +191,12 @@ export default function Navigation() {
                       משחקים
                     </DropdownMenuItem>
                   </Link>
+                  <Link href="/news">
+                    <DropdownMenuItem>
+                      <Newspaper className="w-4 h-4 ml-2" />
+                      חדשות
+                    </DropdownMenuItem>
+                  </Link>
                   <Link href="/leaderboard">
                     <DropdownMenuItem>
                       <Trophy className="w-4 h-4 ml-2" />
@@ -209,22 +215,17 @@ export default function Navigation() {
                       גביע המדינה
                     </DropdownMenuItem>
                   </Link>
-                  <Link href="/competitions">
-                    <DropdownMenuItem>
-                      <Users className="w-4 h-4 ml-2" />
-                      תחרויות
-                    </DropdownMenuItem>
-                  </Link>
+                  <DropdownMenuSeparator />
                   <Link href="/ai-prediction">
                     <DropdownMenuItem>
                       <Brain className="w-4 h-4 ml-2" />
-                      ניבוי AI
+                      ניבוי AI — תחזית משחק
                     </DropdownMenuItem>
                   </Link>
                   <Link href="/chat">
                     <DropdownMenuItem>
                       <MessageSquare className="w-4 h-4 ml-2" />
-                      ניתוח AI
+                      ניתוח AI — שאל שאלה
                     </DropdownMenuItem>
                   </Link>
                   {isAuthenticated && (
@@ -234,12 +235,6 @@ export default function Navigation() {
                         <DropdownMenuItem>
                           <BarChart3 className="w-4 h-4 ml-2" />
                           לוח בקרה
-                        </DropdownMenuItem>
-                      </Link>
-                      <Link href="/user-chat">
-                        <DropdownMenuItem>
-                          <MessageSquare className="w-4 h-4 ml-2" />
-                          צ'אט קהילתי
                         </DropdownMenuItem>
                       </Link>
                       {user?.role === "admin" && (

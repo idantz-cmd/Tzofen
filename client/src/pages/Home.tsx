@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { useCategory } from "@/contexts/CategoryContext";
 import { Trophy, TrendingUp, BarChart3, Users, Flame, Target, ChevronLeft, Timer, Shield, ArrowLeft, Brain, Loader2, Sparkles, Lock } from "lucide-react";
 import { TeamLogo, LIGAT_HAEL_TEAMS } from "@/components/TeamLogos";
-import { HeroTitleReveal, TiltCard, StaggerList, PageTransition, CountdownRing, ScoreCounter } from "@/components/animations";
+import { HeroTitleReveal, TiltCard, StaggerList, PageTransition, CountdownRing } from "@/components/animations";
 import { trpc } from "@/lib/trpc";
 
 const HOW_IT_WORKS = [
@@ -69,6 +69,11 @@ export default function Home() {
   const { data: upcomingMatches = [] } = trpc.matches.getUpcoming.useQuery({});
   const nextMatch = upcomingMatches[0] as { id: number; matchDate: string; homeTeam: string; awayTeam: string } | undefined;
 
+  const { data: leaderboardData = [] } = trpc.leaderboard.getAllTime.useQuery({ limit: 1000 });
+  const totalPredictionsCount = leaderboardData.length > 0
+    ? (leaderboardData as any[]).reduce((s: number, e: any) => s + (e.totalPredictions || 0), 0)
+    : undefined;
+
   const aiPreview = trpc.agents.query.useMutation();
   const [aiPreviewRequested, setAiPreviewRequested] = useState(false);
 
@@ -110,7 +115,7 @@ export default function Home() {
                 {teamNames.slice(0, 8).map((team, i) => (
                   <motion.div
                     key={team}
-                    className="absolute opacity-10"
+                    className="absolute opacity-[0.18]"
                     initial={{ x: `${10 + i * 12}%`, y: `${20 + (i % 3) * 30}%` }}
                     animate={{ y: [`${20 + (i % 3) * 30}%`, `${25 + (i % 3) * 30}%`, `${20 + (i % 3) * 30}%`] }}
                     transition={{ duration: 3 + i * 0.5, repeat: Infinity, ease: "easeInOut" }}
@@ -221,10 +226,10 @@ export default function Home() {
                     </div>
                   )}
 
-                  {/* Animated predictions counter — always visible */}
+                  {/* Predictions counter */}
                   <div className="flex flex-col items-center gap-1">
                     <div className="text-3xl font-black tabular-nums" style={{ color: "#1F6BFF", textShadow: "0 0 12px rgba(31,107,255,0.45)" }}>
-                      <ScoreCounter value={12480} duration={2} />+
+                      {totalPredictionsCount !== undefined ? `${totalPredictionsCount.toLocaleString("he-IL")}+` : "—"}
                     </div>
                     <p className="text-xs text-muted-foreground">ניחושים הוגשו</p>
                     <p className="text-[10px] text-muted-foreground/60">בפלטפורמה</p>

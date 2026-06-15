@@ -4,26 +4,21 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition } from "@/components/animations";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import Navigation from "@/components/Navigation";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { hebrewTeamName, TeamBadge } from "@/components/TeamLogos";
+import ReactMarkdown from "react-markdown";
+import rehypeSanitize from "rehype-sanitize";
 import {
   Brain,
   Target,
-  CircleDot,
-  Flag,
-  AlertTriangle,
   TrendingUp,
   ChevronDown,
-  Zap,
   Users,
   CheckCircle2,
-  XCircle,
   Newspaper,
-  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 
@@ -33,97 +28,6 @@ const LEAGUE_LABELS: Record<League, string> = {
   ligat_hael: "ליגת העל",
   ligah_leumit: "הליגה הלאומית",
 };
-
-function ProbBar({
-  homeProb,
-  drawProb,
-  awayProb,
-  homeLabel,
-  awayLabel,
-}: {
-  homeProb: number;
-  drawProb: number;
-  awayProb: number;
-  homeLabel: string;
-  awayLabel: string;
-}) {
-  const homeLevel = homeProb >= 60 ? "ביטחון גבוה" : homeProb >= 40 ? "ביטחון בינוני" : "ביטחון נמוך";
-  const awayLevel = awayProb >= 60 ? "ביטחון גבוה" : awayProb >= 40 ? "ביטחון בינוני" : "ביטחון נמוך";
-
-  return (
-    <div className="space-y-2">
-      <div className="flex justify-between text-xs text-muted-foreground font-medium">
-        <span>{homeLabel}</span>
-        <span>תיקו</span>
-        <span>{awayLabel}</span>
-      </div>
-      <div className="flex h-6 rounded-full overflow-hidden text-xs font-bold">
-        <div
-          className="flex items-center justify-center transition-all"
-          style={{ width: `${homeProb}%`, background: "#1F6BFF", color: "white" }}
-        >
-          {homeProb >= 15 ? `${homeProb}%` : ""}
-        </div>
-        <div
-          className="flex items-center justify-center transition-all"
-          style={{ width: `${drawProb}%`, background: "#6B7280", color: "white" }}
-        >
-          {drawProb >= 12 ? `${drawProb}%` : ""}
-        </div>
-        <div
-          className="flex items-center justify-center transition-all"
-          style={{ width: `${awayProb}%`, background: "#13CE66", color: "white" }}
-        >
-          {awayProb >= 15 ? `${awayProb}%` : ""}
-        </div>
-      </div>
-      <div className="flex justify-between text-[10px] text-muted-foreground">
-        <span style={{ color: "#1F6BFF" }}>{homeLevel}</span>
-        <span style={{ color: "#13CE66" }}>{awayLevel}</span>
-      </div>
-    </div>
-  );
-}
-
-function ConfidenceBadge({ level }: { level: "low" | "medium" | "high" }) {
-  const map = {
-    low:    { label: "ביטחון נמוך",   bg: "#FF3B5C", color: "white" },
-    medium: { label: "ביטחון בינוני", bg: "#FFC91F", color: "#15151E" },
-    high:   { label: "ביטחון גבוה",   bg: "#13CE66", color: "white" },
-  };
-  const { label, bg, color } = map[level];
-  return (
-    <span
-      className="text-xs font-bold px-2 py-0.5 rounded-full"
-      style={{ background: bg, color }}
-    >
-      {label}
-    </span>
-  );
-}
-
-function StatChip({
-  label,
-  value,
-  sub,
-  color,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  color: string;
-}) {
-  return (
-    <div
-      className="flex flex-col items-center justify-center rounded-xl p-3 gap-0.5"
-      style={{ background: color }}
-    >
-      <span className="text-[11px] text-muted-foreground font-medium leading-tight text-center">{label}</span>
-      <span className="text-xl font-black leading-tight" style={{ direction: "ltr" }}>{value}</span>
-      {sub && <span className="text-[10px] text-muted-foreground">{sub}</span>}
-    </div>
-  );
-}
 
 function AiAccuracyBanner() {
   return (
@@ -169,7 +73,7 @@ export default function AIPrediction() {
   const { data: upcomingMatches = [], isLoading: matchesLoading } =
     trpc.matches.getUpcoming.useQuery({ league: selectedLeague });
 
-  const predictMutation = trpc.agents.orchestratePredict.useMutation({
+  const predictMutation = trpc.agents.queryAll.useMutation({
     onError: (err) => toast.error(err.message || "שגיאה בניבוי"),
   });
 
@@ -187,31 +91,12 @@ export default function AIPrediction() {
       toast.error("בחר קבוצת בית וקבוצת חוץ");
       return;
     }
-    predictMutation.mutate({ homeTeam: home, awayTeam: away, league: selectedLeague });
+    predictMutation.mutate({
+      message: `נתח את המשחק הכדורגל הישראלי: ${home} נגד ${away} ב${LEAGUE_LABELS[selectedLeague]}. תן חיזוי מקצועי ומפורט — מי צפוי לנצח, הסיבות העיקריות, ונתונים סטטיסטיים רלוונטיים.`,
+    });
   }
 
   const pred = predictMutation.data;
-
-  const resultLabel = pred
-    ? pred.result === "home_win"
-      ? `${hebrewTeamName(pred.homeTeam)} מנצחת`
-      : pred.result === "away_win"
-      ? `${hebrewTeamName(pred.awayTeam)} מנצחת`
-      : "תיקו"
-    : null;
-
-  const resultBg =
-    pred?.result === "home_win"
-      ? "rgba(19,206,102,0.13)"
-      : pred?.result === "away_win"
-      ? "rgba(255,59,92,0.13)"
-      : "rgba(255,201,31,0.13)";
-
-  function qaScoreBg(score: number) {
-    if (score >= 75) return { bg: "#13CE66", color: "white" };
-    if (score >= 50) return { bg: "#FFC91F", color: "#15151E" };
-    return { bg: "#FF3B5C", color: "white" };
-  }
 
   return (
     <PageTransition>
@@ -375,243 +260,54 @@ export default function AIPrediction() {
             >
               {/* Match header */}
               <Card className="p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <ConfidenceBadge level={pred.confidence} />
-                    {"qaOverallScore" in pred && (
-                      <span
-                        className="text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1"
-                        style={{
-                          background: qaScoreBg((pred as any).qaOverallScore).bg,
-                          color: qaScoreBg((pred as any).qaOverallScore).color,
-                        }}
-                      >
-                        <ShieldCheck className="w-3 h-3" />
-                        QA {(pred as any).qaOverallScore}/100
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-xs text-muted-foreground">{pred.dataPoints} נקודות מידע</span>
-                </div>
-
-                <div className="flex items-center justify-around gap-4 mb-5">
+                <div className="flex items-center justify-around gap-4">
                   <div className="flex flex-col items-center gap-2">
-                    <TeamBadge teamName={pred.homeTeam} logoUrl={selectedMatch?.logo1} size="lg" showName />
+                    <TeamBadge teamName={homeTeam} logoUrl={selectedMatch?.logo1} size="lg" showName />
                   </div>
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-3xl font-black tabular-nums" style={{ direction: "ltr" }}>
-                      {pred.predictedHomeGoals} – {pred.predictedAwayGoals}
-                    </span>
-                    <Badge
-                      variant="secondary"
-                      className="text-xs font-bold"
-                      style={{ background: resultBg }}
-                    >
-                      {resultLabel}
-                    </Badge>
-                  </div>
+                  <span className="text-xl font-black text-muted-foreground/40 shrink-0">נגד</span>
                   <div className="flex flex-col items-center gap-2">
-                    <TeamBadge teamName={pred.awayTeam} logoUrl={selectedMatch?.logo2} size="lg" showName />
+                    <TeamBadge teamName={awayTeam} logoUrl={selectedMatch?.logo2} size="lg" showName />
                   </div>
                 </div>
-
-                <ProbBar
-                  homeProb={pred.homeWinProb}
-                  drawProb={pred.drawProb}
-                  awayProb={pred.awayWinProb}
-                  homeLabel={hebrewTeamName(pred.homeTeam)}
-                  awayLabel={hebrewTeamName(pred.awayTeam)}
-                />
               </Card>
 
-              {/* Stats grid */}
-              <div className="grid grid-cols-3 gap-2">
-                <StatChip
-                  label="סה״כ שערים"
-                  value={`${pred.predictedHomeGoals + pred.predictedAwayGoals}`}
-                  sub={pred.totalGoalsOver25 ? "מעל 2.5 ✓" : "מתחת 2.5"}
-                  color="rgba(19,206,102,0.10)"
-                />
-                <StatChip
-                  label="קרנות"
-                  value={`${pred.predictedCorners}`}
-                  sub={pred.cornersOver95 ? "מעל 9.5 ✓" : "מתחת 9.5"}
-                  color="rgba(31,107,255,0.08)"
-                />
-                <StatChip
-                  label="כרטיסים צהובים"
-                  value={`${pred.predictedYellowCards}`}
-                  sub={pred.yellowCardsOver35 ? "מעל 3.5 ✓" : "מתחת 3.5"}
-                  color="rgba(255,201,31,0.12)"
-                />
-              </div>
-
-              {pred.redCardExpected && (
-                <div
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium"
-                  style={{ background: "rgba(255,59,92,0.10)", color: "#CC1F45" }}
-                >
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
-                  צפוי כרטיס אדום במשחק זה
-                </div>
-              )}
-
-              {/* Analysis sections */}
-              <Card className="p-4 space-y-4">
-                <h3 className="font-black text-base flex items-center gap-2">
-                  <Brain className="w-4 h-4 text-primary" />
-                  ניתוח מפורט
-                </h3>
-
-                {[
-                  { icon: <Target className="w-4 h-4" />, title: "תוצאה",   text: pred.resultReasoning,  color: "#13CE66" },
-                  { icon: <CircleDot className="w-4 h-4" />, title: "שערים", text: pred.goalsReasoning,   color: "#1F6BFF" },
-                  { icon: <Flag className="w-4 h-4" />,      title: "קרנות", text: pred.cornersReasoning, color: "#8B4DFF" },
-                  { icon: <AlertTriangle className="w-4 h-4" />, title: "כרטיסים", text: pred.cardsReasoning, color: "#FFC91F" },
-                ].map((item) => (
-                  <div key={item.title} className="flex gap-3">
-                    <div
-                      className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
-                      style={{ background: "#F0F4FF", color: item.color }}
-                    >
-                      {item.icon}
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-muted-foreground mb-0.5">{item.title}</p>
-                      <p className="text-sm leading-relaxed">{item.text}</p>
-                    </div>
+              {/* Orchestrator summary */}
+              {pred.responses.orchestrator?.response && (
+                <Card className="p-5 border-primary/20" style={{ background: "rgba(31,107,255,0.04)" }}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Brain className="w-4 h-4 text-primary" />
+                    <h3 className="font-black text-sm">סיכום AI מקצועי</h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full mr-auto" style={{ background: "#8B4DFF", color: "white" }}>GEMINI</span>
                   </div>
-                ))}
-              </Card>
-
-              {/* Summary */}
-              <Card
-                className="p-4 border-primary/20"
-                style={{ background: "rgba(31,107,255,0.05)" }}
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <TrendingUp className="w-4 h-4 text-primary" />
-                  <h3 className="font-black text-sm">סיכום מקצועי</h3>
-                </div>
-                <p className="text-sm leading-relaxed text-foreground/90">{pred.fullSummary}</p>
-              </Card>
-
-              {/* Key factors */}
-              <Card className="p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Zap className="w-4 h-4" style={{ color: "#FFC91F" }} />
-                  <h3 className="font-black text-sm">גורמים מרכזיים</h3>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {pred.keyFactors.map((factor, i) => (
-                    <span
-                      key={i}
-                      className="text-xs font-medium px-2.5 py-1 rounded-full"
-                      style={
-                        i % 2 === 0
-                          ? { background: "rgba(31,107,255,0.10)", color: "#1F4CB3", border: "1px solid rgba(31,107,255,0.22)" }
-                          : { background: "rgba(139,77,255,0.10)", color: "#6B2FD6", border: "1px solid rgba(139,77,255,0.22)" }
-                      }
-                    >
-                      {factor}
-                    </span>
-                  ))}
-                </div>
-              </Card>
-
-              {/* News headlines */}
-              {"newsHeadlines" in pred && Array.isArray((pred as any).newsHeadlines) && (pred as any).newsHeadlines.length > 0 && (
-                <Card className="p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Newspaper className="w-4 h-4" style={{ color: "#FF3B5C" }} />
-                    <h3 className="font-black text-sm">חדשות רלוונטיות</h3>
-                    <span
-                      className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white ml-auto"
-                      style={{ background: "#FF3B5C" }}
-                    >
-                      LIVE
-                    </span>
-                  </div>
-                  <ul className="space-y-1.5">
-                    {(pred as any).newsHeadlines.map((h: string, i: number) => (
-                      <li key={i} className="text-xs text-foreground/80 leading-relaxed flex gap-2">
-                        <span className="text-muted-foreground shrink-0 mt-0.5">•</span>
-                        {h}
-                      </li>
-                    ))}
-                  </ul>
-                  {"newsInfluence" in pred && (pred as any).newsInfluence && (
-                    <p className="text-xs italic text-muted-foreground border-t border-border/40 pt-2">
-                      {(pred as any).newsInfluence}
-                    </p>
-                  )}
+                  <ReactMarkdown rehypePlugins={[rehypeSanitize]} className="text-sm leading-relaxed text-foreground/90 [&>p]:mb-2 [&>ul]:list-disc [&>ul]:pr-4 [&>strong]:font-bold">
+                    {pred.responses.orchestrator.response}
+                  </ReactMarkdown>
                 </Card>
               )}
 
-              {/* Agent reports */}
-              {"agentReports" in pred && Array.isArray((pred as any).agentReports) && (
-                <Card className="p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-primary" />
-                    <h3 className="font-black text-sm">דוחות סוכנים</h3>
-                    {"qaOverallScore" in pred && (
-                      <span className="text-xs text-muted-foreground mr-auto">
-                        ציון ממוצע: <strong>{(pred as any).qaOverallScore}/100</strong>
-                      </span>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    {(pred as any).agentReports.map((report: any) => {
-                      const qs = qaScoreBg(report.qaScore);
-                      return (
-                        <div
-                          key={report.agentId}
-                          className="flex items-start gap-2.5 p-2.5 rounded-lg bg-muted/20 border border-border/15"
-                        >
-                          {report.status === "success" ? (
-                            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "#13CE66" }} />
-                          ) : report.status === "partial" ? (
-                            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "#FFC91F" }} />
-                          ) : (
-                            <XCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "#FF3B5C" }} />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-xs font-bold">{report.agentName}</span>
-                              <span
-                                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                                style={{ background: qs.bg, color: qs.color }}
-                              >
-                                {report.qaScore}/100
-                              </span>
-                              <span className="text-[10px] text-muted-foreground mr-auto" dir="ltr">
-                                {report.executionMs}ms
-                              </span>
-                            </div>
-                            <p className="text-xs text-foreground/70 mt-0.5 leading-snug">{report.summary}</p>
-                            {report.qaIssues.length > 0 && (
-                              <ul className="mt-1 space-y-0.5">
-                                {report.qaIssues.map((issue: string, j: number) => (
-                                  <li key={j} className="text-[10px] text-orange-600 flex gap-1">
-                                    <span>⚠</span>{issue}
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {"qaReport" in pred && (pred as any).qaReport && (
-                    <p className="text-xs text-muted-foreground border-t border-border/40 pt-2">
-                      {(pred as any).qaReport}
-                    </p>
-                  )}
-                </Card>
-              )}
+              {/* Specialist agent sections */}
+              {([
+                { key: "prediction", label: "חיזוי תוצאה",     icon: Target,       color: "#1F6BFF", bg: "rgba(31,107,255,0.05)"  },
+                { key: "statistics", label: "ניתוח סטטיסטי",   icon: TrendingUp,   color: "#13CE66", bg: "rgba(19,206,102,0.05)"  },
+                { key: "tactical",   label: "ניתוח טקטי",      icon: Users,        color: "#8B4DFF", bg: "rgba(139,77,255,0.05)"  },
+                { key: "news",       label: "חדשות רלוונטיות",  icon: Newspaper,    color: "#FF3B5C", bg: "rgba(255,59,92,0.05)"   },
+                { key: "research",   label: "מחקר ליגה",        icon: Sparkles,     color: "#D4A000", bg: "rgba(212,160,0,0.05)"   },
+                { key: "schedule",   label: "לוח עומסים",       icon: CheckCircle2, color: "#475569", bg: "rgba(71,85,105,0.05)"  },
+              ] as const).map(({ key, label, icon: Icon, color, bg }) => {
+                const agentResp = pred.responses[key];
+                if (!agentResp?.response) return null;
+                return (
+                  <Card key={key} className="p-4 border-border/15" style={{ background: bg }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Icon className="w-3.5 h-3.5 shrink-0" style={{ color }} />
+                      <h4 className="text-xs font-bold" style={{ color }}>{label}</h4>
+                    </div>
+                    <p className="text-sm leading-relaxed text-foreground/80 whitespace-pre-wrap">{agentResp.response}</p>
+                  </Card>
+                );
+              })}
 
-              {/* New prediction button */}
+              {/* Reset */}
               <Button
                 variant="outline"
                 className="w-full"

@@ -67,20 +67,33 @@ export default function Dashboard() {
   const { setCategory } = useCategory();
   useEffect(() => { setCategory("profile"); }, [setCategory]);
   const { user } = useAuth();
-  const [_timeframe, setTimeframe] = useState<"week" | "month" | "all">("month");
 
   const { data: stats, isLoading: statsLoading } = trpc.dashboard.getStats.useQuery(undefined, { enabled: !!user });
-  const { data: recentPredictions = [], isLoading: predictionsLoading } = trpc.dashboard.getRecentPredictions.useQuery({ limit: 10 }, { enabled: !!user });
+  const { data: recentPredictions = [], isLoading: predictionsLoading } = trpc.dashboard.getRecentPredictions.useQuery({ limit: 20 }, { enabled: !!user });
   const { data: streakData } = trpc.streaks.getMine.useQuery(undefined, { enabled: !!user });
   const { data: myCompetitions = [] } = trpc.competitions.getMine.useQuery(undefined, { enabled: !!user });
   const { data: streakHistory = [] } = trpc.streaks.getHistory.useQuery(undefined, { enabled: !!user });
 
-  const mockWeeklyData = [
-    { week: "שבוע 1", correct: 8, total: 12, points: 45 },
-    { week: "שבוע 2", correct: 9, total: 13, points: 52 },
-    { week: "שבוע 3", correct: 7, total: 11, points: 38 },
-    { week: "שבוע 4", correct: 10, total: 14, points: 58 },
-  ];
+  // Build weekly chart data from real recent predictions
+  const weeklyChartData = (() => {
+    if (recentPredictions.length === 0) return [];
+    const weeks: Record<string, { week: string; correct: number; total: number; points: number }> = {};
+    recentPredictions.forEach((p: any) => {
+      const d = new Date(p.createdAt ?? p.matchDate ?? Date.now());
+      const weekStart = new Date(d);
+      weekStart.setDate(d.getDate() - d.getDay());
+      const key = weekStart.toISOString().slice(0, 10);
+      if (!weeks[key]) {
+        weeks[key] = {
+          week: new Intl.DateTimeFormat("he-IL", { month: "short", day: "numeric" }).format(weekStart),
+          correct: 0, total: 0, points: 0,
+        };
+      }
+      weeks[key].total++;
+      if (p.isCorrect) { weeks[key].correct++; weeks[key].points += p.pointsEarned ?? 10; }
+    });
+    return Object.values(weeks).slice(-6);
+  })();
 
   const getPredictionLabel = (pick: string) => {
     switch (pick) {
@@ -223,8 +236,14 @@ export default function Dashboard() {
             <TabsContent value="performance" className="space-y-5">
               <Card className="p-6 border-border/20">
                 <h3 className="text-base font-bold mb-5 text-foreground">ביצועים שבועיים</h3>
+                {weeklyChartData.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/50">
+                    <BarChart3 className="w-10 h-10 mb-3 opacity-30" />
+                    <p className="text-sm">נתונים יופיעו לאחר הגשת תחזיות ראשונות</p>
+                  </div>
+                ) : (
                 <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={mockWeeklyData} barGap={4}>
+                  <BarChart data={weeklyChartData} barGap={4}>
                     <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
                     <XAxis dataKey="week" stroke={CHART_AXIS} tick={{ fill: CHART_AXIS, fontSize: 12 }} axisLine={false} tickLine={false} />
                     <YAxis stroke={CHART_AXIS} tick={{ fill: CHART_AXIS, fontSize: 12 }} axisLine={false} tickLine={false} />
@@ -234,12 +253,19 @@ export default function Dashboard() {
                     <Bar dataKey="total" fill="#E2E8F0" name='סה"כ' radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
+                )}
               </Card>
 
               <Card className="p-6 border-border/20">
                 <h3 className="text-base font-bold mb-5 text-foreground">מגמת נקודות</h3>
+                {weeklyChartData.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/50">
+                    <TrendingUp className="w-10 h-10 mb-3 opacity-30" />
+                    <p className="text-sm">נתונים יופיעו לאחר הגשת תחזיות ראשונות</p>
+                  </div>
+                ) : (
                 <ResponsiveContainer width="100%" height={280}>
-                  <LineChart data={mockWeeklyData}>
+                  <LineChart data={weeklyChartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
                     <XAxis dataKey="week" stroke={CHART_AXIS} tick={{ fill: CHART_AXIS, fontSize: 12 }} axisLine={false} tickLine={false} />
                     <YAxis stroke={CHART_AXIS} tick={{ fill: CHART_AXIS, fontSize: 12 }} axisLine={false} tickLine={false} />
@@ -248,6 +274,7 @@ export default function Dashboard() {
                     <Line type="monotone" dataKey="points" stroke="#8B4DFF" name="נקודות" strokeWidth={2.5} dot={{ r: 4, fill: "#8B4DFF", strokeWidth: 0 }} activeDot={{ r: 6 }} />
                   </LineChart>
                 </ResponsiveContainer>
+                )}
               </Card>
             </TabsContent>
 
