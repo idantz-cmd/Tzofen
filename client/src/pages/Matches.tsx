@@ -545,11 +545,12 @@ function MatchCard({
 
         <button
           onClick={onToggleExpand}
-          className="flex items-center gap-1 mt-3 text-xs text-muted-foreground hover:text-primary transition-colors w-full justify-center pt-2 border-t border-border/10"
+          className="flex items-center gap-1.5 mt-3 w-full justify-center pt-2 border-t border-border/10 text-xs font-bold transition-all"
+          style={{ color: isExpanded ? "#6B7280" : "#1F6BFF" }}
         >
-          <TrendingUp className="w-3 h-3" />
-          {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          {isExpanded ? "הסתר ניתוח" : "הצג ניתוח מקצועי"}
+          <TrendingUp className="w-3.5 h-3.5" />
+          {isExpanded ? "הסתר ניתוח" : "הצג ניתוח AI"}
+          {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         </button>
 
         <AnimatePresence>

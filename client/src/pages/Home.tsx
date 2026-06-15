@@ -354,7 +354,7 @@ export default function Home() {
                     key={stat.label}
                     initial={{ opacity: 0, y: 10 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
+                    viewport={{ once: true, amount: 0.05 }}
                     transition={{ delay: i * 0.1 }}
                   >
                     <p className="text-2xl md:text-3xl font-black" style={stat.colorStyle}>{stat.value}</p>
@@ -366,11 +366,12 @@ export default function Home() {
           </section>
 
           {/* How It Works */}
-          <section className="py-16 max-w-5xl mx-auto px-4">
+          <section className="py-16" style={{ background: "#F5F8FF" }}>
+          <div className="max-w-5xl mx-auto px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.05 }}
               className="text-center mb-12"
             >
               <h2 className="text-3xl font-black mb-3 text-gradient-blue">איך זה עובד?</h2>
@@ -383,7 +384,7 @@ export default function Home() {
                   key={item.step}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
+                  viewport={{ once: true, amount: 0.05 }}
                   transition={{ delay: i * 0.15 }}
                   className="text-center"
                 >
@@ -403,15 +404,16 @@ export default function Home() {
                 </motion.div>
               ))}
             </div>
+          </div>
           </section>
 
           {/* Features Grid */}
-          <section className="py-16 border-y border-border/30" style={{ background: "rgba(240,244,255,0.75)" }}>
+          <section className="py-16 border-y border-border/30" style={{ background: "#EEF3FF" }}>
             <div className="max-w-5xl mx-auto px-4">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, amount: 0.05 }}
                 className="text-center mb-12"
               >
                 <h2 className="text-3xl font-black mb-3 text-gradient-amber">מה מחכה לך בפנים</h2>
@@ -424,7 +426,7 @@ export default function Home() {
                     key={feature.title}
                     initial={{ opacity: 0, y: 15 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
+                    viewport={{ once: true, amount: 0.05 }}
                     transition={{ delay: i * 0.08 }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -453,7 +455,7 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.05 }}
               className="text-center mb-10"
             >
               <h2 className="text-3xl font-black mb-3">כל הקבוצות. כל המשחקים.</h2>
@@ -466,7 +468,7 @@ export default function Home() {
                   key={name}
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
+                  viewport={{ once: true, amount: 0.05 }}
                   transition={{ delay: i * 0.04 }}
                   whileHover={{ scale: 1.12 }}
                   className="cursor-default"
@@ -485,7 +487,7 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.05 }}
             >
               <h2 className="text-3xl md:text-4xl font-black text-foreground mb-4">
                 מוכן להוכיח את עצמך?

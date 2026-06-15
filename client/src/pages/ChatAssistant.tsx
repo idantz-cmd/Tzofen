@@ -190,19 +190,32 @@ export default function ChatAssistant() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 + i * 0.07, ease: [0.23, 1, 0.32, 1] }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <Card className="p-4 border-border/20 hover:border-primary/20 transition-all">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ background: module.bgActive }}>
-                        <span style={{ color: module.color }}>{module.icon}</span>
+                  <button
+                    className="w-full text-right"
+                    onClick={() => { window.location.href = getLoginUrl(); }}
+                  >
+                    <Card
+                      className="p-4 transition-all duration-200 cursor-pointer"
+                      style={{ borderColor: "transparent" }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = module.borderActive; (e.currentTarget as HTMLElement).style.boxShadow = module.shadowActive; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "transparent"; (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                          style={{ background: module.bgActive }}>
+                          <span style={{ color: module.color }}>{module.icon}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-sm">{module.name}</p>
+                          <p className="text-xs text-muted-foreground">{module.description}</p>
+                        </div>
+                        <span className="text-[10px] font-bold shrink-0" style={{ color: module.color }}>התחבר →</span>
                       </div>
-                      <div>
-                        <p className="font-bold text-sm">{module.name}</p>
-                        <p className="text-xs text-muted-foreground">{module.description}</p>
-                      </div>
-                    </div>
-                  </Card>
+                    </Card>
+                  </button>
                 </motion.div>
               ))}
             </div>

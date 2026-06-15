@@ -18,6 +18,8 @@ export function BottomNav() {
   const { isAuthenticated } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  if (location === "/login") return null;
+
   const isActive = (path: string) => location === path;
 
   const { data: notifs = [], refetch } = trpc.streaks.getNotifications.useQuery(undefined, {
