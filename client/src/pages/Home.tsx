@@ -7,7 +7,7 @@ import { getLoginUrl } from "@/const";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useCategory } from "@/contexts/CategoryContext";
-import { Trophy, TrendingUp, BarChart3, Users, Flame, Target, ChevronLeft, Timer, Shield, ArrowLeft } from "lucide-react";
+import { Trophy, TrendingUp, BarChart3, Users, Flame, Target, ChevronLeft, Timer, Shield, ArrowLeft, Brain, Loader2, Sparkles, Lock } from "lucide-react";
 import { TeamLogo, LIGAT_HAEL_TEAMS } from "@/components/TeamLogos";
 import { HeroTitleReveal, TiltCard, StaggerList, PageTransition, CountdownRing, ScoreCounter } from "@/components/animations";
 import { trpc } from "@/lib/trpc";
@@ -67,7 +67,10 @@ export default function Home() {
   const teamNames = Object.keys(LIGAT_HAEL_TEAMS);
 
   const { data: upcomingMatches = [] } = trpc.matches.getUpcoming.useQuery({});
-  const nextMatch = upcomingMatches[0] as { matchDate: string; homeTeam: string; awayTeam: string } | undefined;
+  const nextMatch = upcomingMatches[0] as { id: number; matchDate: string; homeTeam: string; awayTeam: string } | undefined;
+
+  const aiPreview = trpc.agents.query.useMutation();
+  const [aiPreviewRequested, setAiPreviewRequested] = useState(false);
 
   const [remainingSeconds, setRemainingSeconds] = useState(0);
 
@@ -230,6 +233,117 @@ export default function Home() {
               </motion.div>
             </div>
           </section>
+
+          {/* AI Preview Card — guests only */}
+          {!isAuthenticated && (
+            <section className="pb-6 max-w-lg mx-auto px-4">
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.65, duration: 0.5 }}
+                className="rounded-2xl border p-5"
+                style={{
+                  background: "linear-gradient(135deg, rgba(139,77,255,0.08), rgba(31,107,255,0.05))",
+                  borderColor: "rgba(139,77,255,0.25)",
+                }}
+              >
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: "linear-gradient(135deg, #9D6FFF, #8B4DFF)" }}
+                  >
+                    <Brain className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-black text-sm text-foreground">ניחוש AI חינמי</p>
+                    <p className="text-xs text-muted-foreground">
+                      {nextMatch ? `${nextMatch.homeTeam} נגד ${nextMatch.awayTeam}` : "ניתוח מהיר לליגת העל"}
+                    </p>
+                  </div>
+                  <span
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0"
+                    style={{ background: "rgba(139,77,255,0.15)", color: "#8B4DFF" }}
+                  >
+                    BETA
+                  </span>
+                </div>
+
+                {/* Match row — only when a real match is loaded */}
+                {nextMatch && (
+                  <div
+                    className="flex items-center justify-between mb-4 p-3 rounded-xl gap-2"
+                    style={{ background: "rgba(255,255,255,0.7)" }}
+                  >
+                    <div className="flex flex-col items-center gap-1 flex-1">
+                      <TeamLogo teamName={nextMatch.homeTeam} size="sm" />
+                      <span className="text-xs font-bold text-center leading-tight line-clamp-2">{nextMatch.homeTeam}</span>
+                    </div>
+                    <span className="text-sm font-black text-muted-foreground/50 shrink-0">vs</span>
+                    <div className="flex flex-col items-center gap-1 flex-1">
+                      <TeamLogo teamName={nextMatch.awayTeam} size="sm" />
+                      <span className="text-xs font-bold text-center leading-tight line-clamp-2">{nextMatch.awayTeam}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* State machine */}
+                {!aiPreviewRequested ? (
+                  <Button
+                    variant="accent"
+                    className="w-full font-bold"
+                    onClick={() => {
+                      setAiPreviewRequested(true);
+                      const msg = nextMatch
+                        ? `נתח את המשחק הקרוב: ${nextMatch.homeTeam} נגד ${nextMatch.awayTeam}. תן תחזית קצרה ובהירה — מי ינצח ולמה?`
+                        : "תן דוגמה לניתוח AI של משחק ליגת העל הישראלית — כולל מי ינצח ולמה, בשפה עברית ידידותית.";
+                      aiPreview.mutate({
+                        agentType: "prediction",
+                        message: msg,
+                        ...(nextMatch ? { matchId: nextMatch.id } : {}),
+                      });
+                    }}
+                  >
+                    <Sparkles className="w-4 h-4 ml-2" />
+                    קבל ניחוש AI בחינם
+                  </Button>
+                ) : aiPreview.isPending ? (
+                  <div className="text-center py-4 text-muted-foreground">
+                    <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" style={{ color: "#8B4DFF" }} />
+                    <p className="text-sm font-medium">8 סוכני AI מנתחים...</p>
+                  </div>
+                ) : aiPreview.data ? (
+                  <div>
+                    <div
+                      className="relative overflow-hidden rounded-xl p-3 mb-3"
+                      style={{ background: "rgba(255,255,255,0.7)", maxHeight: 96 }}
+                    >
+                      <p className="text-sm text-foreground leading-relaxed" dir="rtl">
+                        {aiPreview.data.response}
+                      </p>
+                      <div
+                        className="absolute bottom-0 inset-x-0 h-12 rounded-b-xl flex items-end justify-center pb-1"
+                        style={{ background: "linear-gradient(to bottom, transparent, rgba(250,248,255,0.97))" }}
+                      >
+                        <Lock className="w-3 h-3 mb-0.5" style={{ color: "#8B4DFF" }} />
+                      </div>
+                    </div>
+                    <Button
+                      variant="accent"
+                      className="w-full font-bold"
+                      onClick={() => { window.location.href = getLoginUrl(); }}
+                    >
+                      הצטרף לקרוא את הניחוש המלא
+                    </Button>
+                  </div>
+                ) : aiPreview.isError ? (
+                  <p className="text-xs text-center text-muted-foreground py-2">
+                    לא הצלחנו לטעון את הניחוש — נסה שוב מאוחר יותר
+                  </p>
+                ) : null}
+              </motion.div>
+            </section>
+          )}
 
           {/* Stats Banner */}
           <section className="py-8 border-y border-border/30" style={{ background: "rgba(238,243,255,0.85)" }}>
