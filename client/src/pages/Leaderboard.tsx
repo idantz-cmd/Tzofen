@@ -40,7 +40,7 @@ export default function Leaderboard() {
       label: "המנחש המוביל",
       icon: Trophy,
       color: "#B38900",
-      value: currentLeaderboard.length > 0 ? "מנחש מוביל" : "—",
+      value: currentLeaderboard.length > 0 ? ((currentLeaderboard as any[])[0]?.name || "מנחש מוביל") : "—",
       sub: currentLeaderboard.length > 0
         ? `${((currentLeaderboard as any[])[0]?.totalPoints || 0).toLocaleString("he-IL")} נקודות`
         : "אין נתונים",

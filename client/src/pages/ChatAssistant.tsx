@@ -315,7 +315,7 @@ export default function ChatAssistant() {
             transition={{ delay: 0.18, duration: 0.4 }}
             className="flex-1"
           >
-            <Card className="flex flex-col border-border/20 h-[520px]">
+            <Card className="flex flex-col border-border/20" style={{ height: "clamp(360px, 55dvh, 520px)" }}>
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {messages.map((message) => (

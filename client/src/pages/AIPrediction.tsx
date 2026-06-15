@@ -215,7 +215,7 @@ export default function AIPrediction() {
 
   return (
     <PageTransition>
-    <div className="min-h-screen pb-24" dir="rtl">
+    <div className="min-h-screen pb-24" dir="rtl" style={{ background: "#F8F6FF" }}>
       <Navigation />
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">

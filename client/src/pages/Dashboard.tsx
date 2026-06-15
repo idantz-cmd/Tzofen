@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
-import { Flame, Trophy, Target, TrendingUp, Crown, BarChart3, CheckCircle2 } from "lucide-react";
+import { Flame, Trophy, Target, TrendingUp, Crown, BarChart3, CheckCircle2, LogIn, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { getLoginUrl } from "@/const";
 import { PageTransition } from "@/components/animations";
 
 const CHART_GRID   = "rgba(226,232,240,0.5)";
@@ -98,8 +100,30 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-background text-foreground">
         <Navigation />
-        <main className="max-w-7xl mx-auto px-4 py-8">
-          <p className="text-center text-muted-foreground">התחבר כדי לראות את לוח הבקרה שלך</p>
+        <main className="max-w-md mx-auto px-4 py-20 text-center">
+          <div
+            className="w-16 h-16 rounded-2xl mx-auto mb-5 flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg, #4D8FFF, #1F6BFF)", boxShadow: "0 8px 28px rgba(31,107,255,0.30)" }}
+          >
+            <BarChart3 className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-2xl font-black mb-2">לוח הבקרה שלי</h2>
+          <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
+            כאן תמצא את הסטטיסטיקות, הרצפים, והתחזיות שלך.<br />
+            התחבר כדי להתחיל לעקוב אחרי הביצועים שלך.
+          </p>
+          <Button
+            size="lg"
+            className="gap-2 font-bold px-8"
+            onClick={() => { window.location.href = getLoginUrl(); }}
+          >
+            <LogIn className="w-4 h-4" />
+            התחבר עכשיו
+          </Button>
+          <p className="text-xs text-muted-foreground mt-4">
+            אין לך חשבון?{" "}
+            <a href={getLoginUrl()} className="font-bold" style={{ color: "#1F6BFF" }}>הרשם בחינם</a>
+          </p>
         </main>
       </div>
     );

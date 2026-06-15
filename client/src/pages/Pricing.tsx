@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Check, Star, Trophy, Zap, Shield, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import Navigation from "@/components/Navigation";
 
 const PLANS = [
   {
@@ -108,6 +109,7 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
+      <Navigation />
       {/* Header */}
       <div className="relative overflow-hidden py-20 px-6 text-center">
         <div className="absolute inset-0 pointer-events-none"

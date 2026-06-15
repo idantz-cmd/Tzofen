@@ -8,7 +8,7 @@ import { KnockoutBracket } from "@/components/cup/KnockoutBracket";
 import { CupMatchCard } from "@/components/cup/CupMatchCard";
 import Navigation from "@/components/Navigation";
 
-const SEASON = "2024-25";
+const SEASON = "2025-26";
 
 const ROUNDS = [
   { key: "round_of_32", label: "שלב 32" },
@@ -133,8 +133,8 @@ export default function Cup() {
               style={{ borderColor: "rgba(212,160,0,0.20)" }}
             >
               <Trophy className="w-10 h-10 mx-auto mb-3 opacity-20" style={{ color: "#D4A000" }} />
-              <p className="text-muted-foreground font-bold">משחקי גביע יתווספו בקרוב</p>
-              <p className="text-muted-foreground/60 text-sm mt-1">מנהל האפליקציה יעדכן את הלוח</p>
+              <p className="text-muted-foreground font-bold">משחקי הגביע יפורסמו בקרוב</p>
+              <p className="text-muted-foreground/60 text-sm mt-1">חזור מאוחר יותר כשלוח הגמר יהיה מוכן</p>
             </div>
           ) : (
             <div

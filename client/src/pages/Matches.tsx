@@ -9,12 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import PredictionChart from "@/components/PredictionChart";
 import { TeamLogo, getTeamColors, hebrewTeamName } from "@/components/TeamLogos";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { MatchCardSkeleton } from "@/components/ui/skeletons/MatchCardSkeleton";
 import { ConfettiCelebration } from "@/components/animations/ConfettiCelebration";
 import { ConversionModal, popQueuedPrediction, type QueuedPrediction } from "@/components/ConversionModal";
+import { Link } from "wouter";
 import {
   Target,
   Trophy,
@@ -26,6 +26,8 @@ import {
   ChevronUp,
   TrendingUp,
   Flame,
+  Brain,
+  ArrowLeft,
 } from "lucide-react";
 
 function useGuestToken(): string {
@@ -561,14 +563,26 @@ function MatchCard({
               exit={{ opacity: 0, height: 0 }}
               className="mt-3 pt-3 border-t border-border/10"
             >
-              <PredictionChart
-                homeWin={45}
-                draw={28}
-                awayWin={27}
-                confidence={72}
-                homeTeam={match.homeTeam}
-                awayTeam={match.awayTeam}
-              />
+              <Link href={`/ai-prediction?home=${encodeURIComponent(match.homeTeam)}&away=${encodeURIComponent(match.awayTeam)}`}>
+                <div
+                  className="flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all hover:shadow-sm"
+                  style={{ background: "rgba(139,77,255,0.07)", border: "1px solid rgba(139,77,255,0.20)" }}
+                >
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ background: "linear-gradient(135deg, #9D6FFF, #8B4DFF)" }}
+                    >
+                      <Brain className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold" style={{ color: "#8B4DFF" }}>ניתוח AI מלא</p>
+                      <p className="text-[10px] text-muted-foreground">8 סוכנים · {match.homeTeam} נגד {match.awayTeam}</p>
+                    </div>
+                  </div>
+                  <ArrowLeft className="w-4 h-4" style={{ color: "#8B4DFF" }} />
+                </div>
+              </Link>
             </motion.div>
           )}
         </AnimatePresence>

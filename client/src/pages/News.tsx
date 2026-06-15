@@ -90,7 +90,7 @@ export default function News() {
         </div>
 
         {/* Source tabs */}
-        <div className="flex gap-1.5 mb-5 overflow-x-auto pb-1 scrollbar-none" dir="ltr">
+        <div className="flex gap-1.5 mb-5 overflow-x-auto pb-1 scrollbar-none" dir="rtl">
           {SOURCE_TABS.map((tab) => (
             <button
               key={tab.id}
