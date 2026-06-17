@@ -3,6 +3,7 @@
  * Contains team info, colors, and SVG-based shield logo badges for ליגת העל and ליגה לאומית
  * Dynamic team colors applied to match cards
  */
+import { useState } from "react";
 
 export interface TeamInfo {
   name: string;
@@ -98,11 +99,49 @@ export function hebrewTeamName(name: string): string {
   return EN_TO_HE[name] ?? name;
 }
 
+// Short/abbreviated names as stored by football.co.il scraper → full team info
+const SHORT_NAME_MAP: Record<string, TeamInfo> = {
+  // ליגת העל abbreviations
+  'מכבי ת"א':    LIGAT_HAEL_TEAMS['מכבי תל אביב'],
+  'הפועל ת"א':   LIGAT_HAEL_TEAMS['הפועל תל אביב'],
+  'הפועל ב"ש':   LIGAT_HAEL_TEAMS['הפועל באר שבע'],
+  'בית"ר י-ם':   LIGAT_HAEL_TEAMS['בית"ר ירושלים'],
+  'מכבי פ"ת':    LIGAT_HAEL_TEAMS['מכבי פתח תקווה'],
+  'הפועל פ"ת':   LIGAT_HAEL_TEAMS['הפועל פתח תקווה'],
+  'הפועל י-ם':   LIGAT_HAEL_TEAMS['הפועל ירושלים'],
+  'בני יהודה ת"א': LIGAT_HAEL_TEAMS['בני יהודה'],
+  // ליגה לאומית abbreviations
+  'הפועל כפ"ס':  LIGA_LEUMIT_TEAMS['הפועל כפר סבא'],
+  'הפועל ר"ג':   LIGA_LEUMIT_TEAMS['הפועל רמת גן'],
+  'הפועל ראשל"צ': LIGA_LEUMIT_TEAMS['הפועל ראשון לציון'],
+  'הפועל ק"ש':   LIGA_LEUMIT_TEAMS['הפועל עכו'], // fallback - unknown abbreviation
+};
+
+/**
+ * Normalize a team name coming from the DB scraper:
+ * - football.co.il encodes the Hebrew letter 'נ' (nun, U+05E0 = UTF-8 \xD7\xA0)
+ *   in a way that sometimes stores \xA0 (NBSP) where 'נ' should appear.
+ * - Strip lone surrogate bytes that arise from the same encoding split.
+ */
+function normalizeTeamName(name: string): string {
+  return name
+    .replace(/ /g, 'נ')          // NBSP → Hebrew nun (encoding artifact)
+    .replace(/[\udc80-\udcff]/g, '')   // strip lone surrogate bytes
+    .trim();
+}
+
 // Get all teams
 export function getTeamInfo(teamName: string): TeamInfo | undefined {
-  const hebrew = hebrewTeamName(teamName);
-  return LIGAT_HAEL_TEAMS[hebrew] || LIGA_LEUMIT_TEAMS[hebrew] ||
-         LIGAT_HAEL_TEAMS[teamName] || LIGA_LEUMIT_TEAMS[teamName];
+  const normalized = normalizeTeamName(teamName);
+  const hebrew = hebrewTeamName(normalized);
+  return (
+    LIGAT_HAEL_TEAMS[hebrew]     ||
+    LIGA_LEUMIT_TEAMS[hebrew]    ||
+    LIGAT_HAEL_TEAMS[normalized] ||
+    LIGA_LEUMIT_TEAMS[normalized]||
+    SHORT_NAME_MAP[normalized]   ||
+    SHORT_NAME_MAP[teamName]
+  );
 }
 
 /**
@@ -152,6 +191,7 @@ interface TeamBadgeProps {
 }
 
 export function TeamBadge({ teamName, size = "md", showName = false, logoUrl }: TeamBadgeProps) {
+  const [imgFailed, setImgFailed] = useState(false);
   const displayName = hebrewTeamName(teamName);
   const team = getTeamInfo(teamName);
   const sizeMap = { sm: 36, md: 48, lg: 64, xl: 88 };
@@ -161,8 +201,8 @@ export function TeamBadge({ teamName, size = "md", showName = false, logoUrl }: 
 
   const resolvedLogo = logoUrl ?? team?.logoUrl;
 
-  // Use real logo from API or team data
-  if (resolvedLogo) {
+  // Use real logo from API or team data — fall back to SVG shield on error
+  if (resolvedLogo && !imgFailed) {
     return (
       <div className="flex flex-col items-center gap-1">
         <img
@@ -170,7 +210,7 @@ export function TeamBadge({ teamName, size = "md", showName = false, logoUrl }: 
           alt={displayName}
           style={{ width: dim, height: dim }}
           className="object-contain drop-shadow-md"
-          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+          onError={() => setImgFailed(true)}
         />
         {showName && <span className={`${textSize[size]} text-muted-foreground text-center max-w-20 leading-tight font-semibold`}>{displayName}</span>}
       </div>
