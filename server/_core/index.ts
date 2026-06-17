@@ -19,6 +19,7 @@ import { startResultsSync } from "../services/resultsSync";
 import { requestLogger, additionalSecurityHeaders } from "../middleware";
 import { ENV } from "./env";
 import { getDb } from "../db";
+import { sql } from "drizzle-orm";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -33,6 +34,18 @@ async function runMigrations() {
   } catch (e) {
     console.error("❌ Migration failed:", e);
     throw e;
+  }
+}
+
+async function ensureAdmin() {
+  if (!ENV.adminEmail) return;
+  try {
+    await getDb().run(
+      sql`UPDATE users SET role = 'admin' WHERE email = ${ENV.adminEmail} AND role != 'admin'`
+    );
+    console.log(`✅ Admin role ensured for ${ENV.adminEmail}`);
+  } catch {
+    // table may not exist yet on very first boot — migrations run before this
   }
 }
 
@@ -76,6 +89,7 @@ const aiLimiter = rateLimit({
 
 async function startServer() {
   await runMigrations();
+  await ensureAdmin();
 
   const app = express();
   const server = createServer(app);
