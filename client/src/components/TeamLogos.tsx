@@ -11,40 +11,43 @@ export interface TeamInfo {
   secondaryColor: string;
   city: string;
   initials: string;
+  logoUrl?: string;
 }
 
-// ליגת העל teams with accurate colors
+const CDN = "https://media.api-sports.io/football/teams";
+
+// ליגת העל teams with accurate colors and real logos
 export const LIGAT_HAEL_TEAMS: Record<string, TeamInfo> = {
-  "מכבי חיפה": { name: "מכבי חיפה", shortName: "מ. חיפה", primaryColor: "#008C45", secondaryColor: "#FFFFFF", city: "חיפה", initials: "מח" },
-  "מכבי תל אביב": { name: "מכבי תל אביב", shortName: "מ. ת\"א", primaryColor: "#F5D000", secondaryColor: "#1A3A7A", city: "תל אביב", initials: "מת" },
-  "הפועל באר שבע": { name: "הפועל באר שבע", shortName: "הפ. ב\"ש", primaryColor: "#D4213D", secondaryColor: "#1A1A1A", city: "באר שבע", initials: "הב" },
-  "הפועל תל אביב": { name: "הפועל תל אביב", shortName: "הפ. ת\"א", primaryColor: "#D4213D", secondaryColor: "#FFFFFF", city: "תל אביב", initials: "הת" },
-  "בית\"ר ירושלים": { name: "בית\"ר ירושלים", shortName: "בית\"ר י-ם", primaryColor: "#F5D000", secondaryColor: "#1A1A1A", city: "ירושלים", initials: "בי" },
-  "מכבי נתניה": { name: "מכבי נתניה", shortName: "מ. נתניה", primaryColor: "#F5D000", secondaryColor: "#1A1A1A", city: "נתניה", initials: "מנ" },
-  "מכבי פתח תקווה": { name: "מכבי פתח תקווה", shortName: "מ. פ\"ת", primaryColor: "#1A3A7A", secondaryColor: "#FFFFFF", city: "פתח תקווה", initials: "מפ" },
-  "הפועל חיפה": { name: "הפועל חיפה", shortName: "הפ. חיפה", primaryColor: "#D4213D", secondaryColor: "#FFFFFF", city: "חיפה", initials: "הח" },
-  "מ.ס. אשדוד": { name: "מ.ס. אשדוד", shortName: "מ.ס. אשדוד", primaryColor: "#F5D000", secondaryColor: "#D4213D", city: "אשדוד", initials: "אש" },
-  "בני סכנין": { name: "בני סכנין", shortName: "בני סכנין", primaryColor: "#008C45", secondaryColor: "#FFFFFF", city: "סכנין", initials: "בס" },
-  "הפועל חדרה": { name: "הפועל חדרה", shortName: "הפ. חדרה", primaryColor: "#E65100", secondaryColor: "#1A1A1A", city: "חדרה", initials: "הד" },
-  "עירוני קריית שמונה": { name: "עירוני קריית שמונה", shortName: "ק. שמונה", primaryColor: "#1A3A7A", secondaryColor: "#FFFFFF", city: "קריית שמונה", initials: "קש" },
-  "הפועל ירושלים": { name: "הפועל ירושלים", shortName: "הפ. י-ם", primaryColor: "#800020", secondaryColor: "#FFFFFF", city: "ירושלים", initials: "הי" },
-  "מכבי בני ריינה": { name: "מכבי בני ריינה", shortName: "בני ריינה", primaryColor: "#008C45", secondaryColor: "#FFFFFF", city: "בני ריינה", initials: "בר" },
-  "בני יהודה": { name: "בני יהודה", shortName: "בני יהודה", primaryColor: "#E65100", secondaryColor: "#1A1A1A", city: "תל אביב", initials: "בי" },
-  "הפועל פתח תקווה": { name: "הפועל פתח תקווה", shortName: "הפ. פ\"ת", primaryColor: "#D4213D", secondaryColor: "#1A3A7A", city: "פתח תקווה", initials: "הפ" },
+  "מכבי חיפה":         { name: "מכבי חיפה",         shortName: "מ. חיפה",      primaryColor: "#008C45", secondaryColor: "#FFFFFF", city: "חיפה",          initials: "מח", logoUrl: `${CDN}/4195.png` },
+  "מכבי תל אביב":      { name: "מכבי תל אביב",      shortName: 'מ. ת"א',       primaryColor: "#F5D000", secondaryColor: "#1A3A7A", city: "תל אביב",       initials: "מת", logoUrl: `${CDN}/604.png`  },
+  "הפועל באר שבע":     { name: "הפועל באר שבע",     shortName: 'הפ. ב"ש',      primaryColor: "#D4213D", secondaryColor: "#1A1A1A", city: "באר שבע",       initials: "הב", logoUrl: `${CDN}/563.png`  },
+  "הפועל תל אביב":     { name: "הפועל תל אביב",     shortName: 'הפ. ת"א',      primaryColor: "#D4213D", secondaryColor: "#FFFFFF", city: "תל אביב",       initials: "הת", logoUrl: `${CDN}/4501.png` },
+  'בית"ר ירושלים':     { name: 'בית"ר ירושלים',     shortName: 'בית"ר י-ם',    primaryColor: "#F5D000", secondaryColor: "#1A1A1A", city: "ירושלים",       initials: "בי", logoUrl: `${CDN}/657.png`  },
+  "מכבי נתניה":        { name: "מכבי נתניה",        shortName: "מ. נתניה",     primaryColor: "#F5D000", secondaryColor: "#1A1A1A", city: "נתניה",         initials: "מנ", logoUrl: `${CDN}/4505.png` },
+  "מכבי פתח תקווה":   { name: "מכבי פתח תקווה",   shortName: 'מ. פ"ת',       primaryColor: "#1A3A7A", secondaryColor: "#FFFFFF", city: "פתח תקווה",     initials: "מפ", logoUrl: `${CDN}/4495.png` },
+  "הפועל חיפה":        { name: "הפועל חיפה",        shortName: "הפ. חיפה",     primaryColor: "#D4213D", secondaryColor: "#FFFFFF", city: "חיפה",          initials: "הח", logoUrl: `${CDN}/2253.png` },
+  "מ.ס. אשדוד":        { name: "מ.ס. אשדוד",        shortName: "מ.ס. אשדוד",   primaryColor: "#F5D000", secondaryColor: "#D4213D", city: "אשדוד",         initials: "אש", logoUrl: `${CDN}/4507.png` },
+  "בני סכנין":         { name: "בני סכנין",         shortName: "בני סכנין",    primaryColor: "#008C45", secondaryColor: "#FFFFFF", city: "סכנין",         initials: "בס", logoUrl: `${CDN}/4481.png` },
+  "הפועל חדרה":        { name: "הפועל חדרה",        shortName: "הפ. חדרה",     primaryColor: "#E65100", secondaryColor: "#1A1A1A", city: "חדרה",          initials: "הד", logoUrl: `${CDN}/4500.png` },
+  "עירוני קריית שמונה":{ name: "עירוני קריית שמונה",shortName: "ק. שמונה",     primaryColor: "#1A3A7A", secondaryColor: "#FFFFFF", city: "קריית שמונה",   initials: "קש", logoUrl: `${CDN}/4510.png` },
+  "הפועל ירושלים":     { name: "הפועל ירושלים",     shortName: "הפ. י-ם",      primaryColor: "#800020", secondaryColor: "#FFFFFF", city: "ירושלים",       initials: "הי", logoUrl: `${CDN}/4486.png` },
+  "מכבי בני ריינה":    { name: "מכבי בני ריינה",    shortName: "בני ריינה",    primaryColor: "#008C45", secondaryColor: "#FFFFFF", city: "בני ריינה",     initials: "בר", logoUrl: `${CDN}/6186.png` },
+  "בני יהודה":         { name: "בני יהודה",         shortName: "בני יהודה",    primaryColor: "#E65100", secondaryColor: "#1A1A1A", city: "תל אביב",       initials: "בי", logoUrl: `${CDN}/4508.png` },
+  "הפועל פתח תקווה":  { name: "הפועל פתח תקווה",  shortName: 'הפ. פ"ת',      primaryColor: "#D4213D", secondaryColor: "#1A3A7A", city: "פתח תקווה",     initials: "הפ", logoUrl: `${CDN}/4488.png` },
 };
 
 // ליגה לאומית teams
 export const LIGA_LEUMIT_TEAMS: Record<string, TeamInfo> = {
-  "הפועל רמת גן": { name: "הפועל רמת גן", shortName: "הפ. ר\"ג", primaryColor: "#D4213D", secondaryColor: "#FFFFFF", city: "רמת גן", initials: "הר" },
-  "הפועל כפר סבא": { name: "הפועל כפר סבא", shortName: "הפ. כ\"ס", primaryColor: "#008C45", secondaryColor: "#FFFFFF", city: "כפר סבא", initials: "הכ" },
-  "הפועל עפולה": { name: "הפועל עפולה", shortName: "הפ. עפולה", primaryColor: "#D4213D", secondaryColor: "#1A1A1A", city: "עפולה", initials: "הע" },
-  "הפועל ראשון לציון": { name: "הפועל ראשון לציון", shortName: "הפ. ראשל\"צ", primaryColor: "#E65100", secondaryColor: "#1A1A1A", city: "ראשון לציון", initials: "הר" },
-  "מכבי הרצליה": { name: "מכבי הרצליה", shortName: "מ. הרצליה", primaryColor: "#1A3A7A", secondaryColor: "#FFFFFF", city: "הרצליה", initials: "מה" },
-  "הפועל נוף הגליל": { name: "הפועל נוף הגליל", shortName: "הפ. נ. הגליל", primaryColor: "#D4213D", secondaryColor: "#FFFFFF", city: "נוף הגליל", initials: "הנ" },
-  "הפועל אום אל פחם": { name: "הפועל אום אל פחם", shortName: "הפ. א. פחם", primaryColor: "#008C45", secondaryColor: "#FFFFFF", city: "אום אל פחם", initials: "הא" },
-  "הפועל פתח תקווה": { name: "הפועל פתח תקווה", shortName: "הפ. פ\"ת", primaryColor: "#D4213D", secondaryColor: "#1A3A7A", city: "פתח תקווה", initials: "הפ" },
-  "עירוני טבריה": { name: "עירוני טבריה", shortName: "ע. טבריה", primaryColor: "#1A3A7A", secondaryColor: "#FFFFFF", city: "טבריה", initials: "עט" },
-  "הפועל עכו": { name: "הפועל עכו", shortName: "הפ. עכו", primaryColor: "#008C45", secondaryColor: "#FFFFFF", city: "עכו", initials: "הע" },
+  "הפועל רמת גן":       { name: "הפועל רמת גן",       shortName: 'הפ. ר"ג',       primaryColor: "#D4213D", secondaryColor: "#FFFFFF", city: "רמת גן",        initials: "הר", logoUrl: `${CDN}/4489.png` },
+  "הפועל כפר סבא":      { name: "הפועל כפר סבא",      shortName: 'הפ. כ"ס',       primaryColor: "#008C45", secondaryColor: "#FFFFFF", city: "כפר סבא",       initials: "הכ", logoUrl: `${CDN}/4497.png` },
+  "הפועל עפולה":        { name: "הפועל עפולה",        shortName: "הפ. עפולה",      primaryColor: "#D4213D", secondaryColor: "#1A1A1A", city: "עפולה",         initials: "הע", logoUrl: `${CDN}/4483.png` },
+  "הפועל ראשון לציון":  { name: "הפועל ראשון לציון",  shortName: 'הפ. ראשל"צ',    primaryColor: "#E65100", secondaryColor: "#1A1A1A", city: "ראשון לציון",   initials: "הר", logoUrl: `${CDN}/4491.png` },
+  "מכבי הרצליה":        { name: "מכבי הרצליה",        shortName: "מ. הרצליה",      primaryColor: "#1A3A7A", secondaryColor: "#FFFFFF", city: "הרצליה",        initials: "מה", logoUrl: `${CDN}/4503.png` },
+  "הפועל נוף הגליל":   { name: "הפועל נוף הגליל",   shortName: "הפ. נ. הגליל",  primaryColor: "#D4213D", secondaryColor: "#FFFFFF", city: "נוף הגליל",     initials: "הנ", logoUrl: `${CDN}/4487.png` },
+  "הפועל אום אל פחם":  { name: "הפועל אום אל פחם",  shortName: "הפ. א. פחם",    primaryColor: "#008C45", secondaryColor: "#FFFFFF", city: "אום אל פחם",    initials: "הא", logoUrl: `${CDN}/4492.png` },
+  "עירוני טבריה":       { name: "עירוני טבריה",       shortName: "ע. טבריה",       primaryColor: "#1A3A7A", secondaryColor: "#FFFFFF", city: "טבריה",         initials: "עט", logoUrl: `${CDN}/6181.png` },
+  "הפועל עכו":          { name: "הפועל עכו",          shortName: "הפ. עכו",        primaryColor: "#008C45", secondaryColor: "#FFFFFF", city: "עכו",           initials: "הע", logoUrl: `${CDN}/4482.png` },
+  "הפועל רעננה":        { name: "הפועל רעננה",        shortName: "הפ. רעננה",      primaryColor: "#D4213D", secondaryColor: "#FFFFFF", city: "רעננה",         initials: "הר", logoUrl: `${CDN}/4509.png` },
 };
 
 // English API name → Hebrew display name
@@ -156,12 +159,14 @@ export function TeamBadge({ teamName, size = "md", showName = false, logoUrl }: 
   const initialsSize = { sm: "text-[10px]", md: "text-sm", lg: "text-lg", xl: "text-xl" };
   const dim = sizeMap[size];
 
-  // Use real logo from API when available
-  if (logoUrl) {
+  const resolvedLogo = logoUrl ?? team?.logoUrl;
+
+  // Use real logo from API or team data
+  if (resolvedLogo) {
     return (
       <div className="flex flex-col items-center gap-1">
         <img
-          src={logoUrl}
+          src={resolvedLogo}
           alt={displayName}
           style={{ width: dim, height: dim }}
           className="object-contain drop-shadow-md"

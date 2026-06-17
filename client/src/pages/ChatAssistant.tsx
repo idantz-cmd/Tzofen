@@ -117,7 +117,12 @@ export default function ChatAssistant() {
       setIsLoading(false);
     },
     onError: (error: any) => {
-      toast.error(`שגיאה: ${error.message}`);
+      const msg = error.message || "";
+      if (msg.includes("429") || msg.includes("credits") || msg.includes("quota")) {
+        toast.error("מכסת ה-AI אזלה. יש להחליף את מפתח GEMINI_API_KEY.", { duration: 8000 });
+      } else {
+        toast.error(`שגיאה: ${msg || "שגיאה לא ידועה"}`);
+      }
       setIsLoading(false);
     },
   });
@@ -139,7 +144,12 @@ export default function ChatAssistant() {
       setIsLoading(false);
     },
     onError: (error: any) => {
-      toast.error(`שגיאה: ${error.message}`);
+      const msg = error.message || "";
+      if (msg.includes("429") || msg.includes("credits") || msg.includes("quota")) {
+        toast.error("מכסת ה-AI אזלה. יש להחליף את מפתח GEMINI_API_KEY.", { duration: 8000 });
+      } else {
+        toast.error(`שגיאה: ${msg || "שגיאה לא ידועה"}`);
+      }
       setIsLoading(false);
     },
   });

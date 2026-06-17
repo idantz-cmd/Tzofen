@@ -8,6 +8,7 @@ import { Loader2, Trophy, BarChart3, Flame, Shield, Star, Check } from "lucide-r
 import { toast } from "sonner";
 import { GoogleLogin } from "@react-oauth/google";
 import { TeamLogo, LIGAT_HAEL_TEAMS } from "@/components/TeamLogos";
+import { TzofenLogo } from "@/components/TzofenLogo";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
 
@@ -95,22 +96,7 @@ export default function Login() {
         {/* Logo */}
         <div>
           <div className="flex items-center gap-3">
-            <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)" }}
-            >
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                <circle cx="10.5" cy="10.5" r="6.5" stroke="white" strokeWidth="1.7" fill="none"/>
-                <line x1="10.5" y1="10.5" x2="8.2" y2="7.8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="10.5" y1="10.5" x2="12.8" y2="7.8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                <circle cx="10.5" cy="4.5" r="0.8" fill="rgba(255,255,255,0.7)"/>
-                <circle cx="16.5" cy="10.5" r="0.8" fill="rgba(255,255,255,0.7)"/>
-                <circle cx="10.5" cy="16.5" r="0.8" fill="rgba(255,255,255,0.7)"/>
-                <circle cx="4.5" cy="10.5" r="0.8" fill="rgba(255,255,255,0.7)"/>
-                <circle cx="10.5" cy="10.5" r="1.1" fill="white"/>
-                <line x1="15.5" y1="15.5" x2="20" y2="20" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
-              </svg>
-            </div>
+            <TzofenLogo size={52} rich style={{ borderRadius: "14px", boxShadow: "0 4px 20px rgba(0,0,0,0.30)", flexShrink: 0 }} />
             <div>
               <p className="font-black text-3xl text-white" style={{ fontFamily: "'Rubik', sans-serif" }}>צופן</p>
               <p className="text-white/55 text-sm">תפסיק לנחש, תתחיל לנצח</p>
@@ -167,18 +153,7 @@ export default function Login() {
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
             <div className="flex items-center justify-center gap-2.5">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "linear-gradient(150deg, #4D8FFF, #1F6BFF)", boxShadow: "0 2px 10px rgba(31,107,255,0.38)" }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <circle cx="10.5" cy="10.5" r="6.5" stroke="white" strokeWidth="1.7" fill="none"/>
-                  <line x1="10.5" y1="10.5" x2="8.2" y2="7.8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                  <line x1="10.5" y1="10.5" x2="12.8" y2="7.8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                  <circle cx="10.5" cy="10.5" r="1.1" fill="white"/>
-                  <line x1="15.5" y1="15.5" x2="20" y2="20" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
-                </svg>
-              </div>
+              <TzofenLogo size={40} style={{ borderRadius: "10px", boxShadow: "0 2px 12px rgba(31,107,255,0.42)", flexShrink: 0 }} />
               <span className="font-black text-2xl" style={{ color: "#1F6BFF", fontFamily: "'Rubik', sans-serif" }}>צופן</span>
             </div>
           </div>

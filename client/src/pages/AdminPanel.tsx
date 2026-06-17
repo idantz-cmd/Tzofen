@@ -8,10 +8,10 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
-import { Download, RefreshCw, Calendar, CheckCircle, AlertCircle, Database, TrendingUp, Users, Send, Flame, Activity, Moon, TrendingDown } from "lucide-react";
+import { Download, RefreshCw, Calendar, CheckCircle, AlertCircle, Database, TrendingUp, Users, Send, Flame, Activity, Moon, TrendingDown, Search, ShieldCheck, ShieldOff, Cpu, Wifi } from "lucide-react";
 
 export default function AdminPanel() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [, navigate] = useLocation();
   const [selectedMatch, setSelectedMatch] = useState<number | null>(null);
   const [matchResult, setMatchResult] = useState<{
@@ -29,7 +29,15 @@ export default function AdminPanel() {
     totalRedCards: 0,
   });
 
-  // Check if user is admin
+  // Wait for auth to load before checking role
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
+
   if (user?.role !== "admin") {
     return (
       <div className="min-h-screen bg-background text-foreground">
@@ -116,14 +124,26 @@ export default function AdminPanel() {
       <main className="max-w-7xl mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold mb-8">⚙️ ניהול מערכת</h1>
 
-        <Tabs defaultValue="publish" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-7">
+            <TabsTrigger value="overview">סקירה</TabsTrigger>
+            <TabsTrigger value="users">משתמשים</TabsTrigger>
             <TabsTrigger value="publish">פרסום תוצאות</TabsTrigger>
             <TabsTrigger value="import">ייבוא אוטומטי</TabsTrigger>
             <TabsTrigger value="leaguedata">נתוני ליגה</TabsTrigger>
             <TabsTrigger value="history">היסטוריה</TabsTrigger>
             <TabsTrigger value="engagement">מעורבות</TabsTrigger>
           </TabsList>
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            <OverviewPanel />
+          </TabsContent>
+
+          {/* Users Tab */}
+          <TabsContent value="users" className="space-y-6">
+            <UsersPanel />
+          </TabsContent>
 
           {/* Import Tab */}
           <TabsContent value="import" className="space-y-6">
@@ -364,6 +384,313 @@ export default function AdminPanel() {
           </TabsContent>
         </Tabs>
       </main>
+    </div>
+  );
+}
+
+// ── Overview Panel ──────────────────────────────────────────────────────────
+
+function OverviewPanel() {
+  const { data: stats, isLoading } = trpc.admin.getStats.useQuery();
+  const { data: status } = trpc.admin.getSystemStatus.useQuery();
+
+  const kpis = [
+    {
+      label: "משתמשים רשומים",
+      value: stats?.totalUsers ?? "—",
+      icon: <Users className="w-5 h-5" />,
+      color: "#1F6BFF",
+      bg: "#EEF3FF",
+    },
+    {
+      label: "מנויים משלמים",
+      value: stats?.payingUsers ?? "—",
+      icon: <TrendingUp className="w-5 h-5" />,
+      color: "#13CE66",
+      bg: "#EAFBF1",
+    },
+    {
+      label: "ניחושים סה״כ",
+      value: stats?.totalPredictions ?? "—",
+      icon: <Activity className="w-5 h-5" />,
+      color: "#8B4DFF",
+      bg: "#F3EDFF",
+    },
+    {
+      label: "משחקים שהסתיימו",
+      value: stats?.finishedMatches ?? "—",
+      icon: <CheckCircle className="w-5 h-5" />,
+      color: "#FFC91F",
+      bg: "#FFF8E6",
+    },
+    {
+      label: "דיוק ממוצע",
+      value: stats?.avgAccuracy != null ? `${stats.avgAccuracy}%` : "—",
+      icon: <Flame className="w-5 h-5" />,
+      color: "#FF3B5C",
+      bg: "#FFEEF1",
+    },
+    {
+      label: "המרה (Free→Pro)",
+      value:
+        stats?.totalUsers
+          ? `${Math.round(((stats.payingUsers ?? 0) / stats.totalUsers) * 100)}%`
+          : "—",
+      icon: <TrendingDown className="w-5 h-5" />,
+      color: "#3A4A66",
+      bg: "#EEF1F6",
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* KPI grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {kpis.map((kpi) => (
+          <Card
+            key={kpi.label}
+            className="p-4 flex items-center gap-4"
+            style={{ border: `1px solid ${kpi.color}22` }}
+          >
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: kpi.bg, color: kpi.color }}
+            >
+              {kpi.icon}
+            </div>
+            <div className="min-w-0">
+              {isLoading ? (
+                <div className="h-6 w-12 rounded bg-muted animate-pulse mb-1" />
+              ) : (
+                <p className="text-xl font-black" style={{ color: kpi.color }}>
+                  {String(kpi.value)}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground leading-tight">{kpi.label}</p>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Plan distribution */}
+      {stats?.planCounts && (
+        <Card className="p-5">
+          <h3 className="font-bold mb-4 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-primary" />
+            חלוקת מנויים
+          </h3>
+          <div className="space-y-3">
+            {(["free", "pro", "champion"] as const).map((plan) => {
+              const entry = stats.planCounts.find((p: any) => p.plan === plan);
+              const cnt = entry?.count ?? 0;
+              const pct = stats.totalUsers ? Math.round((Number(cnt) / stats.totalUsers) * 100) : 0;
+              const colors: Record<string, string> = {
+                free: "#3A4A66",
+                pro: "#1F6BFF",
+                champion: "#FFC91F",
+              };
+              const labels: Record<string, string> = {
+                free: "חינמי",
+                pro: "Pro",
+                champion: "Champion",
+              };
+              return (
+                <div key={plan} className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium">{labels[plan]}</span>
+                    <span className="text-muted-foreground">
+                      {String(cnt)} ({pct}%)
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${pct}%`, background: colors[plan] }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
+      {/* System status */}
+      <Card className="p-5">
+        <h3 className="font-bold mb-4 flex items-center gap-2">
+          <Cpu className="w-4 h-4 text-primary" />
+          סטטוס מערכת
+        </h3>
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { label: "מסד נתונים", ok: status?.db, icon: <Database className="w-4 h-4" /> },
+            { label: "Gemini AI", ok: status?.gemini, icon: <Activity className="w-4 h-4" /> },
+            { label: "API-Football", ok: status?.apifootball, icon: <Wifi className="w-4 h-4" /> },
+          ].map(({ label, ok, icon }) => (
+            <div
+              key={label}
+              className="flex items-center gap-3 p-3 rounded-xl border"
+              style={{
+                borderColor: ok ? "#13CE6644" : "#FF3B5C44",
+                background: ok ? "#EAFBF1" : "#FFEEF1",
+              }}
+            >
+              <span style={{ color: ok ? "#13CE66" : "#FF3B5C" }}>{icon}</span>
+              <div>
+                <p className="text-xs font-bold" style={{ color: ok ? "#13CE66" : "#FF3B5C" }}>
+                  {ok ? "פעיל" : "לא מחובר"}
+                </p>
+                <p className="text-[11px] text-muted-foreground">{label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ── Users Panel ──────────────────────────────────────────────────────────────
+
+function UsersPanel() {
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  const { data: userList = [], isLoading, refetch } = trpc.admin.getAllUsers.useQuery({
+    limit: 50,
+    search: debouncedSearch || undefined,
+  });
+
+  const setRole = trpc.admin.setUserRole.useMutation({
+    onSuccess: () => {
+      toast.success("הרשאה עודכנה");
+      refetch();
+    },
+    onError: (e) => toast.error(`שגיאה: ${e.message}`),
+  });
+
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setDebouncedSearch(search);
+  }
+
+  const planLabel: Record<string, string> = {
+    free: "חינמי",
+    pro: "Pro",
+    champion: "Champion",
+  };
+  const planColor: Record<string, string> = {
+    free: "#3A4A66",
+    pro: "#1F6BFF",
+    champion: "#FFC91F",
+  };
+
+  return (
+    <div className="space-y-4">
+      <form onSubmit={handleSearchSubmit} className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="חיפוש לפי שם או אימייל..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-lg border border-border bg-background pr-9 pl-3 py-2 text-sm"
+          />
+        </div>
+        <Button type="submit" size="sm">חיפוש</Button>
+      </form>
+
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border/30 text-right">
+                <th className="px-4 py-3 font-semibold text-muted-foreground">שם</th>
+                <th className="px-4 py-3 font-semibold text-muted-foreground">אימייל</th>
+                <th className="px-4 py-3 font-semibold text-muted-foreground">מנוי</th>
+                <th className="px-4 py-3 font-semibold text-muted-foreground">נקודות</th>
+                <th className="px-4 py-3 font-semibold text-muted-foreground">דיוק</th>
+                <th className="px-4 py-3 font-semibold text-muted-foreground">תפקיד</th>
+                <th className="px-4 py-3 font-semibold text-muted-foreground">פעולה</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center">
+                    <Spinner className="mx-auto" />
+                  </td>
+                </tr>
+              ) : userList.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                    לא נמצאו משתמשים
+                  </td>
+                </tr>
+              ) : (
+                userList.map((u: any) => (
+                  <tr key={u.id} className="border-b border-border/10 hover:bg-muted/5 transition-colors">
+                    <td className="px-4 py-3 font-medium">{u.name}</td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">{u.email}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className="text-xs font-bold px-2 py-0.5 rounded-full"
+                        style={{
+                          background: `${planColor[u.plan ?? "free"]}22`,
+                          color: planColor[u.plan ?? "free"],
+                        }}
+                      >
+                        {planLabel[u.plan ?? "free"]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-bold" style={{ color: "#1F6BFF" }}>
+                      {u.totalPoints ?? 0}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {u.accuracyRate != null
+                        ? `${Math.round(Number(u.accuracyRate) * 100)}%`
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className="text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 w-fit"
+                        style={{
+                          background: u.role === "admin" ? "#FF3B5C22" : "#EEF3FF",
+                          color: u.role === "admin" ? "#FF3B5C" : "#3A4A66",
+                        }}
+                      >
+                        {u.role === "admin" ? (
+                          <ShieldCheck className="w-3 h-3" />
+                        ) : (
+                          <ShieldOff className="w-3 h-3" />
+                        )}
+                        {u.role === "admin" ? "מנהל" : "משתמש"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-7 px-2"
+                        disabled={setRole.isPending}
+                        onClick={() =>
+                          setRole.mutate({
+                            userId: u.id,
+                            role: u.role === "admin" ? "user" : "admin",
+                          })
+                        }
+                      >
+                        {u.role === "admin" ? "הסר הרשאה" : "הפוך למנהל"}
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 }

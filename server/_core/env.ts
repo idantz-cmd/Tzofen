@@ -16,7 +16,7 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().optional(),
   ADMIN_EMAIL: z.string().optional(),
   AI_API_KEY: z.string().optional(),
-  GEMINI_API_KEY: z.string().optional(),
+  OPENAI_API_KEY: z.string().optional(),
   RAPIDAPI_KEY: z.string().optional(),
   APISPORTS_KEY: z.string().optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
@@ -39,6 +39,6 @@ export const ENV = {
   port: parseInt(process.env.PORT ?? "3000", 10),
   corsOrigin: process.env.CORS_ORIGIN ?? "http://localhost:5173",
   adminEmail: process.env.ADMIN_EMAIL ?? "",
-  aiApiKey: process.env.AI_API_KEY ?? process.env.GEMINI_API_KEY ?? "",
+  aiApiKey: process.env.AI_API_KEY ?? process.env.OPENAI_API_KEY ?? "",
   rapidApiKey: process.env.RAPIDAPI_KEY ?? "",
 };

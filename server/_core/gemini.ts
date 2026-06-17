@@ -1,28 +1,29 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import { ENV } from "./env";
 
-function getClient(): GoogleGenerativeAI {
-  if (!ENV.aiApiKey) throw new Error("GEMINI_API_KEY not configured");
-  return new GoogleGenerativeAI(ENV.aiApiKey);
+function getClient(): OpenAI {
+  if (!ENV.aiApiKey) throw new Error("OPENAI_API_KEY not configured");
+  return new OpenAI({ apiKey: ENV.aiApiKey });
 }
 
 export async function callGemini(prompt: string): Promise<string> {
-  const genAI = getClient();
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    tools: [{ googleSearch: {} } as any],
+  const client = getClient();
+  const response = await client.chat.completions.create({
+    model: "gpt-4.1-nano",
+    messages: [{ role: "user", content: prompt }],
   });
-  const result = await model.generateContent(prompt);
-  return result.response.text();
+  return response.choices[0]?.message?.content ?? "";
 }
 
 export async function validateGeminiApiKey(): Promise<boolean> {
   try {
     if (!ENV.aiApiKey) return false;
-    const genAI = new GoogleGenerativeAI(ENV.aiApiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    await model.generateContent("ping");
+    const client = new OpenAI({ apiKey: ENV.aiApiKey });
+    await client.chat.completions.create({
+      model: "gpt-4.1-nano",
+      messages: [{ role: "user", content: "ping" }],
+      max_tokens: 5,
+    });
     return true;
   } catch {
     return false;

@@ -32,10 +32,10 @@ import {
 
 function useGuestToken(): string {
   const [token] = useState(() => {
-    let t = localStorage.getItem("beting_guest_token");
+    let t = localStorage.getItem("tzofen_guest_token");
     if (!t) {
       t = crypto.randomUUID();
-      localStorage.setItem("beting_guest_token", t);
+      localStorage.setItem("tzofen_guest_token", t);
     }
     return t;
   });

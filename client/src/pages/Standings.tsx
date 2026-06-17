@@ -9,53 +9,67 @@ import { Trophy, ChevronDown, ChevronUp, TrendingUp, Star, Zap } from "lucide-re
 
 type League = "ligat_hael" | "ligah_leumit";
 
-// ── Static fallback data (Israeli Ligat HaAl 2024/25) ──────────────────────
+// ── Static data (Israeli Ligat HaAl 2025/26 — source: API-Sports) ──────────
+// Championship group (pos 1-6) + Relegation group (pos 7-14) final standings
 const MOCK_LIGAT_HAEL = [
-  { id:1,  position:1,  teamName:"מכבי תל אביב",         played:30, won:22, drawn:5,  lost:3,  goalsFor:68, goalsAgainst:28, goalDifference:40,  points:71, form:"WWWWW", externalTeamId:101 },
-  { id:2,  position:2,  teamName:"מכבי חיפה",              played:30, won:19, drawn:6,  lost:5,  goalsFor:57, goalsAgainst:31, goalDifference:26,  points:63, form:"WWDWW", externalTeamId:102 },
-  { id:3,  position:3,  teamName:"הפועל באר שבע",          played:30, won:17, drawn:7,  lost:6,  goalsFor:51, goalsAgainst:34, goalDifference:17,  points:58, form:"DWWWD", externalTeamId:103 },
-  { id:4,  position:4,  teamName:'בית"ר ירושלים',          played:30, won:15, drawn:8,  lost:7,  goalsFor:48, goalsAgainst:39, goalDifference:9,   points:53, form:"WDLDW", externalTeamId:104 },
-  { id:5,  position:5,  teamName:"הפועל תל אביב",          played:30, won:14, drawn:6,  lost:10, goalsFor:43, goalsAgainst:40, goalDifference:3,   points:48, form:"LWWDL", externalTeamId:105 },
-  { id:6,  position:6,  teamName:"מכבי נתניה",             played:30, won:12, drawn:9,  lost:9,  goalsFor:41, goalsAgainst:38, goalDifference:3,   points:45, form:"DDWLW", externalTeamId:106 },
-  { id:7,  position:7,  teamName:"בני סכנין",              played:30, won:11, drawn:8,  lost:11, goalsFor:35, goalsAgainst:40, goalDifference:-5,  points:41, form:"LWDWD", externalTeamId:107 },
-  { id:8,  position:8,  teamName:"הפועל חיפה",             played:30, won:10, drawn:8,  lost:12, goalsFor:32, goalsAgainst:42, goalDifference:-10, points:38, form:"WLLDD", externalTeamId:108 },
-  { id:9,  position:9,  teamName:"מ.ס. אשדוד",            played:30, won:9,  drawn:9,  lost:12, goalsFor:30, goalsAgainst:43, goalDifference:-13, points:36, form:"DLWLL", externalTeamId:109 },
-  { id:10, position:10, teamName:'הפועל פ"ת',              played:30, won:8,  drawn:10, lost:12, goalsFor:29, goalsAgainst:45, goalDifference:-16, points:34, form:"LDDWL", externalTeamId:110 },
-  { id:11, position:11, teamName:'מכבי פ"ת',               played:30, won:8,  drawn:7,  lost:15, goalsFor:27, goalsAgainst:48, goalDifference:-21, points:31, form:"LLLWL", externalTeamId:111 },
-  { id:12, position:12, teamName:"הפועל רמת גן",           played:30, won:7,  drawn:7,  lost:16, goalsFor:25, goalsAgainst:51, goalDifference:-26, points:28, form:"LLDLL", externalTeamId:112 },
-  { id:13, position:13, teamName:"עירוני קריית שמונה",      played:30, won:5,  drawn:8,  lost:17, goalsFor:23, goalsAgainst:54, goalDifference:-31, points:23, form:"LLLLD", externalTeamId:113 },
-  { id:14, position:14, teamName:"הפועל ראשון לציון",       played:30, won:4,  drawn:6,  lost:20, goalsFor:19, goalsAgainst:61, goalDifference:-42, points:18, form:"LLLLL", externalTeamId:114 },
+  { id:1,  position:1,  teamName:"הפועל באר שבע",       played:36, won:24, drawn:7,  lost:5,  goalsFor:79, goalsAgainst:38, goalDifference:41,  points:79, form:"LWWDW", externalTeamId:563  },
+  { id:2,  position:2,  teamName:"ביתר ירושלים",         played:36, won:22, drawn:10, lost:4,  goalsFor:78, goalsAgainst:40, goalDifference:38,  points:76, form:"DDWDL", externalTeamId:657  },
+  { id:3,  position:3,  teamName:"מכבי תל אביב",         played:36, won:19, drawn:9,  lost:8,  goalsFor:75, goalsAgainst:46, goalDifference:29,  points:66, form:"DLLWD", externalTeamId:604  },
+  { id:4,  position:4,  teamName:"הפועל תל אביב",        played:36, won:18, drawn:8,  lost:10, goalsFor:55, goalsAgainst:38, goalDifference:17,  points:60, form:"DLLWD", externalTeamId:4501 },
+  { id:5,  position:5,  teamName:"מכבי חיפה",            played:36, won:15, drawn:10, lost:11, goalsFor:66, goalsAgainst:47, goalDifference:19,  points:55, form:"WWDLW", externalTeamId:4195 },
+  { id:6,  position:6,  teamName:"הפועל פתח תקווה",      played:36, won:9,  drawn:13, lost:14, goalsFor:48, goalsAgainst:57, goalDifference:-9,  points:40, form:"DDDLL", externalTeamId:4488 },
+  { id:7,  position:7,  teamName:"מכבי נתניה",           played:33, won:14, drawn:6,  lost:13, goalsFor:59, goalsAgainst:63, goalDifference:-4,  points:48, form:"WDLWL", externalTeamId:4505 },
+  { id:8,  position:8,  teamName:"עירוני קריית שמונה",   played:33, won:11, drawn:7,  lost:15, goalsFor:50, goalsAgainst:53, goalDifference:-3,  points:40, form:"LWDWW", externalTeamId:4510 },
+  { id:9,  position:9,  teamName:"עירוני טבריה",          played:33, won:12, drawn:8,  lost:13, goalsFor:45, goalsAgainst:56, goalDifference:-11, points:36, form:"WWWWD", externalTeamId:6181 },
+  { id:10, position:10, teamName:"הפועל חיפה",           played:33, won:8,  drawn:10, lost:15, goalsFor:39, goalsAgainst:51, goalDifference:-12, points:34, form:"WDWLD", externalTeamId:2253 },
+  { id:11, position:11, teamName:"בני סכנין",             played:33, won:8,  drawn:10, lost:15, goalsFor:28, goalsAgainst:49, goalDifference:-21, points:34, form:"LLLLD", externalTeamId:4481 },
+  { id:12, position:12, teamName:"הפועל קטמון",           played:33, won:7,  drawn:10, lost:16, goalsFor:26, goalsAgainst:43, goalDifference:-17, points:31, form:"LWWLW", externalTeamId:4486 },
+  { id:13, position:13, teamName:"מ.ס. אשדוד",           played:33, won:6,  drawn:10, lost:17, goalsFor:38, goalsAgainst:62, goalDifference:-24, points:28, form:"WLLLD", externalTeamId:4507 },
+  { id:14, position:14, teamName:"מכבי בני ריינה",        played:33, won:6,  drawn:4,  lost:23, goalsFor:26, goalsAgainst:69, goalDifference:-43, points:22, form:"LLDWL", externalTeamId:6186 },
 ];
 
+// Ligah Leumit 2025/26 — Championship group (pos 1-8) + Relegation group (pos 9-16)
 const MOCK_LIGAH_LEUMIT = [
-  { id:21, position:1,  teamName:"הפועל עכו",             played:28, won:18, drawn:7, lost:3,  goalsFor:52, goalsAgainst:22, goalDifference:30,  points:61, form:"WWWDW", externalTeamId:201 },
-  { id:22, position:2,  teamName:"הפועל ירושלים",          played:28, won:17, drawn:6, lost:5,  goalsFor:48, goalsAgainst:26, goalDifference:22,  points:57, form:"WWWLW", externalTeamId:202 },
-  { id:23, position:3,  teamName:"הפועל כ\"ס",             played:28, won:16, drawn:5, lost:7,  goalsFor:44, goalsAgainst:30, goalDifference:14,  points:53, form:"WDWWL", externalTeamId:203 },
-  { id:24, position:4,  teamName:"הפועל חדרה",             played:28, won:14, drawn:6, lost:8,  goalsFor:40, goalsAgainst:33, goalDifference:7,   points:48, form:"LWWDW", externalTeamId:204 },
-  { id:25, position:5,  teamName:"הפועל נהריה",            played:28, won:13, drawn:6, lost:9,  goalsFor:37, goalsAgainst:35, goalDifference:2,   points:45, form:"DWLWW", externalTeamId:205 },
-  { id:26, position:6,  teamName:"מכבי יפו",              played:28, won:11, drawn:9, lost:8,  goalsFor:35, goalsAgainst:34, goalDifference:1,   points:42, form:"DDWLW", externalTeamId:206 },
-  { id:27, position:7,  teamName:"הפועל לוד",              played:28, won:10, drawn:8, lost:10, goalsFor:32, goalsAgainst:36, goalDifference:-4,  points:38, form:"LWDWD", externalTeamId:207 },
-  { id:28, position:8,  teamName:"שמשון תל אביב",          played:28, won:9,  drawn:8, lost:11, goalsFor:30, goalsAgainst:38, goalDifference:-8,  points:35, form:"WLLDD", externalTeamId:208 },
-  { id:29, position:9,  teamName:"מכבי הרצליה",            played:28, won:8,  drawn:9, lost:11, goalsFor:28, goalsAgainst:40, goalDifference:-12, points:33, form:"DLWLL", externalTeamId:209 },
-  { id:30, position:10, teamName:"הפועל עפולה",            played:28, won:7,  drawn:9, lost:12, goalsFor:26, goalsAgainst:42, goalDifference:-16, points:30, form:"LDDWL", externalTeamId:210 },
-  { id:31, position:11, teamName:"הפועל אילת",             played:28, won:6,  drawn:8, lost:14, goalsFor:24, goalsAgainst:46, goalDifference:-22, points:26, form:"LLLWL", externalTeamId:211 },
-  { id:32, position:12, teamName:"הפועל קטמון ירושלים",    played:28, won:5,  drawn:7, lost:16, goalsFor:21, goalsAgainst:50, goalDifference:-29, points:22, form:"LLDLL", externalTeamId:212 },
+  { id:21, position:1,  teamName:"מכבי פתח תקווה",      played:37, won:18, drawn:13, lost:6,  goalsFor:77, goalsAgainst:42, goalDifference:35,  points:67, form:"DDDWD", externalTeamId:4495  },
+  { id:22, position:2,  teamName:"הפועל רמת גן",         played:37, won:18, drawn:10, lost:9,  goalsFor:59, goalsAgainst:41, goalDifference:18,  points:64, form:"DWWWD", externalTeamId:4489  },
+  { id:23, position:3,  teamName:"מכבי הרצליה",          played:37, won:17, drawn:11, lost:9,  goalsFor:55, goalsAgainst:44, goalDifference:11,  points:62, form:"DDWLW", externalTeamId:4503  },
+  { id:24, position:4,  teamName:"בני יהודה",            played:37, won:15, drawn:12, lost:10, goalsFor:46, goalsAgainst:44, goalDifference:2,   points:57, form:"DDWWW", externalTeamId:4508  },
+  { id:25, position:5,  teamName:"הפועל כפר שלם",        played:37, won:16, drawn:8,  lost:13, goalsFor:67, goalsAgainst:63, goalDifference:4,   points:56, form:"WWLLL", externalTeamId:6160  },
+  { id:26, position:6,  teamName:"עירוני קריית ים",       played:37, won:15, drawn:9,  lost:13, goalsFor:48, goalsAgainst:43, goalDifference:5,   points:50, form:"DLLWW", externalTeamId:20105 },
+  { id:27, position:7,  teamName:"הפועל כפר סבא",        played:37, won:13, drawn:11, lost:13, goalsFor:52, goalsAgainst:50, goalDifference:2,   points:50, form:"DDDLL", externalTeamId:4497  },
+  { id:28, position:8,  teamName:"הפועל ראשון לציון",     played:37, won:13, drawn:10, lost:14, goalsFor:50, goalsAgainst:54, goalDifference:-4,  points:49, form:"LLLLL", externalTeamId:4491  },
+  { id:29, position:9,  teamName:"מכבי כבילה יפו",       played:37, won:14, drawn:9,  lost:14, goalsFor:66, goalsAgainst:58, goalDifference:8,   points:51, form:"WWDLW", externalTeamId:6192  },
+  { id:30, position:10, teamName:"הפועל רעננה",           played:37, won:13, drawn:11, lost:13, goalsFor:42, goalsAgainst:44, goalDifference:-2,  points:50, form:"WDDWD", externalTeamId:4509  },
+  { id:31, position:11, teamName:"הפועל עפולה",           played:37, won:11, drawn:12, lost:14, goalsFor:39, goalsAgainst:58, goalDifference:-19, points:45, form:"WLWDD", externalTeamId:4483  },
+  { id:32, position:12, teamName:"כפר קאסם",             played:37, won:9,  drawn:14, lost:14, goalsFor:42, goalsAgainst:49, goalDifference:-7,  points:41, form:"LDDDW", externalTeamId:4493  },
+  { id:33, position:13, teamName:"הפועל עכו",             played:37, won:8,  drawn:16, lost:13, goalsFor:40, goalsAgainst:48, goalDifference:-8,  points:40, form:"DDWLL", externalTeamId:4482  },
+  { id:34, position:14, teamName:"עירוני מודיעין",         played:37, won:10, drawn:10, lost:17, goalsFor:37, goalsAgainst:47, goalDifference:-10, points:40, form:"LWLWL", externalTeamId:6179  },
+  { id:35, position:15, teamName:"הפועל נצרת עילית",       played:37, won:7,  drawn:16, lost:14, goalsFor:44, goalsAgainst:58, goalDifference:-14, points:37, form:"DLLDL", externalTeamId:4487  },
+  { id:36, position:16, teamName:"הפועל חדרה",             played:37, won:6,  drawn:14, lost:17, goalsFor:40, goalsAgainst:61, goalDifference:-21, points:32, form:"LDDDW", externalTeamId:4500  },
 ];
 
-// Top scorers mock data
+// Top scorers — API-Sports data for ליגת העל 2025/26
 const TOP_SCORERS = [
-  { name: "יכיני", team: "מכבי ת\"א",   goals: 22, assists: 8,  flag: "🇧🇷" },
-  { name: "ביטון",  team: "מכבי חיפה",  goals: 17, assists: 11, flag: "🇮🇱" },
-  { name: "שלוש",   team: "הפועל ב\"ש", goals: 16, assists: 6,  flag: "🇮🇱" },
-  { name: "אבו פאני",team:"בני סכנין",  goals: 14, assists: 9,  flag: "🇮🇱" },
-  { name: "פלק",    team: "מכבי ת\"א",  goals: 13, assists: 14, flag: "🇦🇺" },
-  { name: "שם טוב", team: 'בית"ר י-ם', goals: 12, assists: 5,  flag: "🇮🇱" },
-  { name: "כבהא",   team: "הפועל ת\"א", goals: 11, assists: 7,  flag: "🇮🇱" },
-  { name: "אוחנה",  team: "מכבי נתניה", goals: 10, assists: 8,  flag: "🇮🇱" },
+  { name: "דור פרץ",      team: "מכבי תל אביב",      goals: 14, assists: 2,  flag: "🇮🇱" },
+  { name: "א. אוגריזה",   team: "עירוני קריית שמונה", goals: 12, assists: 2,  flag: "🇵🇪" },
+  { name: "ג. מלמד",      team: "מכבי חיפה",          goals: 11, assists: 1,  flag: "🇮🇱" },
+  { name: "ד. ביטון",     team: "הפועל באר שבע",      goals: 11, assists: 1,  flag: "🇮🇱" },
+  { name: "ק. קנגווה",    team: "הפועל באר שבע",      goals: 9,  assists: 6,  flag: "🇿🇲" },
+  { name: "י. שוע",       team: "ביתר ירושלים",       goals: 9,  assists: 5,  flag: "🇮🇱" },
+  { name: "א. עצילי",     team: "ביתר ירושלים",       goals: 9,  assists: 4,  flag: "🇮🇱" },
+  { name: "א. זלטנוביץ'", team: "הפועל באר שבע",      goals: 8,  assists: 3,  flag: "🇷🇸" },
 ];
 
 // ── Zone helpers ────────────────────────────────────────────────────────────
+// total >= 16 → ליגה לאומית (promotion top 2, relegation bottom 2)
+// total <= 14 → ליגת העל (champion pos 1, europe pos 2-4, relegation bottom 3)
 function getZone(position: number, total: number): { label: string; color: string; bg: string } | null {
+  const isLeumit = total >= 16;
+  if (isLeumit) {
+    if (position <= 2) return { label: "עלייה", color: "#B38900", bg: "rgba(179,137,0,0.08)" };
+    if (position >= total - 1) return { label: "הורדה", color: "#FF3B5C", bg: "rgba(255,59,92,0.07)" };
+    return null;
+  }
   if (position === 1) return { label: "אלוף", color: "#B38900", bg: "rgba(179,137,0,0.08)" };
   if (position <= 4) return { label: "אירופה", color: "#1F6BFF", bg: "rgba(31,107,255,0.07)" };
   if (position > total - 3) return { label: "הורדה", color: "#FF3B5C", bg: "rgba(255,59,92,0.07)" };
@@ -216,9 +230,9 @@ function StandingsTable({ league }: { league: League }) {
   return (
     <div className="space-y-4">
       {isMock && (
-        <div className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-amber-500/20 bg-amber-500/5 text-amber-400/80">
+        <div className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-green-500/20 bg-green-500/5 text-green-600/80">
           <Zap className="w-3 h-3 shrink-0" />
-          נתוני הטבלה אינם עדכניים — יעודכנו בקרוב
+          נתונים עדכניים עונת 25/26 — מקור: API-Sports
         </div>
       )}
 
@@ -227,12 +241,14 @@ function StandingsTable({ league }: { league: League }) {
         <div className="flex flex-wrap gap-3 px-4 py-2.5 border-b border-border/20 text-[11px] bg-muted/30">
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-sm inline-block" style={{ background: "rgba(179,137,0,0.35)" }} />
-            <span style={{ color: "#B38900" }}>מקום ראשון</span>
+            <span style={{ color: "#B38900" }}>{league === "ligah_leumit" ? "עלייה (1-2)" : "אלוף"}</span>
           </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-sm inline-block" style={{ background: "rgba(31,107,255,0.25)" }} />
-            <span style={{ color: "#1F6BFF" }}>אירופה (2-4)</span>
-          </span>
+          {league === "ligat_hael" && (
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-sm inline-block" style={{ background: "rgba(31,107,255,0.25)" }} />
+              <span style={{ color: "#1F6BFF" }}>אירופה (2-4)</span>
+            </span>
+          )}
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-sm inline-block" style={{ background: "rgba(255,59,92,0.25)" }} />
             <span style={{ color: "#FF3B5C" }}>הורדה</span>

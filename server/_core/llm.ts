@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, type Content } from "@google/generative-ai";
+import OpenAI from "openai";
 import { ENV } from "./env";
 
 export type Role = "system" | "user" | "assistant";
@@ -11,6 +11,7 @@ export type Message = {
 
 export type InvokeParams = {
   messages: Message[];
+  maxTokens?: number;
   [key: string]: unknown;
 };
 
@@ -25,49 +26,33 @@ export type InvokeResult = {
   }>;
 };
 
-const MODEL_ID = "gemini-2.0-flash";
+const MODEL_ID = "gpt-4.1-nano";
 
 export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
-  if (!ENV.aiApiKey) throw new Error("GEMINI_API_KEY not configured");
+  if (!ENV.aiApiKey) throw new Error("OPENAI_API_KEY not configured");
 
-  const genAI = new GoogleGenerativeAI(ENV.aiApiKey);
+  const client = new OpenAI({ apiKey: ENV.aiApiKey });
 
-  const systemMsg = params.messages.find((m) => m.role === "system");
-  const nonSystem = params.messages.filter((m) => m.role !== "system");
-
-  const model = genAI.getGenerativeModel({
+  const response = await client.chat.completions.create({
     model: MODEL_ID,
-    ...(systemMsg ? { systemInstruction: systemMsg.content } : {}),
+    messages: params.messages.map((m) => ({ role: m.role, content: m.content })),
+    max_tokens: params.maxTokens ?? 120,
   });
 
-  // Split into history (all but last) + final user message
-  const history: Content[] = nonSystem.slice(0, -1).map((m) => ({
-    role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: m.content }],
-  }));
-
-  const lastMsg = nonSystem[nonSystem.length - 1];
-  const userText = lastMsg?.content ?? "";
-
-  let responseText: string;
-  if (history.length > 0) {
-    const chat = model.startChat({ history });
-    const result = await chat.sendMessage(userText);
-    responseText = result.response.text();
-  } else {
-    const result = await model.generateContent(userText);
-    responseText = result.response.text();
-  }
+  const choice = response.choices[0];
 
   return {
-    id: `gemini-${Date.now()}`,
-    created: Math.floor(Date.now() / 1000),
-    model: MODEL_ID,
+    id: response.id,
+    created: response.created,
+    model: response.model,
     choices: [
       {
         index: 0,
-        message: { role: "assistant", content: responseText },
-        finish_reason: "stop",
+        message: {
+          role: "assistant",
+          content: choice?.message?.content ?? "",
+        },
+        finish_reason: choice?.finish_reason ?? null,
       },
     ],
   };

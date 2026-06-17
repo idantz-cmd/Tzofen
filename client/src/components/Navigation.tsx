@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Trophy, Target, BarChart3, Users, MessageSquare, Settings, LogOut, User, Flame, TrendingUp, Brain, Newspaper } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { NewsTicker } from "./layout/NewsTicker";
+import { TzofenLogo } from "./TzofenLogo";
 
 export default function Navigation() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -20,29 +21,7 @@ export default function Navigation() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 hover:opacity-85 transition-opacity select-none">
-            {/* Tzofen icon: magnifying glass with clock face */}
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: "linear-gradient(150deg, #4D8FFF, #1F6BFF)", boxShadow: "0 2px 10px rgba(31,107,255,0.38)" }}
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                {/* Lens / clock face */}
-                <circle cx="10.5" cy="10.5" r="6.5" stroke="white" strokeWidth="1.7" fill="none"/>
-                {/* Clock hands at 10:10 */}
-                <line x1="10.5" y1="10.5" x2="8.2" y2="7.8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="10.5" y1="10.5" x2="12.8" y2="7.8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                {/* Score dots at cardinal points */}
-                <circle cx="10.5" cy="4.5" r="0.8" fill="rgba(255,255,255,0.7)"/>
-                <circle cx="16.5" cy="10.5" r="0.8" fill="rgba(255,255,255,0.7)"/>
-                <circle cx="10.5" cy="16.5" r="0.8" fill="rgba(255,255,255,0.7)"/>
-                <circle cx="4.5" cy="10.5" r="0.8" fill="rgba(255,255,255,0.7)"/>
-                {/* Football center dot */}
-                <circle cx="10.5" cy="10.5" r="1.1" fill="white"/>
-                {/* Handle */}
-                <line x1="15.5" y1="15.5" x2="20" y2="20" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
-              </svg>
-            </div>
-            {/* Brand name */}
+            <TzofenLogo size={36} style={{ boxShadow: "0 2px 12px rgba(31,107,255,0.42)", borderRadius: "8px", flexShrink: 0 }} />
             <span className="font-black text-[1.15rem] tracking-tight" style={{ color: "#1F6BFF", fontFamily: "'Rubik', sans-serif" }}>
               צופן
             </span>

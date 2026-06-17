@@ -3,7 +3,7 @@
  * Uses DB historical stats + Gemini to produce a full Hebrew match analysis:
  * result, exact score, goals, corners, cards with detailed reasoning.
  */
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import { ENV } from "../_core/env";
 import { getTeamStats, getHeadToHead } from "./agents";
 
@@ -91,8 +91,7 @@ ${h2h.recentMatches.length > 0 ? `- 3 אחרונים: ${h2h.recentMatches.slice(
   const apiKey = ENV.aiApiKey;
   if (apiKey) {
     try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const client = new OpenAI({ apiKey });
 
       const prompt = `אתה סוכן AI מומחה לכדורגל ישראלי. נתח את המשחק הבא ותן ניבוי מפורט.
 
@@ -122,12 +121,15 @@ ${statsContext}
 
 הנחיות: סכום ההסתברויות חייב להיות 100. הישאר מקצועי ומדויק.`;
 
-      const response = await model.generateContent(prompt);
-      const text = response.response.text().trim();
-      const jsonText = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-      geminiAnalysis = JSON.parse(jsonText);
+      const response = await client.chat.completions.create({
+        model: "gpt-4.1-nano",
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" },
+      });
+      const text = response.choices[0]?.message?.content ?? "{}";
+      geminiAnalysis = JSON.parse(text);
     } catch (err) {
-      console.warn("Gemini prediction failed, using statistical fallback:", err);
+      console.warn("OpenAI prediction failed, using statistical fallback:", err);
     }
   }
 

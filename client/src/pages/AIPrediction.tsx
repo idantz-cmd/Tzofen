@@ -47,7 +47,7 @@ function AiAccuracyBanner() {
           <Sparkles className="w-4 h-4 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold" style={{ color: "#8B4DFF" }}>8 סוכני AI במקביל · Gemini 2.0 Flash</p>
+          <p className="text-xs font-bold" style={{ color: "#8B4DFF" }}>8 סוכני AI במקביל · GPT-4.1 Nano</p>
           <p className="text-[11px] text-muted-foreground">סטטיסטיקה · מחקר · טקטיקה · חדשות · חיזוי · לוח · QA · אורקסטרציה</p>
         </div>
         <span
@@ -74,7 +74,14 @@ export default function AIPrediction() {
     trpc.matches.getUpcoming.useQuery({ league: selectedLeague });
 
   const predictMutation = trpc.agents.queryAll.useMutation({
-    onError: (err) => toast.error(err.message || "שגיאה בניבוי"),
+    onError: (err) => {
+      const msg = err.message || "";
+      if (msg.includes("429") || msg.includes("credits") || msg.includes("quota") || msg.includes("billing")) {
+        toast.error("מכסת ה-AI אזלה. יש להחליף את מפתח ה-GEMINI_API_KEY.", { duration: 8000 });
+      } else {
+        toast.error(msg || "שגיאה בניבוי — נסה שוב");
+      }
+    },
   });
 
   function selectMatch(home: string, away: string, logo1?: string | null, logo2?: string | null) {
@@ -126,7 +133,7 @@ export default function AIPrediction() {
             צוות סוכני AI
           </h1>
           <p className="text-sm text-muted-foreground">
-            8 סוכנים במקביל · חדשות בזמן אמת · QA · סינתזת Gemini
+            8 סוכנים במקביל · חדשות בזמן אמת · QA · סינתזת GPT-4.1 Nano
           </p>
         </motion.div>
 
@@ -277,11 +284,13 @@ export default function AIPrediction() {
                   <div className="flex items-center gap-2 mb-3">
                     <Brain className="w-4 h-4 text-primary" />
                     <h3 className="font-black text-sm">סיכום AI מקצועי</h3>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full mr-auto" style={{ background: "#8B4DFF", color: "white" }}>GEMINI</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full mr-auto" style={{ background: "#8B4DFF", color: "white" }}>GPT-4o</span>
                   </div>
-                  <ReactMarkdown rehypePlugins={[rehypeSanitize]} className="text-sm leading-relaxed text-foreground/90 [&>p]:mb-2 [&>ul]:list-disc [&>ul]:pr-4 [&>strong]:font-bold">
-                    {pred.responses.orchestrator.response}
-                  </ReactMarkdown>
+                  <div className="text-sm leading-relaxed text-foreground/90 [&>p]:mb-2 [&>ul]:list-disc [&>ul]:pr-4 [&>strong]:font-bold">
+                    <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
+                      {pred.responses.orchestrator.response}
+                    </ReactMarkdown>
+                  </div>
                 </Card>
               )}
 

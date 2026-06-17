@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useCategory } from "@/contexts/CategoryContext";
 import { Trophy, TrendingUp, BarChart3, Users, Flame, Target, ChevronLeft, Timer, Shield, ArrowLeft, Brain, Loader2, Sparkles, Lock } from "lucide-react";
 import { TeamLogo, LIGAT_HAEL_TEAMS } from "@/components/TeamLogos";
+import { TzofenLogo } from "@/components/TzofenLogo";
 import { HeroTitleReveal, TiltCard, StaggerList, PageTransition, CountdownRing } from "@/components/animations";
 import { trpc } from "@/lib/trpc";
 
@@ -130,6 +131,20 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
               >
+                {/* Hero Logo */}
+                <motion.div
+                  initial={{ scale: 0.75, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.05, duration: 0.55, ease: [0.23, 1, 0.32, 1] }}
+                  className="flex justify-center mb-6"
+                >
+                  <TzofenLogo
+                    size={88}
+                    rich
+                    style={{ boxShadow: "0 8px 32px rgba(31,107,255,0.40)", borderRadius: "20px" }}
+                  />
+                </motion.div>
+
                 {/* Live badge */}
                 <motion.div
                   initial={{ scale: 0.9, opacity: 0 }}
@@ -523,8 +538,12 @@ export default function Home() {
 
           {/* Footer */}
           <footer className="border-t border-border/20 py-8 text-center">
+            <div className="flex items-center justify-center gap-2.5 mb-2">
+              <TzofenLogo size={28} style={{ borderRadius: "7px", boxShadow: "0 1px 6px rgba(31,107,255,0.30)" }} />
+              <span className="font-black text-base" style={{ color: "#1F6BFF", fontFamily: "'Rubik', sans-serif" }}>צופן</span>
+            </div>
             <p className="text-sm text-muted-foreground">
-              צופן © 2025 — פיצוח כדורגל ישראלי בעזרת AI
+              © 2025 — פיצוח כדורגל ישראלי בעזרת AI
             </p>
           </footer>
         </main>

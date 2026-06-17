@@ -13,7 +13,7 @@
  * can enrich the next one's input.
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import { ENV } from "../_core/env";
 import { getTeamStats, getHeadToHead } from "./agents";
 import type { TeamStats, HeadToHeadStats } from "./agents";
@@ -332,11 +332,14 @@ export async function orchestrateMatchPrediction(
   const apiKey = ENV.aiApiKey;
   if (apiKey && ctx.deepPrediction) {
     try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const client = new OpenAI({ apiKey });
       const prompt = buildSynthesisPrompt(ctx, ctx.deepPrediction);
-      const resp = await model.generateContent(prompt);
-      const raw = resp.response.text().trim().replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      const resp = await client.chat.completions.create({
+        model: "gpt-4.1-nano",
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" },
+      });
+      const raw = resp.choices[0]?.message?.content ?? "{}";
       const parsed = JSON.parse(raw);
 
       newsInfluence = parsed.newsInfluence ?? newsInfluence;
