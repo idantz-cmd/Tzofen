@@ -120,7 +120,22 @@ async function startServer() {
   app.set("trust proxy", 1);
 
   // Security headers — disable CSP in dev so Vite's inline scripts work
-  app.use(helmet({ contentSecurityPolicy: process.env.NODE_ENV !== "development" }));
+  app.use(
+    helmet({
+      contentSecurityPolicy:
+        process.env.NODE_ENV === "development"
+          ? false
+          : {
+              directives: {
+                ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+                // Allow team logos from api-sports CDN and Google Fonts
+                "img-src": ["'self'", "data:", "https://media.api-sports.io"],
+                "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+                "font-src": ["'self'", "https://fonts.gstatic.com"],
+              },
+            },
+    })
+  );
   app.use(cors({
     origin: ENV.corsOrigin,
     credentials: true,
