@@ -3,6 +3,8 @@ import express from "express";
 import cors from "cors";
 import { createServer } from "http";
 import net from "net";
+import path from "path";
+import { fileURLToPath } from "url";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
@@ -16,6 +18,21 @@ import { importMatchesHandler } from "../scheduled/importHandler";
 import { startResultsSync } from "../services/resultsSync";
 import { requestLogger, additionalSecurityHeaders } from "../middleware";
 import { ENV } from "./env";
+import { getDb } from "../db";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+async function runMigrations() {
+  try {
+    const { migrate } = await import("drizzle-orm/libsql/migrator");
+    const migrationsFolder = path.resolve(__dirname, "../../drizzle");
+    await migrate(getDb(), { migrationsFolder });
+    console.log("✅ Database migrations applied");
+  } catch (e) {
+    console.error("❌ Migration failed:", e);
+    throw e;
+  }
+}
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -56,8 +73,13 @@ const aiLimiter = rateLimit({
 });
 
 async function startServer() {
+  await runMigrations();
+
   const app = express();
   const server = createServer(app);
+
+  // Trust Fly.io / reverse proxy headers for rate limiting
+  app.set("trust proxy", 1);
 
   // Security headers — disable CSP in dev so Vite's inline scripts work
   app.use(helmet({ contentSecurityPolicy: process.env.NODE_ENV !== "development" }));
