@@ -25,7 +25,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 async function runMigrations() {
   try {
     const { migrate } = await import("drizzle-orm/libsql/migrator");
-    const migrationsFolder = path.resolve(__dirname, "../../drizzle");
+    const migrationsFolder = ENV.isProduction
+      ? path.resolve(__dirname, "../drizzle")
+      : path.resolve(__dirname, "../../drizzle");
     await migrate(getDb(), { migrationsFolder });
     console.log("✅ Database migrations applied");
   } catch (e) {
