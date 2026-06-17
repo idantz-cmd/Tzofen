@@ -62,7 +62,18 @@
    White  #FFFFFF  · cards and surfaces
    ============================================================ */
 
+html {
+  color-scheme: light only;
+  background-color: #FFFFFF;
+}
+
+body {
+  background-color: #FFFFFF;
+  color: #15151E;
+}
+
 :root {
+  color-scheme: light only;
   --radius: 0.75rem;
 
   /* Brand primitives */

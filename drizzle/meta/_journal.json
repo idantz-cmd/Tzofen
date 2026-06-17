@@ -8,20 +8,6 @@
       "when": 1779294269915,
       "tag": "0000_faulty_vulcan",
       "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1779648157291,
-      "tag": "0001_magenta_martin_li",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1750168800000,
-      "tag": "0002_add_user_fields",
-      "breakpoints": true
     }
   ]
 }

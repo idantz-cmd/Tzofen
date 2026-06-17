@@ -25,6 +25,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function runMigrations() {
   try {
+    if (process.env.RESET_DB === "true" && ENV.databasePath) {
+      const fs = await import("fs");
+      if (fs.existsSync(ENV.databasePath)) {
+        fs.unlinkSync(ENV.databasePath);
+        console.log("🗑️  Wiped stale database for fresh migration");
+      }
+    }
     const { migrate } = await import("drizzle-orm/libsql/migrator");
     const migrationsFolder = ENV.isProduction
       ? path.resolve(__dirname, "../drizzle")
@@ -34,6 +41,20 @@ async function runMigrations() {
   } catch (e) {
     console.error("❌ Migration failed:", e);
     throw e;
+  }
+}
+
+async function ensureColumns() {
+  const db = getDb();
+  const columns: Array<{ name: string }> = await db.all(sql`PRAGMA table_info(users)`);
+  const names = columns.map((c) => c.name);
+  if (!names.includes("favTeam")) {
+    await db.run(sql`ALTER TABLE users ADD COLUMN favTeam text`);
+    console.log("✅ Added favTeam column");
+  }
+  if (!names.includes("plan")) {
+    await db.run(sql`ALTER TABLE users ADD COLUMN plan text DEFAULT 'free'`);
+    console.log("✅ Added plan column");
   }
 }
 
@@ -89,6 +110,7 @@ const aiLimiter = rateLimit({
 
 async function startServer() {
   await runMigrations();
+  await ensureColumns();
   await ensureAdmin();
 
   const app = express();
