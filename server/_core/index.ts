@@ -152,7 +152,16 @@ async function startServer() {
   app.use("/api/trpc", globalLimiter);
   app.use("/api/auth/login", authLimiter);
   app.use("/api/auth/register", authLimiter);
-  app.use("/api/trpc/agents", aiLimiter);
+  // tRPC routes procedures as flat dotted paths (e.g. /api/trpc/agents.query),
+  // not nested segments, so a plain app.use("/api/trpc/agents", ...) never
+  // matches. Inspect the procedure path(s) — including batched requests like
+  // "leaderboard.top,agents.query" — and apply the AI limiter if any agent
+  // procedure is involved.
+  app.use("/api/trpc", (req, res, next) => {
+    const procs = req.path.replace(/^\//, "").split(",");
+    const hitsAgents = procs.some((p) => p === "agents" || p.startsWith("agents."));
+    return hitsAgents ? aiLimiter(req, res, next) : next();
+  });
 
   registerStorageProxy(app);
   registerAuthRoutes(app);
