@@ -11,3 +11,4 @@ data/
 .project-config.json
 .manus-logs/
 patches/
+app-bundle.txt
