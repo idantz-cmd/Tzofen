@@ -5,12 +5,21 @@ import dotenv from "dotenv";
 dotenv.config();
 dotenv.config({ path: ".env.local", override: true });
 
+const isProduction = process.env.NODE_ENV === "production";
+
+// In production the JWT secrets MUST be set (>=32 chars) — the app refuses to
+// boot otherwise, so we never silently fall back to a hardcoded dev string that
+// lives in public source. In development they stay optional with a dev fallback.
+const jwtSecretSchema = isProduction
+  ? z.string().min(32, "must be at least 32 characters in production")
+  : z.string().min(1).optional();
+
 const envSchema = z.object({
   DATABASE_URL: z.string().optional(),
   DATABASE_AUTH_TOKEN: z.string().optional(),
   DATABASE_PATH: z.string().optional(),
-  JWT_SECRET: z.string().min(1).optional(),
-  JWT_REFRESH_SECRET: z.string().min(1).optional(),
+  JWT_SECRET: jwtSecretSchema,
+  JWT_REFRESH_SECRET: jwtSecretSchema,
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.string().optional(),
   CORS_ORIGIN: z.string().optional(),
@@ -30,8 +39,14 @@ if (!parsed.success) {
 }
 
 export const ENV = {
-  cookieSecret: process.env.JWT_SECRET ?? "dev-secret-change-in-production",
-  refreshSecret: process.env.JWT_REFRESH_SECRET ?? "dev-refresh-secret-change-in-production",
+  // In production these are guaranteed present by the schema above, so the
+  // dev fallback can only ever apply outside production.
+  cookieSecret: isProduction
+    ? (process.env.JWT_SECRET as string)
+    : (process.env.JWT_SECRET ?? "dev-secret-change-in-production"),
+  refreshSecret: isProduction
+    ? (process.env.JWT_REFRESH_SECRET as string)
+    : (process.env.JWT_REFRESH_SECRET ?? "dev-refresh-secret-change-in-production"),
   databaseUrl: process.env.DATABASE_URL,
   databaseAuthToken: process.env.DATABASE_AUTH_TOKEN,
   databasePath: process.env.DATABASE_PATH ?? path.join(process.cwd(), "data", "tzofen.db"),
