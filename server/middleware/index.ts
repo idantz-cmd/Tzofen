@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken } from '../services/auth';
+import { COOKIE_NAME } from '../../shared/const';
 import pino from 'pino';
 
 const logger = pino({ transport: { target: 'pino-pretty' } });
@@ -15,10 +16,13 @@ export const authenticate = async (
   res: Response,
   next: NextFunction
 ) => {
+  // Read token from Authorization header first, then fall back to the session
+  // cookie — mirrors createContext so cookie-only clients (the web app) are
+  // recognized on any route that mounts this middleware.
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith('Bearer ')
     ? authHeader.slice(7)
-    : null;
+    : (req.cookies?.[COOKIE_NAME] ?? null);
 
   if (!token) {
     req.user = undefined;
