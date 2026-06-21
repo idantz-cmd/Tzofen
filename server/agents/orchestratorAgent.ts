@@ -21,6 +21,7 @@ import { deepPredictMatch } from "./deepPredictionAgent";
 import type { DeepMatchPrediction } from "./deepPredictionAgent";
 import { fetchIsraeliFootballNews } from "./newsScraperAgent";
 import type { NewsItem } from "./newsScraperAgent";
+import { llmSynthesisSchema, parseLlmJson } from "./llmSchemas";
 
 // ── Shared context (lives for the duration of one orchestration run) ──────────
 
@@ -340,7 +341,9 @@ export async function orchestrateMatchPrediction(
         response_format: { type: "json_object" },
       });
       const raw = resp.choices[0]?.message?.content ?? "{}";
-      const parsed = JSON.parse(raw);
+      // Validate before merging: wrong-typed/out-of-range fields collapse to
+      // undefined so the basePred fallbacks below apply per-field.
+      const parsed = llmSynthesisSchema.parse(parseLlmJson(raw));
 
       newsInfluence = parsed.newsInfluence ?? newsInfluence;
       newsHeadlines = parsed.newsHeadlines ?? [];

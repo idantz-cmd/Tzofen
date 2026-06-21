@@ -6,6 +6,7 @@
 import OpenAI from "openai";
 import { ENV } from "../_core/env";
 import { getTeamStats, getHeadToHead } from "./agents";
+import { llmDeepPredictionSchema, parseLlmJson } from "./llmSchemas";
 
 export interface DeepMatchPrediction {
   homeTeam: string;
@@ -127,7 +128,9 @@ ${statsContext}
         response_format: { type: "json_object" },
       });
       const text = response.choices[0]?.message?.content ?? "{}";
-      geminiAnalysis = JSON.parse(text);
+      // Validate before merging: wrong-typed/out-of-range fields collapse to
+      // undefined so the statistical fallbacks below apply per-field.
+      geminiAnalysis = llmDeepPredictionSchema.parse(parseLlmJson(text));
     } catch (err) {
       console.warn("OpenAI prediction failed, using statistical fallback:", err);
     }
