@@ -144,9 +144,12 @@ async function startServer() {
   app.use(cookieParser());
   app.use(requestLogger);
 
-  // Configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  // Body parser. 2mb is ample for this JSON API (match imports, predictions);
+  // a large limit is a cheap DoS vector (memory pressure under concurrent big
+  // payloads). File storage is a stub, so nothing here needs more — raise the
+  // limit on a specific route if real uploads are added later.
+  app.use(express.json({ limit: "2mb" }));
+  app.use(express.urlencoded({ limit: "2mb", extended: true }));
 
   // Rate limits
   app.use("/api/trpc", globalLimiter);
