@@ -1,90 +1,53 @@
-﻿import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+// callGemini is now backed by the OpenAI SDK (gpt-4.1-nano), not the Gemini REST
+// API. Mock the SDK and the env so the client always has a key.
+const { createMock } = vi.hoisted(() => ({ createMock: vi.fn() }));
+
+vi.mock("./env", () => ({
+  ENV: { aiApiKey: "test-key" },
+}));
+
+vi.mock("openai", () => ({
+  default: class {
+    chat = { completions: { create: createMock } };
+  },
+}));
+
 import { callGemini } from "./gemini";
 
-// Mock fetch
-vi.stubGlobal("fetch", vi.fn());
-
-describe("Gemini API Integration", () => {
+describe("callGemini (OpenAI-backed)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("should call Gemini API successfully", async () => {
-    const mockFetch = vi.mocked(global.fetch);
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        candidates: [
-          {
-            content: {
-              parts: [{ text: "Test response" }],
-            },
-          },
-        ],
-      }),
-    } as any);
+  it("returns the model's message content on success", async () => {
+    createMock.mockResolvedValueOnce({
+      choices: [{ message: { content: "Test response" } }],
+    });
 
     const response = await callGemini("test prompt");
     expect(response).toBe("Test response");
-    expect(mockFetch).toHaveBeenCalled();
+    expect(createMock).toHaveBeenCalledOnce();
   });
 
-  it("should handle Gemini API errors", async () => {
-    const mockFetch = vi.mocked(global.fetch);
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      statusText: "Unauthorized",
-      json: async () => ({
-        error: { message: "Invalid API key" },
-      }),
-    } as any);
+  it("propagates errors thrown by the OpenAI SDK", async () => {
+    createMock.mockRejectedValueOnce(new Error("Invalid API key"));
 
-    try {
-      await callGemini("test");
-      expect.fail("Should have thrown an error");
-    } catch (error: any) {
-      expect(error.message).toContain("Gemini API error");
-    }
+    await expect(callGemini("test")).rejects.toThrow("Invalid API key");
   });
 
-  it("should handle empty response from API", async () => {
-    const mockFetch = vi.mocked(global.fetch);
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        candidates: [],
-      }),
-    } as any);
+  it("returns an empty string when no choices are returned", async () => {
+    createMock.mockResolvedValueOnce({ choices: [] });
 
-    try {
-      await callGemini("test");
-      expect.fail("Should have thrown an error");
-    } catch (error: any) {
-      expect(error.message).toContain("No response from Gemini API");
-    }
+    const response = await callGemini("test");
+    expect(response).toBe("");
   });
 
-  it("should handle malformed response format", async () => {
-    const mockFetch = vi.mocked(global.fetch);
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        candidates: [
-          {
-            content: {
-              parts: [],
-            },
-          },
-        ],
-      }),
-    } as any);
+  it("returns an empty string when the message has no content", async () => {
+    createMock.mockResolvedValueOnce({ choices: [{ message: {} }] });
 
-    try {
-      await callGemini("test");
-      expect.fail("Should have thrown an error");
-    } catch (error: any) {
-      expect(error.message).toContain("Invalid response format");
-    }
+    const response = await callGemini("test");
+    expect(response).toBe("");
   });
 });
-

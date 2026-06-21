@@ -1,17 +1,25 @@
-﻿import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { chatRouter } from "./chat";
-import * as llmModule from "../_core/llm";
 import * as dbModule from "../db";
 
-// Mock the LLM module
-vi.mock("../_core/llm", () => ({
-  invokeLLM: vi.fn(),
-}));
-
-// Mock the database
+// getDb is synchronous in this router, so mock it with a plain return value.
 vi.mock("../db", () => ({
   getDb: vi.fn(),
 }));
+
+const makeCaller = () =>
+  chatRouter.createCaller({ user: null, req: {} as any, res: {} as any });
+
+function mockDb() {
+  const db = {
+    select: vi.fn().mockReturnThis(),
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockResolvedValue([]),
+  };
+  vi.spyOn(dbModule, "getDb").mockReturnValue(db as any);
+  return db;
+}
 
 describe("Chat Router", () => {
   beforeEach(() => {
@@ -19,151 +27,42 @@ describe("Chat Router", () => {
   });
 
   describe("chat.ask", () => {
-    it("should return a success response with AI message", async () => {
-      // Mock database
-      const mockDb = {
-        select: vi.fn().mockReturnThis(),
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockResolvedValue([]),
-      };
-      vi.spyOn(dbModule, "getDb").mockResolvedValue(mockDb as any);
-
-      // Mock LLM
-      const mockInvokeLLM = vi.spyOn(llmModule, "invokeLLM");
-      mockInvokeLLM.mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: "×–×”×• ×ª×©×•×‘×” ×‘×¢×‘×¨×™×ª ×ž-AI",
-            },
-          },
-        ],
-      } as any);
-
-      const caller = chatRouter.createCaller({
-        user: null,
-        req: {} as any,
-        res: {} as any,
+    // chat.ask is currently a stub: the AI assistant is disabled, so it always
+    // resolves to success:false with a fixed Hebrew "unavailable" message and
+    // never calls the LLM.
+    it("returns the AI-unavailable stub response", async () => {
+      const result = await makeCaller().ask({
+        message: "מה הביצועים של מכבי תל אביב?",
       });
 
-      const result = await caller.ask({
-        message: "×ž×” ×”× ×‘×™×¦×•×¢×™ ×ž×›×‘×™ ×ª×œ ××‘×™×‘?",
-      });
-
-      expect(result.success).toBe(true);
-      expect(result.message).toBe("×–×”×• ×ª×©×•×‘×” ×‘×¢×‘×¨×™×ª ×ž-AI");
-      expect(mockInvokeLLM).toHaveBeenCalled();
+      expect(result.success).toBe(false);
+      expect(result.message).toContain("אינו זמין");
     });
 
-    it("should handle LLM errors gracefully", async () => {
-      // Mock database
-      const mockDb = {
-        select: vi.fn().mockReturnThis(),
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockResolvedValue([]),
-      };
-      vi.spyOn(dbModule, "getDb").mockResolvedValue(mockDb as any);
-
-      // Mock LLM to throw error
-      const mockInvokeLLM = vi.spyOn(llmModule, "invokeLLM");
-      mockInvokeLLM.mockRejectedValueOnce(new Error("LLM service unavailable"));
-
-      const caller = chatRouter.createCaller({
-        user: null,
-        req: {} as any,
-        res: {} as any,
-      });
-
-      try {
-        await caller.ask({
-          message: "×ž×” ×”× ×‘×™×¦×•×¢×™ ×ž×›×‘×™ ×ª×œ ××‘×™×‘?",
-        });
-        expect.fail("Should have thrown an error");
-      } catch (error: any) {
-        expect(error.message).toContain("Failed to process");
-      }
-    });
-
-    it("should validate message length", async () => {
-      const caller = chatRouter.createCaller({
-        user: null,
-        req: {} as any,
-        res: {} as any,
-      });
-
-      try {
-        await caller.ask({
-          message: "", // Empty message
-        });
-        expect.fail("Should have thrown validation error");
-      } catch (error: any) {
-        // Check if the error message contains validation info
-        expect(error.message).toMatch(/Too small|at least 1 characters|string/i);
-      }
-    });
-
-    it("should accept optional matchId parameter", async () => {
-      // Mock database
-      const mockDb = {
-        select: vi.fn().mockReturnThis(),
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockResolvedValue([]),
-      };
-      vi.spyOn(dbModule, "getDb").mockResolvedValue(mockDb as any);
-
-      // Mock LLM
-      const mockInvokeLLM = vi.spyOn(llmModule, "invokeLLM");
-      mockInvokeLLM.mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: "× ×™×ª×•×— ×”×ž×©×—×§",
-            },
-          },
-        ],
-      } as any);
-
-      const caller = chatRouter.createCaller({
-        user: null,
-        req: {} as any,
-        res: {} as any,
-      });
-
-      const result = await caller.ask({
-        message: "×ž×” ×”×ª×—×–×•×§×” ×œ×’×‘×™ ×”×ž×©×—×§ ×”×–×”?",
+    it("accepts an optional matchId without error", async () => {
+      const result = await makeCaller().ask({
+        message: "מה התחזית לגבי המשחק הזה?",
         matchId: 1,
       });
 
-      expect(result.success).toBe(true);
-      expect(mockInvokeLLM).toHaveBeenCalled();
+      expect(result.success).toBe(false);
+      expect(result.message).toContain("אינו זמין");
+    });
+
+    it("validates message length (rejects an empty message)", async () => {
+      await expect(makeCaller().ask({ message: "" })).rejects.toThrow();
     });
   });
 
   describe("chat.getTeamForm", () => {
-    it("should return team form statistics", async () => {
-      // Mock database
-      const mockDb = {
-        select: vi.fn().mockReturnThis(),
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockResolvedValue([]),
-      };
-      vi.spyOn(dbModule, "getDb").mockResolvedValue(mockDb as any);
+    it("returns team form statistics", async () => {
+      mockDb();
 
-      const caller = chatRouter.createCaller({
-        user: null,
-        req: {} as any,
-        res: {} as any,
+      const result = await makeCaller().getTeamForm({
+        teamName: "מכבי תל אביב",
       });
 
-      const result = await caller.getTeamForm({
-        teamName: "×ž×›×‘×™ ×ª×œ ××‘×™×‘",
-      });
-
-      expect(result).toHaveProperty("teamName", "×ž×›×‘×™ ×ª×œ ××‘×™×‘");
+      expect(result).toHaveProperty("teamName", "מכבי תל אביב");
       expect(result).toHaveProperty("recentMatches");
       expect(result).toHaveProperty("wins");
       expect(result).toHaveProperty("draws");
@@ -172,28 +71,16 @@ describe("Chat Router", () => {
   });
 
   describe("chat.getHeadToHead", () => {
-    it("should return head-to-head statistics between two teams", async () => {
-      // Mock database
-      const mockDb = {
-        select: vi.fn().mockReturnThis(),
-        from: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockResolvedValue([]),
-      };
-      vi.spyOn(dbModule, "getDb").mockResolvedValue(mockDb as any);
+    it("returns head-to-head statistics between two teams", async () => {
+      mockDb();
 
-      const caller = chatRouter.createCaller({
-        user: null,
-        req: {} as any,
-        res: {} as any,
+      const result = await makeCaller().getHeadToHead({
+        team1: "מכבי תל אביב",
+        team2: "הפועל ירושלים",
       });
 
-      const result = await caller.getHeadToHead({
-        team1: "×ž×›×‘×™ ×ª×œ ××‘×™×‘",
-        team2: "×”×¤×•×¢×œ ×‘×™×¨×•×©×œ×™×",
-      });
-
-      expect(result).toHaveProperty("team1", "×ž×›×‘×™ ×ª×œ ××‘×™×‘");
-      expect(result).toHaveProperty("team2", "×”×¤×•×¢×œ ×‘×™×¨×•×©×œ×™×");
+      expect(result).toHaveProperty("team1", "מכבי תל אביב");
+      expect(result).toHaveProperty("team2", "הפועל ירושלים");
       expect(result).toHaveProperty("totalMatches");
       expect(result).toHaveProperty("team1Wins");
       expect(result).toHaveProperty("team2Wins");
@@ -201,4 +88,3 @@ describe("Chat Router", () => {
     });
   });
 });
-

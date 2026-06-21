@@ -63,13 +63,16 @@ describe("Agent Config", () => {
 
   it("points-strategy agent config focuses on confidence and points", () => {
     const config = getAgentConfig("points-strategy");
-    expect(config.systemPrompt).toContain("confidence");
+    // Prompt is Hebrew: "ביטחון" = confidence, "נקודות" = points
+    expect(config.systemPrompt).toContain("ביטחון");
+    expect(config.systemPrompt).toContain("נקודות");
     expect(config.skills).toContain("Confidence Tier Selection");
   });
 
   it("news agent config mentions real-time priorities", () => {
     const config = getAgentConfig("news");
-    expect(config.systemPrompt).toContain("CRITICAL");
+    // Prompt is Hebrew: "פציעות" = injuries, a key real-time priority
+    expect(config.systemPrompt).toContain("פציעות");
     expect(config.skills).toContain("Injury Tracking");
   });
 
@@ -81,7 +84,8 @@ describe("Agent Config", () => {
 
   it("schedule agent config covers fixture congestion", () => {
     const config = getAgentConfig("schedule");
-    expect(config.systemPrompt).toContain("congestion");
+    // Prompt is Hebrew: "עומס" = (fixture) congestion/load
+    expect(config.systemPrompt).toContain("עומס");
     expect(config.skills).toContain("Fixture Congestion Analysis");
   });
 });
@@ -136,7 +140,10 @@ describe("queryAgent", () => {
 
     const call = spy.mock.calls[0][0];
     expect(call.messages[0].role).toBe("system");
-    expect(call.messages[0].content).toContain("confidence");
+    // The system message must embed the agent's configured system prompt
+    expect(call.messages[0].content).toContain(
+      getAgentConfig("points-strategy").systemPrompt
+    );
     expect(call.messages[1].role).toBe("user");
     expect(call.messages[1].content).toBe("איזה ביטחון להשתמש?");
   });
@@ -154,7 +161,7 @@ describe("queryAgent", () => {
       new Error("LLM unavailable")
     );
     await expect(queryAgent("tactical", "שאלה")).rejects.toThrow(
-      "Failed to query סוכן ניתוח טקטי"
+      "שגיאת AI בסוכן סוכן ניתוח טקטי"
     );
   });
 });
