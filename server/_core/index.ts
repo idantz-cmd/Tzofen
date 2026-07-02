@@ -128,8 +128,8 @@ async function startServer() {
           : {
               directives: {
                 ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-                // Allow team logos from api-sports CDN and Google Fonts
-                "img-src": ["'self'", "data:", "https://media.api-sports.io"],
+                // Allow team logos from football.co.il (primary) + api-sports (fallback) and Google Fonts
+                "img-src": ["'self'", "data:", "https://static.football.co.il", "https://media.api-sports.io"],
                 "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
                 "font-src": ["'self'", "https://fonts.gstatic.com"],
               },
