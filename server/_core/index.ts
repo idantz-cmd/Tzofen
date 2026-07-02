@@ -17,6 +17,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { importMatchesHandler } from "../scheduled/importHandler";
 import { startResultsSync } from "../services/resultsSync";
+import { startFixtureSync } from "../services/fixtureSync";
 import { requestLogger, additionalSecurityHeaders } from "../middleware";
 import { ENV } from "./env";
 import { getDb } from "../db";
@@ -251,6 +252,7 @@ async function startServer() {
   server.listen(port, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${port}/`);
     startResultsSync();
+    startFixtureSync();
   });
 }
 

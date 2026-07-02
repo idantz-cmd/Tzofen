@@ -1,8 +1,17 @@
 import type { Request, Response } from "express";
+import { importUpcomingFixtures } from "../services/fixtureSync";
 
-// This handler relied on externalId, matchAdvancedStats, and resultPublished
-// columns that were removed in the schema migration. It is stubbed until
-// a replacement import strategy using the new schema is implemented.
+/**
+ * Scheduled-import endpoint (POST /api/scheduled/importMatches).
+ * Imports upcoming fixtures from football.co.il via the shared fixtureSync
+ * logic. Also runnable autonomously by the in-app cron (startFixtureSync).
+ */
 export async function importMatchesHandler(_req: Request, res: Response) {
-  res.status(501).json({ error: "Scheduled import not available in current schema version" });
+  try {
+    const result = await importUpcomingFixtures();
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    console.error("[importMatchesHandler] failed:", err);
+    res.status(500).json({ error: "Fixture import failed", detail: String(err) });
+  }
 }

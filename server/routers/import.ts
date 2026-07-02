@@ -31,6 +31,12 @@ import {
   type LeagueKey,
 } from "../services/footballApi";
 import { publishMatchResult } from "../services/publishResult";
+import { seasonForDate } from "../services/fixtureSync";
+
+// Season label ('YYYY-YY') for an imported match's kickoff.
+function seasonOf(m: ImportedMatch): string {
+  return seasonForDate(m.matchDate instanceof Date ? m.matchDate : new Date(String(m.matchDate)));
+}
 
 // Map scraper enum values to new schema enum values.
 function mapResult(r: ImportedMatch["actualResult"]): "home" | "draw" | "away" | undefined {
@@ -106,6 +112,7 @@ export const importRouter = router({
           homeTeam: match.homeTeam,
           awayTeam: match.awayTeam,
           matchDate: match.matchDate instanceof Date ? match.matchDate.toISOString() : String(match.matchDate),
+          season: seasonOf(match),
           status: "scheduled",
         });
         created++;
@@ -255,6 +262,7 @@ export const importRouter = router({
           homeTeam: match.homeTeam,
           awayTeam: match.awayTeam,
           matchDate: match.matchDate instanceof Date ? match.matchDate.toISOString() : String(match.matchDate),
+          season: seasonOf(match),
           status: mapped ? "finished" : "scheduled",
           ...(mapped && {
             actualResult: mapped,
@@ -374,6 +382,7 @@ export const importRouter = router({
           homeTeam: match.homeTeam,
           awayTeam: match.awayTeam,
           matchDate: match.matchDate instanceof Date ? match.matchDate.toISOString() : String(match.matchDate),
+          season: seasonOf(match),
           status: mapped ? "finished" : "scheduled",
           ...(mapped && {
             actualResult: mapped,
