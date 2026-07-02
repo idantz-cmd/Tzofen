@@ -12,3 +12,17 @@ data/
 .manus-logs/
 patches/
 app-bundle.txt
+
+# Local dev / debug artifacts
+/*.png
+*.log
+app-overview.html
+check-logos.mjs
+playwright-report/
+test-results/
+e2e/screenshots/
+
+# Stray empty libsql auth files
+auth
+auth-wal
+auth-shm
