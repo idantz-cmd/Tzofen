@@ -1,7 +1,11 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
-import { Check, Star, Trophy, Zap, Shield, Crown } from "lucide-react";
+import { Check, Star, Trophy, Zap, Shield, Crown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import Navigation from "@/components/Navigation";
 
 const PLANS = [
@@ -106,6 +110,33 @@ const FAQ = [
 
 export default function Pricing() {
   const [, navigate] = useLocation();
+  const { isAuthenticated } = useAuth();
+
+  const createCheckout = trpc.billing.createCheckoutSession.useMutation({
+    onSuccess: ({ url }) => { window.location.href = url; },
+    onError: (err) => { toast.error(err.message || "שגיאה ביצירת התשלום"); },
+  });
+
+  // Surface the outcome of a returning Stripe Checkout redirect, then clean the URL.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const outcome = params.get("checkout");
+    if (outcome === "success") toast.success("התשלום הושלם! המנוי שלך פעיל 🎉");
+    else if (outcome === "cancel") toast("התשלום בוטל");
+    if (outcome) window.history.replaceState({}, "", "/pricing");
+  }, []);
+
+  function handleSelectPlan(planId: string) {
+    if (planId === "free") {
+      navigate(isAuthenticated ? "/" : "/login");
+      return;
+    }
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+    createCheckout.mutate({ plan: planId as "pro" | "champion", interval: "month" });
+  }
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
@@ -190,11 +221,15 @@ export default function Pricing() {
                 </ul>
 
                 <Button
-                  onClick={() => navigate("/login")}
+                  onClick={() => handleSelectPlan(plan.id)}
+                  disabled={createCheckout.isPending}
                   className="w-full font-bold"
                   variant={plan.highlight ? "accent" : "outline"}
                   style={plan.highlight ? {} : { borderColor: plan.borderColor, color: plan.color }}
                 >
+                  {createCheckout.isPending && createCheckout.variables?.plan === plan.id && (
+                    <Loader2 className="w-4 h-4 animate-spin ml-2" />
+                  )}
                   {plan.cta}
                 </Button>
               </motion.div>
@@ -231,7 +266,7 @@ export default function Pricing() {
           <Trophy className="w-10 h-10 mx-auto mb-3" style={{ color: "#1F6BFF" }} />
           <h3 className="text-xl font-black text-foreground mb-2">מוכן להתחיל לנצח?</h3>
           <p className="text-muted-foreground text-sm mb-5">הצטרף ל-1,200+ מנחשים שכבר מתחרים בפלטפורמה</p>
-          <Button variant="accent" className="font-bold px-8" onClick={() => navigate("/login")}>
+          <Button variant="accent" className="font-bold px-8" onClick={() => navigate(isAuthenticated ? "/" : "/login")}>
             צור חשבון בחינם
           </Button>
         </motion.div>

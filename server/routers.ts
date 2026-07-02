@@ -17,6 +17,7 @@ import { leagueDataRouter } from "./routers/leagueData";
 import { newsRouter } from "./routers/news";
 import { engagementRouter } from "./routers/engagement";
 import { cupRouter } from "./routers/cup";
+import { billingRouter } from "./routers/billing";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -47,6 +48,7 @@ export const appRouter = router({
   news: newsRouter,
   engagement: engagementRouter,
   cup: cupRouter,
+  billing: billingRouter,
 });
 
 export type AppRouter = typeof appRouter;

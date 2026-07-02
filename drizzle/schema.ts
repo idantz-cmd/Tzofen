@@ -10,10 +10,60 @@ export const users = sqliteTable('users', {
   role:         text('role', { enum: ['user', 'admin'] }).default('user'),
   favTeam:      text('favTeam'),
   plan:         text('plan', { enum: ['free', 'pro', 'champion'] }).default('free'),
+  stripeCustomerId: text('stripeCustomerId'),
   createdAt:    text('createdAt').default(new Date().toISOString()),
 }, (table) => ({
   emailIdx: uniqueIndex('user_email_idx').on(table.email),
 }));
+
+// ─── Billing ──────────────────────────────────────────────────────────────────
+
+// One row per Stripe subscription. The user's effective access tier is mirrored
+// onto users.plan by the webhook handler; this table is the audit/source record.
+export const subscriptions = sqliteTable('subscriptions', {
+  id:                   integer('id').primaryKey({ autoIncrement: true }),
+  userId:               integer('userId').notNull(),
+  stripeSubscriptionId: text('stripeSubscriptionId').notNull(),
+  stripeCustomerId:     text('stripeCustomerId').notNull(),
+  plan:                 text('plan', { enum: ['pro', 'champion'] }).notNull(),
+  status:               text('status', {
+    enum: ['active', 'trialing', 'past_due', 'canceled', 'incomplete', 'incomplete_expired', 'unpaid', 'paused'],
+  }).notNull(),
+  priceId:              text('priceId'),
+  interval:             text('interval', { enum: ['month', 'year'] }),
+  currentPeriodEnd:     text('currentPeriodEnd'),
+  cancelAtPeriodEnd:    integer('cancelAtPeriodEnd', { mode: 'boolean' }).default(false),
+  createdAt:            text('createdAt'),
+  updatedAt:            text('updatedAt'),
+}, (table) => ({
+  stripeSubIdx: uniqueIndex('subs_stripe_sub_id').on(table.stripeSubscriptionId),
+  userIdx:      index('subs_user_idx').on(table.userId),
+}));
+
+// Immutable ledger of payment events (invoices, refunds, failures) for the admin
+// revenue dashboard. Amounts are stored in the currency's minor unit (agorot).
+export const transactions = sqliteTable('transactions', {
+  id:                    integer('id').primaryKey({ autoIncrement: true }),
+  userId:                integer('userId'),
+  stripeInvoiceId:       text('stripeInvoiceId'),
+  stripePaymentIntentId: text('stripePaymentIntentId'),
+  amount:                integer('amount').notNull(),
+  currency:              text('currency').default('ils'),
+  status:                text('status', { enum: ['paid', 'refunded', 'failed'] }).notNull(),
+  description:           text('description'),
+  invoiceUrl:            text('invoiceUrl'),
+  createdAt:             text('createdAt'),
+}, (table) => ({
+  userIdx: index('txn_user_idx').on(table.userId),
+}));
+
+// Idempotency guard: every processed Stripe webhook event id is recorded so a
+// retried delivery is a no-op.
+export const webhookEvents = sqliteTable('webhook_events', {
+  id:          text('id').primaryKey(),
+  type:        text('type'),
+  processedAt: text('processedAt'),
+});
 
 export const matches = sqliteTable('matches', {
   id:              integer('id').primaryKey({ autoIncrement: true }),
@@ -118,3 +168,7 @@ export type InsertPrediction = typeof predictions.$inferInsert;
 export type LeaderboardScore = typeof leaderboardScores.$inferSelect;
 export type Standing = typeof standings.$inferSelect;
 export type CupChampionPrediction = typeof cupChampionPredictions.$inferSelect;
+export type Subscription = typeof subscriptions.$inferSelect;
+export type InsertSubscription = typeof subscriptions.$inferInsert;
+export type Transaction = typeof transactions.$inferSelect;
+export type InsertTransaction = typeof transactions.$inferInsert;

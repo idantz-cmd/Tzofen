@@ -5,8 +5,9 @@ import fs from "fs";
 import path from "path";
 import {
   users, matches, predictions, leaderboardScores,
+  subscriptions, transactions, webhookEvents,
   type InsertUser, type InsertMatch, type InsertPrediction,
-  type LeaderboardScore,
+  type LeaderboardScore, type InsertSubscription, type InsertTransaction,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -325,6 +326,96 @@ export async function upsertUserStreak(streak: {
 export const getUserLeaderboardScore = getLeaderboardScoreByUserId;
 export const createMatch = insertMatch;
 export const createPrediction = upsertPrediction;
+
+// ─── Billing ──────────────────────────────────────────────────────────────────
+
+export async function setStripeCustomerId(userId: number, stripeCustomerId: string) {
+  const db = getDb();
+  await db.update(users).set({ stripeCustomerId }).where(eq(users.id, userId));
+}
+
+export async function getUserByStripeCustomerId(stripeCustomerId: string) {
+  const db = getDb();
+  return (await db.select().from(users).where(eq(users.stripeCustomerId, stripeCustomerId)))[0] ?? null;
+}
+
+export async function setUserPlan(userId: number, plan: "free" | "pro" | "champion") {
+  const db = getDb();
+  await db.update(users).set({ plan }).where(eq(users.id, userId));
+}
+
+/** Insert or update a subscription row keyed by its Stripe subscription id. */
+export async function upsertSubscription(sub: InsertSubscription) {
+  const db = getDb();
+  const existing = (await db
+    .select()
+    .from(subscriptions)
+    .where(eq(subscriptions.stripeSubscriptionId, sub.stripeSubscriptionId)))[0];
+
+  if (existing) {
+    await db
+      .update(subscriptions)
+      .set({ ...sub, updatedAt: new Date().toISOString() })
+      .where(eq(subscriptions.stripeSubscriptionId, sub.stripeSubscriptionId));
+    return existing.id;
+  }
+  const result = await db
+    .insert(subscriptions)
+    .values({ ...sub, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+  return Number(result.lastInsertRowid);
+}
+
+export async function getSubscriptionByUserId(userId: number) {
+  const db = getDb();
+  return (await db
+    .select()
+    .from(subscriptions)
+    .where(eq(subscriptions.userId, userId))
+    .orderBy(desc(subscriptions.id))
+    .limit(1))[0] ?? null;
+}
+
+export async function recordTransaction(txn: InsertTransaction) {
+  const db = getDb();
+  await db.insert(transactions).values({ ...txn, createdAt: new Date().toISOString() });
+}
+
+export async function getRecentTransactions(limit = 50) {
+  const db = getDb();
+  return db
+    .select({
+      id: transactions.id,
+      userId: transactions.userId,
+      amount: transactions.amount,
+      currency: transactions.currency,
+      status: transactions.status,
+      description: transactions.description,
+      invoiceUrl: transactions.invoiceUrl,
+      createdAt: transactions.createdAt,
+      stripePaymentIntentId: transactions.stripePaymentIntentId,
+      userName: users.name,
+      userEmail: users.email,
+    })
+    .from(transactions)
+    .leftJoin(users, eq(transactions.userId, users.id))
+    .orderBy(desc(transactions.id))
+    .limit(limit);
+}
+
+/** Idempotency: returns true if this Stripe event was already processed. */
+export async function isWebhookEventProcessed(eventId: string): Promise<boolean> {
+  const db = getDb();
+  const row = (await db.select().from(webhookEvents).where(eq(webhookEvents.id, eventId)))[0];
+  return Boolean(row);
+}
+
+export async function markWebhookEventProcessed(eventId: string, type: string) {
+  const db = getDb();
+  await db
+    .insert(webhookEvents)
+    .values({ id: eventId, type, processedAt: new Date().toISOString() })
+    .onConflictDoNothing();
+}
 
 // ─── Unused-import guard ──────────────────────────────────────────────────────
 // `lte` is intentionally re-exported below for callers that previously imported

@@ -29,6 +29,15 @@ const envSchema = z.object({
   RAPIDAPI_KEY: z.string().optional(),
   APISPORTS_KEY: z.string().optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
+  // Billing (Stripe) — all optional; when unset, billing endpoints return a
+  // friendly "not configured" error and the rest of the app is unaffected.
+  APP_URL: z.string().optional(),
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_PRICE_PRO_MONTHLY: z.string().optional(),
+  STRIPE_PRICE_PRO_YEARLY: z.string().optional(),
+  STRIPE_PRICE_CHAMPION_MONTHLY: z.string().optional(),
+  STRIPE_PRICE_CHAMPION_YEARLY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -56,4 +65,21 @@ export const ENV = {
   adminEmail: process.env.ADMIN_EMAIL ?? "",
   aiApiKey: process.env.AI_API_KEY ?? process.env.OPENAI_API_KEY ?? "",
   rapidApiKey: process.env.RAPIDAPI_KEY ?? "",
+  // Public base URL for Stripe redirect (checkout success/cancel, portal return).
+  // Falls back to CORS_ORIGIN, then localhost dev.
+  appUrl: process.env.APP_URL ?? process.env.CORS_ORIGIN ?? "http://localhost:5173",
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY ?? "",
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? "",
+    prices: {
+      pro: {
+        month: process.env.STRIPE_PRICE_PRO_MONTHLY ?? "",
+        year: process.env.STRIPE_PRICE_PRO_YEARLY ?? "",
+      },
+      champion: {
+        month: process.env.STRIPE_PRICE_CHAMPION_MONTHLY ?? "",
+        year: process.env.STRIPE_PRICE_CHAMPION_YEARLY ?? "",
+      },
+    },
+  },
 };

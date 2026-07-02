@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
+import { toast } from "sonner";
 import { useCategory } from "@/contexts/CategoryContext";
 import { motion } from "framer-motion";
 import Navigation from "@/components/Navigation";
@@ -67,6 +69,15 @@ export default function Dashboard() {
   const { setCategory } = useCategory();
   useEffect(() => { setCategory("profile"); }, [setCategory]);
   const { user } = useAuth();
+  const [, navigate] = useLocation();
+
+  const { data: mySubscription } = trpc.billing.getMySubscription.useQuery(undefined, { enabled: !!user });
+  const openPortal = trpc.billing.createPortalSession.useMutation({
+    onSuccess: ({ url }) => { window.location.href = url; },
+    onError: (err) => { toast.error(err.message || "שגיאה בפתיחת ניהול המנוי"); },
+  });
+  const currentPlan = mySubscription?.plan ?? "free";
+  const PLAN_LABEL: Record<string, string> = { free: "חינם", pro: "פרו", champion: "אלוף" };
 
   const { data: stats, isLoading: statsLoading } = trpc.dashboard.getStats.useQuery(undefined, { enabled: !!user });
   const { data: recentPredictions = [], isLoading: predictionsLoading } = trpc.dashboard.getRecentPredictions.useQuery({ limit: 20 }, { enabled: !!user });
@@ -157,6 +168,43 @@ export default function Dashboard() {
           >
             <h1 className="text-3xl font-black text-gradient-blue">לוח הבקרה שלי</h1>
             <p className="text-sm text-muted-foreground mt-1">ביצועים, רצפים ותחזיות אחרונות</p>
+          </motion.div>
+
+          {/* Subscription card */}
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="mb-8"
+          >
+            <Card className="p-4 flex items-center gap-3 border-border/20"
+              style={{ background: "linear-gradient(135deg, rgba(139,77,255,0.05), rgba(31,107,255,0.05))" }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: currentPlan === "free" ? "rgba(31,107,255,0.15)" : "rgba(139,77,255,0.15)" }}>
+                {currentPlan === "champion"
+                  ? <Crown className="w-4 h-4" style={{ color: "#D4A000" }} />
+                  : <Sparkles className="w-4 h-4" style={{ color: currentPlan === "free" ? "#1F6BFF" : "#8B4DFF" }} />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold">
+                  התוכנית שלך: <span style={{ color: currentPlan === "free" ? "#1F6BFF" : "#8B4DFF" }}>{PLAN_LABEL[currentPlan]}</span>
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {currentPlan === "free" ? "שדרג לפרו לחיזויים ללא הגבלה וניתוח AI מתקדם" : "המנוי שלך פעיל — ניתן לנהל או לבטל בכל עת"}
+                </p>
+              </div>
+              {currentPlan === "free" ? (
+                <Button size="sm" variant="accent" className="font-bold shrink-0" onClick={() => navigate("/pricing")}>
+                  שדרג
+                </Button>
+              ) : (
+                <Button size="sm" variant="outline" className="font-bold shrink-0"
+                  disabled={openPortal.isPending} onClick={() => openPortal.mutate()}>
+                  {openPortal.isPending && <Spinner className="w-4 h-4 ml-2" />}
+                  נהל מנוי
+                </Button>
+              )}
+            </Card>
           </motion.div>
 
           {/* Stats Cards */}

@@ -11,6 +11,7 @@ import rateLimit from "express-rate-limit";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
+import { registerStripeWebhook } from "./stripeWebhook";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -56,6 +57,53 @@ async function ensureColumns() {
     await db.run(sql`ALTER TABLE users ADD COLUMN plan text DEFAULT 'free'`);
     console.log("✅ Added plan column");
   }
+  if (!names.includes("stripeCustomerId")) {
+    await db.run(sql`ALTER TABLE users ADD COLUMN stripeCustomerId text`);
+    console.log("✅ Added stripeCustomerId column");
+  }
+}
+
+// Idempotently create the billing tables. Mirrors drizzle/schema.ts; kept as a
+// runtime ensure (like ensureColumns) so it works on existing, fresh, and prod
+// databases without depending on migration-journal state.
+async function ensureBillingSchema() {
+  const db = getDb();
+  await db.run(sql`CREATE TABLE IF NOT EXISTS subscriptions (
+    id integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+    userId integer NOT NULL,
+    stripeSubscriptionId text NOT NULL,
+    stripeCustomerId text NOT NULL,
+    plan text NOT NULL,
+    status text NOT NULL,
+    priceId text,
+    interval text,
+    currentPeriodEnd text,
+    cancelAtPeriodEnd integer DEFAULT false,
+    createdAt text,
+    updatedAt text
+  )`);
+  await db.run(sql`CREATE UNIQUE INDEX IF NOT EXISTS subs_stripe_sub_id ON subscriptions (stripeSubscriptionId)`);
+  await db.run(sql`CREATE INDEX IF NOT EXISTS subs_user_idx ON subscriptions (userId)`);
+
+  await db.run(sql`CREATE TABLE IF NOT EXISTS transactions (
+    id integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+    userId integer,
+    stripeInvoiceId text,
+    stripePaymentIntentId text,
+    amount integer NOT NULL,
+    currency text DEFAULT 'ils',
+    status text NOT NULL,
+    description text,
+    invoiceUrl text,
+    createdAt text
+  )`);
+  await db.run(sql`CREATE INDEX IF NOT EXISTS txn_user_idx ON transactions (userId)`);
+
+  await db.run(sql`CREATE TABLE IF NOT EXISTS webhook_events (
+    id text PRIMARY KEY NOT NULL,
+    type text,
+    processedAt text
+  )`);
 }
 
 async function ensureAdmin() {
@@ -111,6 +159,7 @@ const aiLimiter = rateLimit({
 async function startServer() {
   await runMigrations();
   await ensureColumns();
+  await ensureBillingSchema();
   await ensureAdmin();
 
   const app = express();
@@ -143,6 +192,11 @@ async function startServer() {
   app.use(additionalSecurityHeaders);
   app.use(cookieParser());
   app.use(requestLogger);
+
+  // Stripe webhook — MUST be registered before express.json(): signature
+  // verification needs the raw request bytes (the route applies express.raw
+  // itself). Registering it here keeps it ahead of the global JSON parser.
+  registerStripeWebhook(app);
 
   // Body parser. 2mb is ample for this JSON API (match imports, predictions);
   // a large limit is a cheap DoS vector (memory pressure under concurrent big
