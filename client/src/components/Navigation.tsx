@@ -32,7 +32,7 @@ export default function Navigation() {
             <Link href="/matches">
               <Button variant={isActive("/matches") ? "default" : "ghost"} size="sm" className="text-sm gap-1.5">
                 <Target className="w-4 h-4" />
-                משחקים
+                ליגה
               </Button>
             </Link>
             <Link href="/news">
@@ -167,7 +167,7 @@ export default function Navigation() {
                   <Link href="/matches">
                     <DropdownMenuItem>
                       <Target className="w-4 h-4 ml-2" />
-                      משחקים
+                      ליגה
                     </DropdownMenuItem>
                   </Link>
                   <Link href="/news">

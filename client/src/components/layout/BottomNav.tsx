@@ -6,7 +6,7 @@ import { trpc } from "@/lib/trpc";
 import { Bell, X, Check } from "lucide-react";
 
 const tabs = [
-  { icon: "📅", label: "משחקים", path: "/matches" },
+  { icon: "📅", label: "ליגה", path: "/matches" },
   { icon: "🏆", label: "גביע", path: "/cup" },
   { icon: "🏠", label: "בית", path: "/" },
   { icon: "📊", label: "פרופיל", path: "/dashboard" },
