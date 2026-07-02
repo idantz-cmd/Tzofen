@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "../_core/trpc";
-import { getUpcomingMatches, getCompletedMatches, getMatchById, createPrediction, getUserPredictionForMatch, getUserPredictions, getOrCreateGuestUser } from "../db";
+import { getUpcomingMatches, getCompletedMatches, getMatchById, createPrediction, getUserPredictionForMatch, getUserPredictions, getOrCreateGuestUser, upsertAdvancedPrediction, getAdvancedPrediction } from "../db";
 
 export const matchesRouter = router({
   // Get upcoming matches
@@ -152,26 +152,48 @@ export const matchesRouter = router({
       }
     }),
 
-  // Get advanced prediction results for a completed match
-  // TODO: implement with new schema (advancedPredictions/matchAdvancedStats tables removed)
+  // Get the user's per-team advanced prediction for a match.
   getAdvancedResults: protectedProcedure
     .input(z.object({ matchId: z.number() }))
-    .query(async () => {
-      throw new TRPCError({ code: "NOT_IMPLEMENTED", message: "תכונה זו אינה זמינה במהדורה הנוכחית" });
+    .query(async ({ ctx, input }) => {
+      const prediction = await getAdvancedPrediction(ctx.user.id, input.matchId);
+      return { prediction };
     }),
 
-  // Submit advanced prediction (goals, corners, cards)
-  // TODO: implement with new schema (advancedPredictions table removed)
+  // Submit a per-team advanced prediction (goals / corners / yellow / red cards
+  // for the home AND away side, each independent and optional).
   submitAdvancedPrediction: protectedProcedure
     .input(z.object({
       matchId: z.number(),
-      goals: z.number().min(0).max(20).optional(),
-      corners: z.number().min(0).max(20).optional(),
-      yellowCards: z.number().min(0).max(20).optional(),
-      redCards: z.number().min(0).max(20).optional(),
+      homeGoals: z.number().int().min(0).max(20).optional(),
+      awayGoals: z.number().int().min(0).max(20).optional(),
+      homeCorners: z.number().int().min(0).max(30).optional(),
+      awayCorners: z.number().int().min(0).max(30).optional(),
+      homeYellowCards: z.number().int().min(0).max(20).optional(),
+      awayYellowCards: z.number().int().min(0).max(20).optional(),
+      homeRedCards: z.number().int().min(0).max(10).optional(),
+      awayRedCards: z.number().int().min(0).max(10).optional(),
     }))
-    .mutation(async () => {
-      // Advanced stats table removed in schema migration — stored client-side only for now
+    .mutation(async ({ ctx, input }) => {
+      // Deadline lock — cannot predict after the match starts.
+      const match = await getMatchById(input.matchId);
+      if (match && new Date() >= new Date(match.matchDate)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "הניחוש נסגר — המשחק החל" });
+      }
+
+      const nn = (v: number | undefined) => (v === undefined ? null : v);
+      await upsertAdvancedPrediction({
+        userId: ctx.user.id,
+        matchId: input.matchId,
+        homeGoals: nn(input.homeGoals),
+        awayGoals: nn(input.awayGoals),
+        homeCorners: nn(input.homeCorners),
+        awayCorners: nn(input.awayCorners),
+        homeYellowCards: nn(input.homeYellowCards),
+        awayYellowCards: nn(input.awayYellowCards),
+        homeRedCards: nn(input.homeRedCards),
+        awayRedCards: nn(input.awayRedCards),
+      });
       return { success: true };
     }),
 });

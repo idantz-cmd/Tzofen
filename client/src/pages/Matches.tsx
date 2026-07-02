@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navigation from "@/components/Navigation";
 import { useCategory } from "@/contexts/CategoryContext";
@@ -293,6 +293,51 @@ function formatCountdown(ms: number) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+/* ===== Advanced (per-team) prediction model ===== */
+type AdvState = {
+  homeGoals: number | null; awayGoals: number | null;
+  homeCorners: number | null; awayCorners: number | null;
+  homeYellowCards: number | null; awayYellowCards: number | null;
+  homeRedCards: number | null; awayRedCards: number | null;
+};
+
+const EMPTY_ADV: AdvState = {
+  homeGoals: null, awayGoals: null,
+  homeCorners: null, awayCorners: null,
+  homeYellowCards: null, awayYellowCards: null,
+  homeRedCards: null, awayRedCards: null,
+};
+
+const ADV_STATS = [
+  { label: "שערים ⚽",  homeKey: "homeGoals",       awayKey: "awayGoals",       color: "#1F6BFF", max: 20 },
+  { label: "קרנות 🚩",  homeKey: "homeCorners",     awayKey: "awayCorners",     color: "#8B4DFF", max: 30 },
+  { label: "צהובים 🟨", homeKey: "homeYellowCards", awayKey: "awayYellowCards", color: "#B38900", max: 20 },
+  { label: "אדומים 🟥", homeKey: "homeRedCards",    awayKey: "awayRedCards",    color: "#FF3B5C", max: 10 },
+] as const;
+
+/** Compact −/+ stepper. `null` means the user hasn't set a value for this side. */
+function StatStepper({ value, onChange, color, max }: {
+  value: number | null;
+  onChange: (v: number | null) => void;
+  color: string;
+  max: number;
+}) {
+  const dec = () => onChange(value === null ? 0 : value <= 0 ? null : value - 1);
+  const inc = () => onChange(value === null ? 1 : Math.min(max, value + 1));
+  return (
+    <div className="flex items-center gap-1 w-[72px] justify-center">
+      <button type="button" onClick={dec} aria-label="הפחת"
+        className="w-6 h-6 rounded-md border border-border/40 text-sm font-black text-muted-foreground hover:bg-muted/40 leading-none">−</button>
+      <span className="w-5 text-center text-sm font-black tabular-nums" style={{ color: value === null ? undefined : color }}>
+        {value ?? "–"}
+      </span>
+      <button type="button" onClick={inc} aria-label="הוסף"
+        className="w-6 h-6 rounded-md border text-sm font-black leading-none hover:opacity-80"
+        style={{ borderColor: `${color}55`, color }}>+</button>
+    </div>
+  );
+}
+
 /* ===== Match Card ===== */
 function MatchCard({
   match,
@@ -313,10 +358,7 @@ function MatchCard({
 }) {
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [goals, setGoals] = useState<number | null>(null);
-  const [corners, setCorners] = useState<number | null>(null);
-  const [yellowCards, setYellowCards] = useState<number | null>(null);
-  const [redCards, setRedCards] = useState<number | null>(null);
+  const [adv, setAdv] = useState<AdvState>(EMPTY_ADV);
 
   const msLeft = useMatchCountdown(match.matchDate);
   const isLocked = msLeft <= 0;
@@ -467,54 +509,32 @@ function MatchCard({
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mt-3 space-y-4 p-3 rounded-lg bg-muted/5 border border-border/15"
+                  className="mt-3 p-3 rounded-lg bg-muted/5 border border-border/15"
                 >
-                  {([
-                    { label: "שערים ⚽", emoji: "⚽", value: goals, set: setGoals, color: "#1F6BFF" },
-                    { label: "קרנות 🚩", emoji: "🚩", value: corners, set: setCorners, color: "#8B4DFF" },
-                    { label: "כרטיסים צהובים 🟨", emoji: "🟨", value: yellowCards, set: setYellowCards, color: "#B38900" },
-                    { label: "כרטיסים אדומים 🟥", emoji: "🟥", value: redCards, set: setRedCards, color: "#FF3B5C" },
-                  ] as const).map(({ label, value, set, color }) => (
-                    <div key={label}>
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-[11px] text-muted-foreground font-bold">{label}</p>
-                        <div className="flex items-center gap-2">
-                          {value !== null ? (
-                            <span className="text-sm font-black tabular-nums px-2 py-0.5 rounded-full text-white" style={{ background: color }}>
-                              {value}
-                            </span>
-                          ) : (
-                            <span className="text-[10px] text-muted-foreground/50">לא מגדיר</span>
-                          )}
-                          {value !== null && (
-                            <button onClick={() => set(null)} className="text-muted-foreground/40 hover:text-muted-foreground text-[10px]">✕</button>
-                          )}
-                        </div>
-                      </div>
-                      <input
-                        type="range"
-                        min={0}
-                        max={20}
-                        step={1}
-                        value={value ?? 5}
-                        onChange={(e) => set(Number(e.target.value))}
-                        className="w-full h-2 rounded-full appearance-none cursor-pointer"
-                        style={{
-                          background: value !== null
-                            ? `linear-gradient(to left, ${color} ${((value) / 20) * 100}%, #E2E8F0 ${((value) / 20) * 100}%)`
-                            : "#E2E8F0",
-                          opacity: value !== null ? 1 : 0.45,
-                        }}
-                      />
-                      <div className="flex justify-between text-[9px] text-muted-foreground/40 mt-1 px-0.5">
-                        <span>0</span>
-                        <span>5</span>
-                        <span>10</span>
-                        <span>15</span>
-                        <span>20</span>
-                      </div>
-                    </div>
-                  ))}
+                  <p className="text-[10px] text-muted-foreground text-center mb-2">חיזוי לכל קבוצה בנפרד</p>
+                  <div className="grid grid-cols-[1fr_auto_auto] items-center gap-x-2 gap-y-2.5">
+                    {/* header: team names */}
+                    <span />
+                    <span className="w-[72px] text-center text-[10px] font-black text-foreground truncate px-1">{homeHebrew}</span>
+                    <span className="w-[72px] text-center text-[10px] font-black text-foreground truncate px-1">{awayHebrew}</span>
+                    {ADV_STATS.map((s) => (
+                      <Fragment key={s.homeKey}>
+                        <span className="text-[11px] font-bold" style={{ color: s.color }}>{s.label}</span>
+                        <StatStepper
+                          value={adv[s.homeKey]}
+                          color={s.color}
+                          max={s.max}
+                          onChange={(v) => setAdv((a) => ({ ...a, [s.homeKey]: v }))}
+                        />
+                        <StatStepper
+                          value={adv[s.awayKey]}
+                          color={s.color}
+                          max={s.max}
+                          onChange={(v) => setAdv((a) => ({ ...a, [s.awayKey]: v }))}
+                        />
+                      </Fragment>
+                    ))}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -524,13 +544,17 @@ function MatchCard({
                 <Button
                   onClick={() => {
                     onSubmitPrediction(match.id, selectedPrediction as "home" | "draw" | "away", homeHebrew, awayHebrew);
-                    if (goals !== null || corners !== null || yellowCards !== null || redCards !== null) {
+                    if (Object.values(adv).some((v) => v !== null)) {
                       advancedMutation.mutate({
                         matchId: match.id,
-                        goals: goals ?? undefined,
-                        corners: corners ?? undefined,
-                        yellowCards: yellowCards ?? undefined,
-                        redCards: redCards ?? undefined,
+                        homeGoals: adv.homeGoals ?? undefined,
+                        awayGoals: adv.awayGoals ?? undefined,
+                        homeCorners: adv.homeCorners ?? undefined,
+                        awayCorners: adv.awayCorners ?? undefined,
+                        homeYellowCards: adv.homeYellowCards ?? undefined,
+                        awayYellowCards: adv.awayYellowCards ?? undefined,
+                        homeRedCards: adv.homeRedCards ?? undefined,
+                        awayRedCards: adv.awayRedCards ?? undefined,
                       });
                     }
                   }}
@@ -726,22 +750,21 @@ function CompletedMatchCard({
           </div>
         )}
 
-        {advancedResults && advancedResults.actualStats && (
+        {advancedResults?.prediction &&
+          ADV_STATS.some((s) => advancedResults.prediction[s.homeKey] != null || advancedResults.prediction[s.awayKey] != null) && (
           <div className="mt-3 pt-2 border-t border-border/10">
-            <p className="text-[10px] text-muted-foreground font-medium mb-2 text-center">חיזויים מתקדמים</p>
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
-              {advancedResults.prediction.goals !== undefined && advancedResults.prediction.goals !== null && (
-                <AdvancedResultItem label="שערים ⚽" predicted={advancedResults.prediction.goals} actual={advancedResults.actualStats.totalGoals ?? null} />
-              )}
-              {advancedResults.prediction.corners !== undefined && advancedResults.prediction.corners !== null && (
-                <AdvancedResultItem label="קרנות 🚩" predicted={advancedResults.prediction.corners} actual={advancedResults.actualStats.totalCorners ?? null} />
-              )}
-              {advancedResults.prediction.yellowCards !== undefined && advancedResults.prediction.yellowCards !== null && (
-                <AdvancedResultItem label="צהובים 🟨" predicted={advancedResults.prediction.yellowCards} actual={advancedResults.actualStats.totalYellowCards ?? null} />
-              )}
-              {advancedResults.prediction.redCards !== undefined && advancedResults.prediction.redCards !== null && (
-                <AdvancedResultItem label="אדומים 🟥" predicted={advancedResults.prediction.redCards} actual={advancedResults.actualStats.totalRedCards ?? null} />
-              )}
+            <p className="text-[10px] text-muted-foreground font-medium mb-2 text-center">החיזוי המתקדם שלך (בית / חוץ)</p>
+            <div className="grid grid-cols-[1fr_auto_auto] items-center gap-x-3 gap-y-1 text-[11px]">
+              <span />
+              <span className="w-10 text-center font-black text-muted-foreground truncate">{homeHebrew}</span>
+              <span className="w-10 text-center font-black text-muted-foreground truncate">{awayHebrew}</span>
+              {ADV_STATS.filter((s) => advancedResults.prediction[s.homeKey] != null || advancedResults.prediction[s.awayKey] != null).map((s) => (
+                <Fragment key={s.homeKey}>
+                  <span className="font-bold" style={{ color: s.color }}>{s.label}</span>
+                  <span className="w-10 text-center font-black tabular-nums">{advancedResults.prediction[s.homeKey] ?? "–"}</span>
+                  <span className="w-10 text-center font-black tabular-nums">{advancedResults.prediction[s.awayKey] ?? "–"}</span>
+                </Fragment>
+              ))}
             </div>
           </div>
         )}
@@ -750,16 +773,3 @@ function CompletedMatchCard({
   );
 }
 
-function AdvancedResultItem({ label, predicted, actual }: { label: string; predicted: number; actual: number | null }) {
-  const isCorrect = actual !== null && predicted === actual;
-  const isPending = actual === null;
-  return (
-    <div className={`px-2 py-1.5 rounded text-center ${isPending ? "bg-muted/10 border border-border/20" : isCorrect ? "bg-primary/10 border border-primary/20" : "bg-red-500/10 border border-red-500/20"}`}>
-      <p className="text-muted-foreground text-[10px]">{label}</p>
-      <p className={`font-black text-sm ${isPending ? "text-muted-foreground" : isCorrect ? "text-primary" : "text-red-400"}`}>
-        {predicted}
-        {!isPending && <span className="text-[10px] mr-1">{isCorrect ? "✓" : `(${actual})`}</span>}
-      </p>
-    </div>
-  );
-}

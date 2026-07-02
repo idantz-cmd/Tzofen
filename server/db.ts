@@ -5,9 +5,10 @@ import fs from "fs";
 import path from "path";
 import {
   users, matches, predictions, leaderboardScores,
-  subscriptions, transactions, webhookEvents,
+  subscriptions, transactions, webhookEvents, advancedPredictions,
   type InsertUser, type InsertMatch, type InsertPrediction,
   type LeaderboardScore, type InsertSubscription, type InsertTransaction,
+  type InsertAdvancedPrediction,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -183,6 +184,31 @@ export async function getUserPredictionForMatch(userId: number, matchId: number)
   const db = getDb();
   return (await db.select().from(predictions)
     .where(and(eq(predictions.userId, userId), eq(predictions.matchId, matchId))))[0] ?? null;
+}
+
+// ─── Advanced predictions (per-team goals/corners/cards) ──────────────────────
+
+/** Insert or update a user's per-team advanced prediction for a match. */
+export async function upsertAdvancedPrediction(pred: InsertAdvancedPrediction) {
+  const db = getDb();
+  const existing = (await db.select().from(advancedPredictions)
+    .where(and(eq(advancedPredictions.userId, pred.userId!), eq(advancedPredictions.matchId, pred.matchId!))))[0];
+
+  if (existing) {
+    await db.update(advancedPredictions)
+      .set(pred)
+      .where(eq(advancedPredictions.id, existing.id));
+    return existing.id;
+  }
+  const result = await db.insert(advancedPredictions).values(pred);
+  return Number(result.lastInsertRowid);
+}
+
+/** Get a user's advanced prediction for a match (or null). */
+export async function getAdvancedPrediction(userId: number, matchId: number) {
+  const db = getDb();
+  return (await db.select().from(advancedPredictions)
+    .where(and(eq(advancedPredictions.userId, userId), eq(advancedPredictions.matchId, matchId))))[0] ?? null;
 }
 
 // ─── Leaderboard ──────────────────────────────────────────────────────────────

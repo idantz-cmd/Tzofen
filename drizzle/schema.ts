@@ -159,6 +159,26 @@ export const cupChampionPredictions = sqliteTable('cup_champion_predictions', {
   userSeasonIdx: uniqueIndex('cup_champ_user_season').on(table.userId, table.season),
 }));
 
+// Per-team advanced prediction (goals, corners, yellow/red cards for home AND
+// away separately). One row per (user, match); any field may be null if the
+// user chose not to predict it.
+export const advancedPredictions = sqliteTable('advanced_predictions', {
+  id:              integer('id').primaryKey({ autoIncrement: true }),
+  userId:          integer('userId').notNull(),
+  matchId:         integer('matchId').notNull(),
+  homeGoals:       integer('homeGoals'),
+  awayGoals:       integer('awayGoals'),
+  homeCorners:     integer('homeCorners'),
+  awayCorners:     integer('awayCorners'),
+  homeYellowCards: integer('homeYellowCards'),
+  awayYellowCards: integer('awayYellowCards'),
+  homeRedCards:    integer('homeRedCards'),
+  awayRedCards:    integer('awayRedCards'),
+  createdAt:       text('createdAt').default(new Date().toISOString()),
+}, (table) => ({
+  userMatchIdx: uniqueIndex('adv_pred_user_match').on(table.userId, table.matchId),
+}));
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Match = typeof matches.$inferSelect;
@@ -172,3 +192,5 @@ export type Subscription = typeof subscriptions.$inferSelect;
 export type InsertSubscription = typeof subscriptions.$inferInsert;
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = typeof transactions.$inferInsert;
+export type AdvancedPrediction = typeof advancedPredictions.$inferSelect;
+export type InsertAdvancedPrediction = typeof advancedPredictions.$inferInsert;

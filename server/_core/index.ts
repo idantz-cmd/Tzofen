@@ -107,6 +107,28 @@ async function ensureBillingSchema() {
   )`);
 }
 
+// Idempotently create the per-team advanced-predictions table. Mirrors
+// drizzle/schema.ts; kept as a runtime ensure so it self-heals on existing,
+// fresh, and prod databases without depending on migration-journal state.
+async function ensureAdvancedPredictionsSchema() {
+  const db = getDb();
+  await db.run(sql`CREATE TABLE IF NOT EXISTS advanced_predictions (
+    id integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+    userId integer NOT NULL,
+    matchId integer NOT NULL,
+    homeGoals integer,
+    awayGoals integer,
+    homeCorners integer,
+    awayCorners integer,
+    homeYellowCards integer,
+    awayYellowCards integer,
+    homeRedCards integer,
+    awayRedCards integer,
+    createdAt text
+  )`);
+  await db.run(sql`CREATE UNIQUE INDEX IF NOT EXISTS adv_pred_user_match ON advanced_predictions (userId, matchId)`);
+}
+
 async function ensureAdmin() {
   if (!ENV.adminEmail) return;
   try {
@@ -161,6 +183,7 @@ async function startServer() {
   await runMigrations();
   await ensureColumns();
   await ensureBillingSchema();
+  await ensureAdvancedPredictionsSchema();
   await ensureAdmin();
 
   const app = express();
