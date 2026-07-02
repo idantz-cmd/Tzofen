@@ -85,7 +85,7 @@ export function NewsTicker() {
         ref={trackRef}
         className="ticker-track flex items-center h-full"
         style={{
-          animation: `ticker-scroll ${duration}s linear infinite`,
+          animation: `ticker-scroll ${duration}s linear infinite reverse`,
           paddingLeft: 72, // space for LIVE badge
           width: "max-content",
         }}

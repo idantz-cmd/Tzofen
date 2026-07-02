@@ -29,38 +29,6 @@ const LEAGUE_LABELS: Record<League, string> = {
   ligah_leumit: "הליגה הלאומית",
 };
 
-function AiAccuracyBanner() {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.1 }}
-    >
-      <Card
-        className="p-3 flex items-center gap-3"
-        style={{ background: "linear-gradient(135deg, rgba(139,77,255,0.06), rgba(31,107,255,0.06))", border: "1px solid rgba(139,77,255,0.18)" }}
-      >
-        <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-          style={{ background: "linear-gradient(135deg, #9D6FFF, #8B4DFF)" }}
-        >
-          <Sparkles className="w-4 h-4 text-white" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold" style={{ color: "#8B4DFF" }}>8 סוכני AI במקביל · GPT-4.1 Nano</p>
-          <p className="text-[11px] text-muted-foreground">סטטיסטיקה · מחקר · טקטיקה · חדשות · חיזוי · לוח · QA · אורקסטרציה</p>
-        </div>
-        <span
-          className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0"
-          style={{ background: "#FFC91F", color: "#15151E" }}
-        >
-          BETA
-        </span>
-      </Card>
-    </motion.div>
-  );
-}
-
 export default function AIPrediction() {
   const { setCategory } = useCategory();
   useEffect(() => { setCategory("ai"); }, [setCategory]);
@@ -136,9 +104,6 @@ export default function AIPrediction() {
             8 סוכנים במקביל · חדשות בזמן אמת · QA · סינתזת GPT-4.1 Nano
           </p>
         </motion.div>
-
-        {/* AI accuracy banner */}
-        <AiAccuracyBanner />
 
         {/* League selector */}
         <div className="flex gap-2 justify-center">
@@ -218,16 +183,16 @@ export default function AIPrediction() {
 
           {/* Manual entry if no match selected */}
           {!selectedMatch && (
-            <div className="flex gap-2 pt-1">
+            <div className="flex gap-2 pt-1 w-full">
               <input
-                className="flex-1 border border-border/50 rounded-lg px-3 py-1.5 text-sm bg-background"
+                className="flex-1 min-w-0 border border-border/50 rounded-lg px-3 py-1.5 text-sm bg-background"
                 placeholder="קבוצת בית"
                 value={homeTeam}
                 onChange={(e) => setHomeTeam(e.target.value)}
               />
-              <span className="text-muted-foreground self-center text-sm font-bold">נגד</span>
+              <span className="text-muted-foreground self-center text-sm font-bold shrink-0">נגד</span>
               <input
-                className="flex-1 border border-border/50 rounded-lg px-3 py-1.5 text-sm bg-background"
+                className="flex-1 min-w-0 border border-border/50 rounded-lg px-3 py-1.5 text-sm bg-background"
                 placeholder="קבוצת חוץ"
                 value={awayTeam}
                 onChange={(e) => setAwayTeam(e.target.value)}
