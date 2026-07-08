@@ -6,6 +6,10 @@ import {
   getAllAgents,
   AgentType,
 } from "../agents/agents";
+import { orchestratePrediction } from "../agents/orchestrator";
+import { getDb } from "../db";
+import { matches } from "../../drizzle/schema";
+import { eq } from "drizzle-orm";
 
 export const agentsRouter = router({
   // ── List all available agents ────────────────────────────────────────────────
@@ -117,6 +121,47 @@ export const agentsRouter = router({
           },
         },
       };
+    }),
+
+  // ── Structured orchestrated prediction (6 agents → strict JSON) ──────────────
+  predictStructured: publicProcedure
+    .input(
+      z.object({
+        homeTeam: z.string().min(1).max(100),
+        awayTeam: z.string().min(1).max(100),
+        league: z.enum(["ligat_hael", "ligah_leumit"]).default("ligat_hael"),
+        matchId: z.number().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      let homeTeam = input.homeTeam.trim();
+      let awayTeam = input.awayTeam.trim();
+
+      // If a matchId is supplied, prefer canonical team names from the DB.
+      if (input.matchId) {
+        try {
+          const db = await getDb();
+          if (db) {
+            const [m] = await db
+              .select()
+              .from(matches)
+              .where(eq(matches.id, input.matchId))
+              .limit(1);
+            if (m) {
+              homeTeam = m.homeTeam;
+              awayTeam = m.awayTeam;
+            }
+          }
+        } catch (err) {
+          console.error("[predictStructured] match lookup failed:", err);
+        }
+      }
+
+      const leagueLabel =
+        input.league === "ligat_hael" ? "ליגת העל" : "הליגה הלאומית";
+
+      const { output } = await orchestratePrediction(homeTeam, awayTeam, leagueLabel);
+      return { success: true, prediction: output };
     }),
 
   // ── Points-strategy agent (protected — uses user prediction history) ─────────

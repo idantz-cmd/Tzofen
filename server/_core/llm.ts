@@ -12,6 +12,9 @@ export type Message = {
 export type InvokeParams = {
   messages: Message[];
   maxTokens?: number;
+  temperature?: number;
+  /** When "json_object", forces the model to return valid JSON. */
+  responseFormat?: "json_object" | "text";
   [key: string]: unknown;
 };
 
@@ -37,6 +40,10 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     model: MODEL_ID,
     messages: params.messages.map((m) => ({ role: m.role, content: m.content })),
     max_tokens: params.maxTokens ?? 120,
+    ...(params.temperature !== undefined ? { temperature: params.temperature } : {}),
+    ...(params.responseFormat === "json_object"
+      ? { response_format: { type: "json_object" as const } }
+      : {}),
   });
 
   const choice = response.choices[0];
