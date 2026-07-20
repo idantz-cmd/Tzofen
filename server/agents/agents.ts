@@ -1,6 +1,8 @@
 import { getDb } from "../db";
 import { matches } from "../../drizzle/schema";
 import { or, eq, and, isNotNull } from "drizzle-orm";
+import { predictWithPoisson } from "./poissonModel";
+import type { PoissonPrediction } from "./poissonModel";
 
 export type { AgentType } from "./llmAgents";
 
@@ -58,6 +60,7 @@ export interface MatchPrediction {
   homeStats: TeamStats;
   awayStats: TeamStats;
   h2h: HeadToHeadStats;
+  poisson?: PoissonPrediction;
 }
 
 export async function getTeamStats(teamName: string): Promise<TeamStats> {
@@ -227,101 +230,55 @@ export async function getHeadToHead(team1: string, team2: string): Promise<HeadT
 
 export async function predictMatch(
   homeTeam: string,
-  awayTeam: string
+  awayTeam: string,
+  // Optional prefetched data — pass these from the orchestrator to avoid
+  // re-querying the DB (it already loaded them).
+  prefetched?: {
+    homeStats?: TeamStats;
+    awayStats?: TeamStats;
+    h2h?: HeadToHeadStats;
+  }
 ): Promise<MatchPrediction> {
   const [homeStats, awayStats, h2h] = await Promise.all([
-    getTeamStats(homeTeam),
-    getTeamStats(awayTeam),
-    getHeadToHead(homeTeam, awayTeam),
+    prefetched?.homeStats ?? getTeamStats(homeTeam),
+    prefetched?.awayStats ?? getTeamStats(awayTeam),
+    prefetched?.h2h ?? getHeadToHead(homeTeam, awayTeam),
   ]);
 
-  // Score-based probability calculation
-  // Base: home advantage ~5%, general draw rate ~25%
-  let homeScore = 50 + 5; // home advantage
-  let awayScore = 50 - 5;
+  // Poisson + Dixon-Coles engine: models goals as a stochastic process, reads
+  // the 1X2 probabilities and the most-likely scoreline off one matrix — so the
+  // predicted result and score can never contradict each other.
+  const poisson = predictWithPoisson(homeStats, awayStats, h2h);
 
-  // Factor 1: win rates (weight 30%)
-  if (homeStats.totalMatches >= 3) {
-    homeScore += (homeStats.homeWinRate - 50) * 0.3;
-  }
-  if (awayStats.totalMatches >= 3) {
-    awayScore += (awayStats.awayWinRate - 50) * 0.3;
-  }
-
-  // Factor 2: form (weight 20%) — W=3, D=1, L=0
-  const formScore = (form: Array<"W" | "D" | "L">) =>
-    form.reduce((sum, r) => sum + (r === "W" ? 3 : r === "D" ? 1 : 0), 0);
-  const maxFormScore = 15; // 5 matches × 3 points
-  if (homeStats.form.length > 0) {
-    homeScore += ((formScore(homeStats.form) / maxFormScore) * 100 - 50) * 0.2;
-  }
-  if (awayStats.form.length > 0) {
-    awayScore += ((formScore(awayStats.form) / maxFormScore) * 100 - 50) * 0.2;
-  }
-
-  // Factor 3: H2H (weight 25%)
-  if (h2h.totalMatches >= 2) {
-    homeScore += (h2h.team1WinRate - 50) * 0.25;
-    awayScore += (h2h.team2WinRate - 50) * 0.25;
-  }
-
-  // Factor 4: avg goals (affects draw probability)
-  const avgGoalsInGame =
-    h2h.totalMatches >= 3
-      ? h2h.avgTotalGoals
-      : (homeStats.avgGoalsScored + awayStats.avgGoalsScored) / 2;
-
-  // More goals per game → lower draw probability
-  const drawBase = avgGoalsInGame > 2.5 ? 20 : avgGoalsInGame < 1.5 ? 30 : 25;
-
-  // Normalize to 100%
-  const total = homeScore + awayScore;
-  const rawHome = (homeScore / total) * (100 - drawBase);
-  const rawAway = (awayScore / total) * (100 - drawBase);
-
-  const homeWinProbability = Math.round(Math.max(15, Math.min(70, rawHome)));
-  const awayWinProbability = Math.round(Math.max(10, Math.min(65, rawAway)));
-  const drawProbability = 100 - homeWinProbability - awayWinProbability;
-
-  // Pick recommendation
-  const max = Math.max(homeWinProbability, drawProbability, awayWinProbability);
-  const recommendedPick: "home" | "draw" | "away" =
-    max === homeWinProbability
-      ? "home"
-      : max === drawProbability
-        ? "draw"
-        : "away";
-
-  // Confidence based on data availability
-  const dataPoints =
-    homeStats.totalMatches + awayStats.totalMatches + h2h.totalMatches * 2;
-  const confidence: "low" | "medium" | "high" =
-    dataPoints < 10 ? "low" : dataPoints < 30 ? "medium" : "high";
-
-  // Hebrew reasoning
   const formHe = (f: Array<"W" | "D" | "L">) =>
     f.map((r) => (r === "W" ? "נ" : r === "D" ? "ת" : "ה")).join("-") || "אין נתונים";
 
   const reasoning = [
-    `${homeTeam}: ${homeStats.wins}נ/${homeStats.draws}ת/${homeStats.losses}ה (${homeStats.winRate}% ניצחונות), פורמה: ${formHe(homeStats.form)}`,
-    `${awayTeam}: ${awayStats.wins}נ/${awayStats.draws}ת/${awayStats.losses}ה (${awayStats.winRate}% ניצחונות), פורמה: ${formHe(awayStats.form)}`,
+    `${homeTeam}: ${homeStats.wins}נ/${homeStats.draws}ת/${homeStats.losses}ה, ` +
+      `xG ${poisson.homeExpectedGoals}, פורמה ${formHe(homeStats.form)}`,
+    `${awayTeam}: ${awayStats.wins}נ/${awayStats.draws}ת/${awayStats.losses}ה, ` +
+      `xG ${poisson.awayExpectedGoals}, פורמה ${formHe(awayStats.form)}`,
+    `תוצאה סבירה: ${poisson.mostLikelyScore.home}-${poisson.mostLikelyScore.away} ` +
+      `(${poisson.scoreProbability}%)`,
     h2h.totalMatches > 0
-      ? `ראש-בראש: ${h2h.totalMatches} משחקים — ${homeTeam} ${h2h.team1Wins} נצ', ${awayTeam} ${h2h.team2Wins} נצ', ${h2h.draws} תיקו`
+      ? `ראש-בראש: ${h2h.totalMatches} משחקים — ${homeTeam} ${h2h.team1Wins}, ${awayTeam} ${h2h.team2Wins}, ${h2h.draws} תיקו`
       : "אין היסטוריית ראש-בראש",
   ].join(" | ");
 
   return {
     homeTeam,
     awayTeam,
-    homeWinProbability,
-    drawProbability,
-    awayWinProbability,
-    recommendedPick,
-    confidence,
+    homeWinProbability: poisson.homeWinProbability,
+    drawProbability: poisson.drawProbability,
+    awayWinProbability: poisson.awayWinProbability,
+    recommendedPick: poisson.recommendedPick,
+    // Map the model's numeric confidence onto the existing 3-level enum.
+    confidence: poisson.confidence >= 0.66 ? "high" : poisson.confidence >= 0.5 ? "medium" : "low",
     reasoning,
     homeStats,
     awayStats,
     h2h,
+    poisson,
   };
 }
 
