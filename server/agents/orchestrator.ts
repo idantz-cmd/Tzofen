@@ -13,9 +13,11 @@
  */
 
 import { invokeLLM } from "../_core/llm";
-import { callGemini } from "../_core/gemini";
 import { getTeamStats, getHeadToHead, predictMatch } from "./agents";
 import type { TeamStats, HeadToHeadStats, MatchPrediction } from "./agents";
+import { fetchIsraeliFootballNews } from "./newsScraperAgent";
+import { getCached, setCached, cacheKey } from "./predictionCache";
+import type { PoissonPrediction } from "./poissonModel";
 
 // ─── Shared Types ───────────────────────────────────────────────────────────
 
@@ -217,11 +219,17 @@ function buildAgentContext(
   ctx += h2hBlock(data.h2h) + "\n";
 
   if (spec.name === "deep_prediction_agent") {
+    const p = (data.model as MatchPrediction & { poisson?: PoissonPrediction }).poisson;
     ctx +=
-      `\n--- פלט מנוע ההסתברות ---\n` +
+      `\n--- פלט מנוע ההסתברות (Poisson/Dixon-Coles) ---\n` +
       `הסתברות ניצחון בית: ${data.model.homeWinProbability}%\n` +
       `הסתברות תיקו: ${data.model.drawProbability}%\n` +
       `הסתברות ניצחון חוץ: ${data.model.awayWinProbability}%\n` +
+      (p
+        ? `שערים צפויים (xG): בית ${p.homeExpectedGoals} / חוץ ${p.awayExpectedGoals}\n` +
+          `תוצאה סבירה ביותר: ${p.mostLikelyScore.home}-${p.mostLikelyScore.away} (${p.scoreProbability}%)\n` +
+          `סיכוי ששתי הקבוצות יבקיעו: ${p.bttsProbability}% | מעל 2.5 שערים: ${p.over25Probability}%\n`
+        : "") +
       `המלצת המנוע: ${data.model.recommendedPick} (ביטחון ${data.model.confidence})\n`;
   }
 
@@ -295,6 +303,13 @@ function normalizeReport(name: OrchestratorAgentName, obj: any): AgentReport | n
 
 // ─── Run one structured agent ───────────────────────────────────────────────
 
+// The analytically heavy agents need the reasoning-tier model to follow the
+// enforcement prompt and emit clean JSON; the rest run on the cheaper fast tier.
+const HEAVY_AGENTS = new Set<OrchestratorAgentName>([
+  "statistics_agent",
+  "deep_prediction_agent",
+]);
+
 async function runAgent(
   spec: AgentSpec,
   home: string,
@@ -319,8 +334,9 @@ async function runAgent(
           content: `נתח את המשחק ${home} נגד ${away} מזווית ההתמחות שלך והחזר JSON בלבד.`,
         },
       ],
-      maxTokens: 700,
-      temperature: 0.6,
+      maxTokens: 1200,
+      temperature: 0.4,
+      tier: HEAVY_AGENTS.has(spec.name) ? "reasoning" : "fast",
       responseFormat: "json_object",
     });
     const parsed = normalizeReport(spec.name, extractJson(res.choices[0]?.message?.content ?? ""));
@@ -426,28 +442,25 @@ function decide(reports: AgentReport[]): Decision {
   return { direction, confidence: Math.round(confidence * 100) / 100, consensus, agreeing, risk, probs, criticalInjury };
 }
 
-// Deterministic scoreline consistent with the predicted result.
+// Scoreline read straight off the Poisson matrix — already coherent with its
+// own 1X2 split. Only override on the rare disagreement with the decided
+// direction; fall back to a minimal consistent score when no poisson field.
 function predictScore(decision: Decision, model: MatchPrediction): string {
-  const hs = model.homeStats;
-  const as = model.awayStats;
-  let homeXg = (hs.avgGoalsScored + as.avgGoalsConceded) / 2;
-  let awayXg = (as.avgGoalsScored + hs.avgGoalsConceded) / 2;
-  if (!Number.isFinite(homeXg) || homeXg <= 0) homeXg = 1.3;
-  if (!Number.isFinite(awayXg) || awayXg <= 0) awayXg = 1.0;
+  const p = (model as MatchPrediction & { poisson?: PoissonPrediction }).poisson;
 
-  let h = Math.max(0, Math.round(homeXg));
-  let a = Math.max(0, Math.round(awayXg));
-
-  if (decision.direction === "home") {
-    if (h <= a) h = a + 1;
-  } else if (decision.direction === "away") {
-    if (a <= h) a = h + 1;
-  } else {
-    const lvl = Math.max(h, a, 1);
-    h = lvl;
-    a = lvl;
+  if (p) {
+    const s = p.mostLikelyScore;
+    const dirOf = (h: number, a: number): Direction =>
+      h > a ? "home" : h < a ? "away" : "draw";
+    if (dirOf(s.home, s.away) === decision.direction) return `${s.home}-${s.away}`;
+    const match = p.topScores.find((t) => dirOf(t.home, t.away) === decision.direction);
+    if (match) return `${match.home}-${match.away}`;
   }
-  return `${h}-${a}`;
+
+  // Fallback (no poisson field): minimal consistent scoreline.
+  if (decision.direction === "home") return "2-1";
+  if (decision.direction === "away") return "1-2";
+  return "1-1";
 }
 
 // ─── Contradiction detection (Step 1, deterministic scaffold) ───────────────
@@ -565,8 +578,9 @@ ${factors.join("\n")}
         { role: "system", content: system },
         { role: "user", content: `כתוב את הסיכום עבור ${home} נגד ${away}.` },
       ],
-      maxTokens: 900,
-      temperature: 0.7,
+      maxTokens: 1000,
+      temperature: 0.6,
+      tier: "reasoning",
       responseFormat: "json_object",
     });
     const obj = extractJson(res.choices[0]?.message?.content ?? "");
@@ -690,21 +704,39 @@ export async function orchestratePrediction(
   home: string,
   away: string,
   league: string,
-): Promise<{ output: OrchestratorOutput; reports: AgentReport[] }> {
-  // 1. Gather real data once (shared across agents).
-  const [homeStats, awayStats, h2h, model] = await Promise.all([
+): Promise<{ output: OrchestratorOutput; reports: AgentReport[]; cached: boolean }> {
+  // 0. Cache: one structured prediction is ~7 LLM calls. Serve identical
+  //    fixtures within the TTL from memory instead of paying again.
+  const key = cacheKey(home, away, league);
+  const hit = getCached<{ output: OrchestratorOutput; reports: AgentReport[] }>(key);
+  if (hit) return { ...hit, cached: true };
+
+  // 1. Gather real data ONCE and pass it into predictMatch — no redundant DB
+  //    round-trips (predictMatch would otherwise re-query the same stats).
+  const [homeStats, awayStats, h2h] = await Promise.all([
     getTeamStats(home),
     getTeamStats(away),
     getHeadToHead(home, away),
-    predictMatch(home, away),
   ]);
+  const model = await predictMatch(home, away, { homeStats, awayStats, h2h });
 
+  // 2. Real Israeli football news (RSS) — only headlines that mention one of the
+  //    two teams, newest first. No hallucinated news source.
   let news = "";
   try {
-    news = await callGemini(
-      `חדשות כדורגל ישראלי עדכניות על ${home} ו-${away}: פציעות, השעיות, שינויי הרכב ומזג אוויר ב-48 השעות האחרונות. תמציתי.`,
-    );
-  } catch {
+    const items = await fetchIsraeliFootballNews();
+    const relevant = items
+      .filter((n) =>
+        [n.title, n.summary].some(
+          (t) => t && (t.includes(home) || t.includes(away)),
+        ),
+      )
+      .slice(0, 6);
+    news = relevant.length
+      ? relevant.map((n) => `- ${n.title} (${n.source}, ${n.ageLabel})`).join("\n")
+      : "לא נמצאו כותרות ספציפיות על שתי הקבוצות ב-48 השעות האחרונות.";
+  } catch (err) {
+    console.warn("[orchestrator] news fetch failed:", (err as Error)?.message);
     news = "";
   }
 
@@ -747,7 +779,9 @@ export async function orchestratePrediction(
   };
 
   validateOutput(output);
-  return { output, reports };
+  const result = { output, reports };
+  setCached(key, result);
+  return { ...result, cached: false };
 }
 
 // ─── Validation checklist (soft — logs warnings, guarantees invariants) ──────
