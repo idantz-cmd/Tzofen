@@ -26,6 +26,10 @@ const envSchema = z.object({
   ADMIN_EMAIL: z.string().optional(),
   AI_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
+  // Tiered LLM models — tune cost/quality without a redeploy. "reasoning" is
+  // used for the hard calls (agents, synthesis); "fast" for cheap ones.
+  LLM_MODEL_REASONING: z.string().optional(),
+  LLM_MODEL_FAST: z.string().optional(),
   RAPIDAPI_KEY: z.string().optional(),
   APISPORTS_KEY: z.string().optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
